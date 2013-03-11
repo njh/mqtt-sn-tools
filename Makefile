@@ -11,6 +11,9 @@ all: mqtts-pub
 mqtts-pub: mqtts-pub.o
 	$(CC) $(LDFLAGS) -o mqtts-pub mqtts-pub.o
   
+mqtts-pub.o: mqtts-pub.c mqtts.h
+	$(CC) $(CFLAGS) -c mqtts-pub.c
+
 clean:
 	rm -f *.o mqtts-pub
 	
