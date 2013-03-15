@@ -1,3 +1,5 @@
+#define MQTTS_MAX_PACKET_LENGTH  (256)
+
 #define MQTTS_TYPE_ADVERTISE     (0x00)
 #define MQTTS_TYPE_SEARCHGW      (0x01)
 #define MQTTS_TYPE_GWINFO        (0x02)
@@ -58,7 +60,7 @@ typedef struct {
   uint8_t type;
   uint16_t topic_id;
   uint16_t message_id;
-  char topic_name[32];
+  char topic_name[MQTTS_MAX_PACKET_LENGTH-6];
 } register_packet_t;
 
 typedef struct {
@@ -68,3 +70,12 @@ typedef struct {
   uint16_t message_id;
   uint16_t return_code;
 } regack_packet_t;
+
+typedef struct __attribute__((packed)) {
+  uint8_t length;
+  uint8_t type;
+  uint8_t flags;
+  uint16_t topic_id;
+  uint16_t message_id;
+  char data[MQTTS_MAX_PACKET_LENGTH-7];
+} publish_packet_t;
