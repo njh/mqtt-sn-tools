@@ -53,3 +53,18 @@ typedef struct {
   uint16_t return_code;
 } connack_packet_t;
 
+typedef struct {
+  uint8_t length;
+  uint8_t type;
+  uint16_t topic_id;
+  uint16_t message_id;
+  char topic_name[32];
+} register_packet_t;
+
+typedef struct {
+  uint8_t length;
+  uint8_t type;
+  uint16_t topic_id;
+  uint16_t message_id;
+  uint16_t return_code;
+} regack_packet_t;

@@ -35,7 +35,8 @@
 char *client_id = "client-id";
 char *topic_name = "test";
 uint16_t keep_alive = 0;
-uint16_t topic_id = 1;
+uint16_t next_topic_id = 1;
+uint16_t next_message_id = 1;
 
 int debug = 1;
 
@@ -118,9 +119,24 @@ void send_connect(int sock, const char* client_id)
     packet.duration = htons(keep_alive);
     strncpy(packet.client_id, client_id, sizeof(packet.client_id));
     packet.length = 0x06 + strlen(packet.client_id);
-    
+
     if (debug)
         printf("Sending CONNECT packet...\n");
+
+    return send_packet(sock, (char*)&packet, packet.length);
+}
+
+void send_register(int sock, const char* topic_name)
+{
+    register_packet_t packet;
+    packet.type = MQTTS_TYPE_REGISTER;
+    packet.topic_id = htons(next_topic_id++);
+    packet.message_id = htons(next_message_id++);
+    strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
+    packet.length = 0x06 + strlen(packet.topic_name);
+
+    if (debug)
+        printf("Sending REGISTER packet...\n");
 
     return send_packet(sock, (char*)&packet, packet.length);
 }
@@ -145,33 +161,46 @@ void recieve_connack(int sock)
     }
 }
 
-    uint16_t return_code;
-    char* body = recieve_packet(sock, &type_id);
+void recieve_regack(int sock)
+{
+    regack_packet_t *packet = recieve_packet(sock);
+    uint16_t return_code, message_id, topic_id;
 
-    if (body) {
-        if (type_id != MQTTS_TYPE_CONNACK) {
-            printf("Was expecting CONNACK packet but received: 0x%2.2x\n", type_id);
-            exit(-1);
-        }
-    
-        // Check Connack result code
-        return_code = ntohs( *(short*)body );
-        if (debug)
-            printf("CONNACK result code: 0x%2.2x\n", return_code);
+    if (packet->type != MQTTS_TYPE_REGACK) {
+        printf("Was expecting REGACK packet but received: 0x%2.2x\n", packet->type);
+        exit(-1);
+    }
 
-        if (return_code) {
-            exit(return_code);
-        }
+    // Check Regack result code
+    return_code = ntohs( packet->return_code );
+    if (debug)
+        printf("REGACK result code: 0x%2.2x\n", return_code);
+
+    // Check that the Message ID matches
+    message_id = ntohs( packet->message_id );
+    if (message_id != next_message_id-1) {
+        printf("Warning: message id in Regack does not equal message id sent\n");
+    }
+
+    // Check that the Topic ID matches
+    topic_id = ntohs( packet->topic_id );
+    if (topic_id != next_topic_id-1) {
+        printf("Warning: topic id in Regack does not equal topic id sent\n");
+    }
+
+    if (return_code) {
+        exit(return_code);
     }
 }
 
 int main(int arvc, char* argv[])
 {
     int sock = create_socket();
-
     if (sock) {
         send_connect(sock, client_id);
         recieve_connack(sock);
+        send_register(sock, topic_name);
+        recieve_regack(sock);
         close(sock);
     }
 
