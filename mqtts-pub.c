@@ -70,13 +70,12 @@ int create_socket()
     return fd;
 }
 
-int send_packet(int sock, char* data, size_t len)
+void send_packet(int sock, char* data, size_t len)
 {
     size_t sent = send(sock, data, len, 0);
     if (sent != len) {
         fprintf(stderr, "Warning: only sent %d of %d bytes\n", (int)sent, (int)len);
     }
-    return 0;
 }
 
 char* recieve_packet(int sock, int *type_id)
@@ -116,7 +115,7 @@ char* recieve_packet(int sock, int *type_id)
     return &buffer[2];
 }
 
-int send_connect(int sock, const char* client_id)
+void send_connect(int sock, const char* client_id)
 {
     connect_packet_t packet;
     packet.type = MQTTS_TYPE_CONNECT;
