@@ -46,3 +46,10 @@ typedef struct {
   uint16_t duration;
   char client_id[21];
 } connect_packet_t;
+
+typedef struct {
+  uint8_t length;
+  uint8_t type;
+  uint16_t return_code;
+} connack_packet_t;
+

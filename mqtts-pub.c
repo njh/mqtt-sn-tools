@@ -29,7 +29,7 @@
 
 #define DEFAULT_PORT 1883
 #define DEFAULT_SERVER "127.0.0.1"
-#define MAX_LENGTH   1440
+#define MAX_LENGTH   256
 
 
 char *client_id = "client-id";
@@ -78,9 +78,9 @@ void send_packet(int sock, char* data, size_t len)
     }
 }
 
-char* recieve_packet(int sock, int *type_id)
+void* recieve_packet(int sock)
 {
-    static char buffer[MAX_LENGTH];
+    static uint8_t buffer[MAX_LENGTH];
     int length;
     int bytes_read;
 
@@ -95,24 +95,18 @@ char* recieve_packet(int sock, int *type_id)
 
     if (debug)
         printf("Received %d bytes.\n", (int)bytes_read);
-        
+
     length = buffer[0];
     if (length == 0x01) {
-        length = ntohs( *(short*)&buffer[1] );
-        if (type_id) {
-            *type_id = buffer[3];
-        }
-    } else {
-        if (type_id) {
-            *type_id = buffer[1];
-        }
+        printf("Error: packet received is longer than this tool can handle\n");
+        exit(-1);
     }
-    
+
     if (length != bytes_read) {
         printf("Error: read %d bytes but packet length is %d bytes.\n", (int)bytes_read, length);
     }
-    
-    return &buffer[2];
+
+    return buffer;
 }
 
 void send_connect(int sock, const char* client_id)
@@ -133,7 +127,24 @@ void send_connect(int sock, const char* client_id)
 
 void recieve_connack(int sock)
 {
-    int type_id = -1;
+    connack_packet_t *packet = recieve_packet(sock);
+    uint16_t return_code;
+
+    if (packet->type != MQTTS_TYPE_CONNACK) {
+        printf("Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
+        exit(-1);
+    }
+
+    // Check Connack result code
+    return_code = ntohs( packet->return_code );
+    if (debug)
+        printf("CONNACK result code: 0x%2.2x\n", return_code);
+
+    if (return_code) {
+        exit(return_code);
+    }
+}
+
     uint16_t return_code;
     char* body = recieve_packet(sock, &type_id);
 
