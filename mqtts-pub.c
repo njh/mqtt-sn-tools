@@ -156,6 +156,18 @@ void send_publish(int sock, uint16_t topic_id, const char* data)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
+void send_disconnect(int sock)
+{
+    publish_packet_t packet;
+    packet.type = MQTTS_TYPE_DISCONNECT;
+    packet.length = 0x02;
+
+    if (debug)
+        printf("Sending DISCONNECT packet...\n");
+
+    return send_packet(sock, (char*)&packet, packet.length);
+}
+
 void recieve_connack(int sock)
 {
     connack_packet_t *packet = recieve_packet(sock);
@@ -222,6 +234,9 @@ int main(int arvc, char* argv[])
 
         // Publish to the topic
         send_publish(sock, topic_id, data);
+
+        // Finally, disconnect
+        send_disconnect(sock);
 
         close(sock);
     }

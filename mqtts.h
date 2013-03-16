@@ -79,3 +79,9 @@ typedef struct __attribute__((packed)) {
   uint16_t message_id;
   char data[MQTTS_MAX_PACKET_LENGTH-7];
 } publish_packet_t;
+
+typedef struct {
+  uint8_t length;
+  uint8_t type;
+  uint16_t duration;
+} disconnect_packet_t;
