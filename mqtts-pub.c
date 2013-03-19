@@ -28,13 +28,13 @@
 
 
 #define DEFAULT_PORT 1883
-#define DEFAULT_SERVER "127.0.0.1"
+#define DEFAULT_SERVER "192.168.1.1"
 
 char *client_id = "client-id";
 char *topic_name = "test";
 char *data = "Hello World";
 uint16_t keep_alive = 0;
-uint16_t topic_id = 1;
+uint16_t topic_id = 0;
 uint16_t next_message_id = 1;
 
 int debug = 1;
@@ -125,11 +125,11 @@ void send_connect(int sock, const char* client_id)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void send_register(int sock, uint16_t topic_id, const char* topic_name)
+void send_register(int sock, const char* topic_name)
 {
     register_packet_t packet;
     packet.type = MQTTS_TYPE_REGISTER;
-    packet.topic_id = htons(topic_id);
+    packet.topic_id = 0;
     packet.message_id = htons(next_message_id++);
     strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
     packet.length = 0x06 + strlen(packet.topic_name);
@@ -188,7 +188,7 @@ void recieve_connack(int sock)
     }
 }
 
-void recieve_regack(int sock, uint16_t topic_id)
+uint16_t recieve_regack(int sock)
 {
     regack_packet_t *packet = recieve_packet(sock);
     uint16_t return_code, received_message_id, received_topic_id;
@@ -203,21 +203,22 @@ void recieve_regack(int sock, uint16_t topic_id)
     if (debug)
         printf("REGACK result code: 0x%2.2x\n", return_code);
 
+    if (return_code) {
+        exit(return_code);
+    }
+
     // Check that the Message ID matches
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
         printf("Warning: message id in Regack does not equal message id sent\n");
     }
 
-    // Check that the Topic ID matches
+    // Store the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
-    if (received_topic_id != topic_id) {
-        printf("Warning: topic id in Regack does not equal topic id sent\n");
-    }
+    if (debug)
+        printf("Topic ID: %d\n", received_topic_id);
 
-    if (return_code) {
-        exit(return_code);
-    }
+    return received_topic_id;
 }
 
 int main(int arvc, char* argv[])
@@ -229,8 +230,8 @@ int main(int arvc, char* argv[])
         recieve_connack(sock);
 
         // Register the topic
-        send_register(sock, topic_id, topic_name);
-        recieve_regack(sock, topic_id);
+        send_register(sock, topic_name);
+        topic_id = recieve_regack(sock);
 
         // Publish to the topic
         send_publish(sock, topic_id, data);
