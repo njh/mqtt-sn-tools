@@ -287,7 +287,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'p':
-            mqtts_port = atoi(optarg);
+            mqtts_port = optarg;
         break;
 
         case 'r':
