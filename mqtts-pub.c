@@ -19,8 +19,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <netdb.h>
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -32,7 +31,7 @@ char client_id[21] = "";
 const char *topic_name = NULL;
 const char *message_data = NULL;
 const char *mqtts_host = "127.0.0.1";
-short mqtts_port = 1883;
+const char *mqtts_port = "1883";
 uint16_t keep_alive = 0;
 uint16_t topic_id = 0;
 uint16_t next_message_id = 1;
@@ -43,30 +42,51 @@ uint8_t debug = FALSE;
 
 int create_socket()
 {
-    struct sockaddr_in addr;
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
     int fd, ret;
 
-    // Create a UDP socket
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        perror("Error creating socket");
-        exit(1);
+    // Set options for the resolver
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+    hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
+    hints.ai_flags = AI_DEFAULT;    /* Default flags */
+    hints.ai_protocol = 0;          /* Any protocol */
+    hints.ai_canonname = NULL;
+    hints.ai_addr = NULL;
+    hints.ai_next = NULL;
+
+    // Lookup address
+    ret = getaddrinfo(mqtts_host, mqtts_port, &hints, &result);
+    if (ret != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
+        exit(EXIT_FAILURE);
     }
 
-    // Set the destination address
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(mqtts_host);
-    addr.sin_port = htons(mqtts_port);
+    /* getaddrinfo() returns a list of address structures.
+       Try each address until we successfully connect(2).
+       If socket(2) (or connect(2)) fails, we (close the socket and)
+       try the next address. */
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (fd == -1)
+            continue;
+
+        // Connect socket to the remote host
+        if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0)
+            break;      // Success
+
+        close(fd);
+    }
+
+    if (rp == NULL) {
+        fprintf(stderr, "Could not connect to remote host.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    freeaddrinfo(result);
 
     // FIXME: set the Don't Fragment flag
-
-    // Connect socket to the remote host
-    ret = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
-    if (ret) {
-        perror("Error connecting socket");
-        exit(1);
-    }
 
     return fd;
 }
@@ -230,10 +250,10 @@ static void usage()
     fprintf(stderr, "\n");
     fprintf(stderr, "  -d             Enable debug messages.\n");
     fprintf(stderr, "  -h <host>      MQTT-S host to connect to. Defaults to '%s'.\n", mqtts_host);
-    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to '%s'.\n", client_id);
+    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtts-client-$$'.\n");
     fprintf(stderr, "  -m <message>   Message payload to send.\n");
     fprintf(stderr, "  -n             Send a null (zero length) message.\n");
-    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %d.\n", mqtts_port);
+    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtts_port);
     fprintf(stderr, "  -r             Message should be retained.\n");
     fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
     exit(-1);
