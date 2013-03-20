@@ -1,3 +1,15 @@
+#ifndef MQTTS_H
+#define MQTTS_H
+
+#ifndef FALSE
+#define FALSE  (0)
+#endif
+
+#ifndef TRUE
+#define TRUE  (1)
+#endif
+
+
 #define MQTTS_MAX_PACKET_LENGTH  (256)
 
 #define MQTTS_TYPE_ADVERTISE     (0x00)
@@ -85,3 +97,5 @@ typedef struct {
   uint8_t type;
   uint16_t duration;
 } disconnect_packet_t;
+
+#endif

@@ -23,21 +23,22 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "mqtts.h"
 
 
-#define DEFAULT_PORT 1883
-#define DEFAULT_SERVER "192.168.1.1"
-
-char *client_id = "client-id";
-char *topic_name = "test";
-char *data = "Hello World";
+char client_id[21] = "";
+const char *topic_name = NULL;
+const char *message_data = NULL;
+const char *mqtts_host = "127.0.0.1";
+short mqtts_port = 1883;
 uint16_t keep_alive = 0;
 uint16_t topic_id = 0;
 uint16_t next_message_id = 1;
 
-int debug = 1;
+uint8_t retain = FALSE;
+uint8_t debug = FALSE;
 
 
 int create_socket()
@@ -55,8 +56,8 @@ int create_socket()
     // Set the destination address
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(DEFAULT_SERVER);
-    addr.sin_port = htons(DEFAULT_PORT);
+    addr.sin_addr.s_addr = inet_addr(mqtts_host);
+    addr.sin_port = htons(mqtts_port);
 
     // FIXME: set the Don't Fragment flag
 
@@ -145,6 +146,8 @@ void send_publish(int sock, uint16_t topic_id, const char* data)
     publish_packet_t packet;
     packet.type = MQTTS_TYPE_PUBLISH;
     packet.flags = 0x00;
+    if (retain)
+        packet.flags += MQTTS_FLAG_RETAIN;
     packet.topic_id = htons(topic_id);
     packet.message_id = htons(next_message_id++);
     strncpy(packet.data, data, sizeof(packet.data));
@@ -221,9 +224,85 @@ uint16_t recieve_regack(int sock)
     return received_topic_id;
 }
 
-int main(int arvc, char* argv[])
+static void usage()
 {
-    int sock = create_socket();
+    fprintf(stderr, "Usage: mqtts-pub [opts] -t <topic> -m <message>\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  -d             Enable debug messages.\n");
+    fprintf(stderr, "  -h <host>      MQTT-S host to connect to. Defaults to '%s'.\n", mqtts_host);
+    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to '%s'.\n", client_id);
+    fprintf(stderr, "  -m <message>   Message payload to send.\n");
+    fprintf(stderr, "  -n             Send a null (zero length) message.\n");
+    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %d.\n", mqtts_port);
+    fprintf(stderr, "  -r             Message should be retained.\n");
+    fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
+    exit(-1);
+}
+
+static void parse_opts(int argc, char** argv)
+{
+    int ch;
+
+    // Parse the options/switches
+    while ((ch = getopt(argc, argv, "dh:i:m:nprt:?")) != -1)
+        switch (ch) {
+        case 'd':
+            debug = TRUE;
+        break;
+
+        case 'h':
+            mqtts_host = optarg;
+        break;
+
+        case 'i':
+            strcpy(client_id, optarg);
+        break;
+
+        case 'm':
+            message_data = optarg;
+        break;
+
+        case 'n':
+            message_data = "";
+        break;
+
+        case 'p':
+            mqtts_port = atoi(optarg);
+        break;
+
+        case 'r':
+            retain = TRUE;
+        break;
+
+        case 't':
+            topic_name = optarg;
+        break;
+
+        case '?':
+        default:
+            usage();
+        break;
+    }
+
+    // Generate a Client ID if none given
+    if (client_id[0] == '\0') {
+        snprintf(client_id, sizeof(client_id)-1, "mqtts-client-%d", getpid());
+    }
+
+    // Missing Parameter?
+    if (!topic_name || !message_data) {
+        usage();
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    int sock;
+
+    // Parse the command-line options
+    parse_opts(argc, argv);
+
+    sock = create_socket();
     if (sock) {
         // Connect to gateway
         send_connect(sock, client_id);
@@ -234,7 +313,7 @@ int main(int arvc, char* argv[])
         topic_id = recieve_regack(sock);
 
         // Publish to the topic
-        send_publish(sock, topic_id, data);
+        send_publish(sock, topic_id, message_data);
 
         // Finally, disconnect
         send_disconnect(sock);
