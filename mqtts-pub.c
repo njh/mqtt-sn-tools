@@ -26,6 +26,9 @@
 
 #include "mqtts.h"
 
+#ifndef AI_DEFAULT
+    #define AI_DEFAULT (AI_ADDRCONFIG|AI_V4MAPPED)
+#endif
 
 char client_id[21] = "";
 const char *topic_name = NULL;
