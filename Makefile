@@ -8,15 +8,18 @@ LDFLAGS=
 
 all: mqtts-pub
 
-mqtts-pub: mqtts-pub.o
-	$(CC) $(LDFLAGS) -o mqtts-pub mqtts-pub.o
+mqtts-pub: mqtts.o mqtts-pub.o
+	$(CC) $(LDFLAGS) -o mqtts-pub $^
   
 mqtts-pub.o: mqtts-pub.c mqtts.h
 	$(CC) $(CFLAGS) -c mqtts-pub.c
 
+mqtts.o: mqtts.c mqtts.h
+	$(CC) $(CFLAGS) -c mqtts.c
+
 clean:
 	rm -f *.o mqtts-pub
-	
+
 dist:
 	distdir='$(PACKAGE)-$(VERSION)'; mkdir $$distdir || exit 1; \
 	list=`git ls-files`; for file in $$list; do \
