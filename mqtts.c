@@ -35,7 +35,7 @@ static uint8_t debug = FALSE;
 static uint16_t next_message_id = 1;
 
 
-int create_socket(const char* host, const char* port)
+int mqtts_create_socket(const char* host, const char* port)
 {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
@@ -86,7 +86,7 @@ int create_socket(const char* host, const char* port)
     return fd;
 }
 
-void send_packet(int sock, char* data, size_t len)
+static void send_packet(int sock, char* data, size_t len)
 {
     size_t sent = send(sock, data, len, 0);
     if (sent != len) {
@@ -94,7 +94,7 @@ void send_packet(int sock, char* data, size_t len)
     }
 }
 
-void* recieve_packet(int sock)
+static void* recieve_packet(int sock)
 {
     static uint8_t buffer[MQTTS_MAX_PACKET_LENGTH];
     int length;
@@ -125,7 +125,7 @@ void* recieve_packet(int sock)
     return buffer;
 }
 
-void send_connect(int sock, const char* client_id, uint16_t keepalive)
+void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive)
 {
     connect_packet_t packet;
     packet.type = MQTTS_TYPE_CONNECT;
@@ -141,7 +141,7 @@ void send_connect(int sock, const char* client_id, uint16_t keepalive)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void send_register(int sock, const char* topic_name)
+void mqtts_send_register(int sock, const char* topic_name)
 {
     register_packet_t packet;
     packet.type = MQTTS_TYPE_REGISTER;
@@ -156,7 +156,7 @@ void send_register(int sock, const char* topic_name)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, uint8_t retain)
+void mqtts_send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, uint8_t retain)
 {
     publish_packet_t packet;
     packet.type = MQTTS_TYPE_PUBLISH;
@@ -174,7 +174,7 @@ void send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, ui
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void send_disconnect(int sock)
+void mqtts_send_disconnect(int sock)
 {
     disconnect_packet_t packet;
     packet.type = MQTTS_TYPE_DISCONNECT;
@@ -186,7 +186,7 @@ void send_disconnect(int sock)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void recieve_connack(int sock)
+void mqtts_recieve_connack(int sock)
 {
     connack_packet_t *packet = recieve_packet(sock);
     uint16_t return_code;
@@ -206,7 +206,7 @@ void recieve_connack(int sock)
     }
 }
 
-uint16_t recieve_regack(int sock)
+uint16_t mqtts_recieve_regack(int sock)
 {
     regack_packet_t *packet = recieve_packet(sock);
     uint16_t return_code, received_message_id, received_topic_id;

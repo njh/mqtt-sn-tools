@@ -100,15 +100,13 @@ typedef struct {
 
 
 // Library functions
-int create_socket(const char* host, const char* port);
-void send_packet(int sock, char* data, size_t len);
-void* recieve_packet(int sock);
-void send_connect(int sock, const char* client_id, uint16_t keepalive);
-void send_register(int sock, const char* topic_name);
-void send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, uint8_t retain);
-void send_disconnect(int sock);
-void recieve_connack(int sock);
-uint16_t recieve_regack(int sock);
+int mqtts_create_socket(const char* host, const char* port);
+void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive);
+void mqtts_send_register(int sock, const char* topic_name);
+void mqtts_send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, uint8_t retain);
+void mqtts_send_disconnect(int sock);
+void mqtts_recieve_connack(int sock);
+uint16_t mqtts_recieve_regack(int sock);
 
 void mqtts_set_debug(uint8_t value);
 

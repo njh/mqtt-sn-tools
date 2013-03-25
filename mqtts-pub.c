@@ -120,21 +120,21 @@ int main(int argc, char* argv[])
     mqtts_set_debug(debug);
 
     // Create a UDP socket
-    sock = create_socket(mqtts_host, mqtts_port);
+    sock = mqtts_create_socket(mqtts_host, mqtts_port);
     if (sock) {
         // Connect to gateway
-        send_connect(sock, client_id, keep_alive);
-        recieve_connack(sock);
+        mqtts_send_connect(sock, client_id, keep_alive);
+        mqtts_recieve_connack(sock);
 
         // Register the topic
-        send_register(sock, topic_name);
-        topic_id = recieve_regack(sock);
+        mqtts_send_register(sock, topic_name);
+        topic_id = mqtts_recieve_regack(sock);
 
         // Publish to the topic
-        send_publish(sock, topic_id, message_data, qos, retain);
+        mqtts_send_publish(sock, topic_id, message_data, qos, retain);
 
         // Finally, disconnect
-        send_disconnect(sock);
+        mqtts_send_disconnect(sock);
 
         close(sock);
     }
