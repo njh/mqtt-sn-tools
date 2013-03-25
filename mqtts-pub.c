@@ -26,7 +26,7 @@
 
 #include "mqtts.h"
 
-char client_id[21] = "";
+const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *message_data = NULL;
 const char *mqtts_host = "127.0.0.1";
@@ -69,7 +69,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'i':
-            strcpy(client_id, optarg);
+            client_id = optarg;
         break;
 
         case 'm':
@@ -96,11 +96,6 @@ static void parse_opts(int argc, char** argv)
         default:
             usage();
         break;
-    }
-
-    // Generate a Client ID if none given
-    if (client_id[0] == '\0') {
-        snprintf(client_id, sizeof(client_id)-1, "mqtts-client-%d", getpid());
     }
 
     // Missing Parameter?
