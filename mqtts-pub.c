@@ -58,7 +58,7 @@ static void parse_opts(int argc, char** argv)
     int ch;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "dh:i:m:nprt:?")) != -1)
+    while ((ch = getopt(argc, argv, "dh:i:m:np:rt:?")) != -1)
         switch (ch) {
         case 'd':
             debug = TRUE;
