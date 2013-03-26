@@ -35,6 +35,11 @@ static uint8_t debug = FALSE;
 static uint16_t next_message_id = 1;
 
 
+void mqtts_set_debug(uint8_t value)
+{
+    debug = value;
+}
+
 int mqtts_create_socket(const char* host, const char* port)
 {
     struct addrinfo hints;
@@ -246,9 +251,4 @@ uint16_t mqtts_recieve_regack(int sock)
         printf("Topic ID: %d\n", received_topic_id);
 
     return received_topic_id;
-}
-
-void mqtts_set_debug(uint8_t value)
-{
-    debug = value;
 }
