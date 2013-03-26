@@ -203,40 +203,37 @@ void mqtts_send_disconnect(int sock)
 void mqtts_recieve_connack(int sock)
 {
     connack_packet_t *packet = recieve_packet(sock);
-    uint16_t return_code;
 
     if (packet->type != MQTTS_TYPE_CONNACK) {
         printf("Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
         exit(-1);
     }
 
-    // Check Connack result code
-    return_code = ntohs( packet->return_code );
+    // Check Connack return code
     if (debug)
-        printf("CONNACK result code: 0x%2.2x\n", return_code);
+        printf("CONNACK return code: 0x%2.2x\n", packet->return_code);
 
-    if (return_code) {
-        exit(return_code);
+    if (packet->return_code) {
+        exit(packet->return_code);
     }
 }
 
 uint16_t mqtts_recieve_regack(int sock)
 {
     regack_packet_t *packet = recieve_packet(sock);
-    uint16_t return_code, received_message_id, received_topic_id;
+    uint16_t received_message_id, received_topic_id;
 
     if (packet->type != MQTTS_TYPE_REGACK) {
         printf("Was expecting REGACK packet but received: 0x%2.2x\n", packet->type);
         exit(-1);
     }
 
-    // Check Regack result code
-    return_code = ntohs( packet->return_code );
+    // Check Regack return code
     if (debug)
-        printf("REGACK result code: 0x%2.2x\n", return_code);
+        printf("REGACK return code: 0x%2.2x\n", packet->return_code);
 
-    if (return_code) {
-        exit(return_code);
+    if (packet->return_code) {
+        exit(packet->return_code);
     }
 
     // Check that the Message ID matches
@@ -245,7 +242,7 @@ uint16_t mqtts_recieve_regack(int sock)
         printf("Warning: message id in Regack does not equal message id sent\n");
     }
 
-    // Store the topic ID returned by the gateway
+    // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
         printf("Topic ID: %d\n", received_topic_id);
