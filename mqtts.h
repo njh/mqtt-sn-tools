@@ -64,7 +64,7 @@ typedef struct {
 typedef struct {
   uint8_t length;
   uint8_t type;
-  uint16_t return_code;
+  uint8_t return_code;
 } connack_packet_t;
 
 typedef struct {
@@ -80,7 +80,7 @@ typedef struct {
   uint8_t type;
   uint16_t topic_id;
   uint16_t message_id;
-  uint16_t return_code;
+  uint8_t return_code;
 } regack_packet_t;
 
 typedef struct __attribute__((packed)) {
