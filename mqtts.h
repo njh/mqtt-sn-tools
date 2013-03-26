@@ -92,6 +92,23 @@ typedef struct __attribute__((packed)) {
   char data[MQTTS_MAX_PACKET_LENGTH-7];
 } publish_packet_t;
 
+typedef struct __attribute__((packed)) {
+  uint8_t length;
+  uint8_t type;
+  uint8_t flags;
+  uint16_t message_id;
+  char topic_name[MQTTS_MAX_PACKET_LENGTH-5];
+} subscribe_packet_t;
+
+typedef struct {
+  uint8_t length;
+  uint8_t type;
+  uint8_t flags;
+  uint16_t topic_id;
+  uint16_t message_id;
+  uint8_t return_code;
+} suback_packet_t;
+
 typedef struct {
   uint8_t length;
   uint8_t type;
@@ -104,9 +121,11 @@ int mqtts_create_socket(const char* host, const char* port);
 void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive);
 void mqtts_send_register(int sock, const char* topic_name);
 void mqtts_send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, uint8_t retain);
+void mqtts_send_subscribe(int sock, const char* topic_name, uint8_t qos);
 void mqtts_send_disconnect(int sock);
 void mqtts_recieve_connack(int sock);
 uint16_t mqtts_recieve_regack(int sock);
+uint16_t mqtts_recieve_suback(int sock);
 
 void mqtts_set_debug(uint8_t value);
 

@@ -188,6 +188,28 @@ void mqtts_send_publish(int sock, uint16_t topic_id, const char* data, uint8_t q
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
+void mqtts_send_subscribe(int sock, const char* topic_name, uint8_t qos)
+{
+    subscribe_packet_t packet;
+    packet.type = MQTTS_TYPE_SUBSCRIBE;
+    packet.flags = 0x00;
+    switch(qos) {
+      case 0: packet.flags += MQTTS_FLAG_QOS_0; break;
+      case 1: packet.flags += MQTTS_FLAG_QOS_1; break;
+      case 2: packet.flags += MQTTS_FLAG_QOS_2; break;
+    }
+    packet.message_id = htons(next_message_id++);
+    strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
+    packet.topic_name[sizeof(packet.topic_name)-1] = '\0';
+    packet.length = 0x05 + strlen(topic_name);
+
+    if (debug)
+        printf("Sending SUBSCRIBE packet...\n");
+
+    return send_packet(sock, (char*)&packet, packet.length);
+
+}
+
 void mqtts_send_disconnect(int sock)
 {
     disconnect_packet_t packet;
@@ -240,6 +262,38 @@ uint16_t mqtts_recieve_regack(int sock)
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
         printf("Warning: message id in Regack does not equal message id sent\n");
+    }
+
+    // Return the topic ID returned by the gateway
+    received_topic_id = ntohs( packet->topic_id );
+    if (debug)
+        printf("Topic ID: %d\n", received_topic_id);
+
+    return received_topic_id;
+}
+
+uint16_t mqtts_recieve_suback(int sock)
+{
+    suback_packet_t *packet = recieve_packet(sock);
+    uint16_t received_message_id, received_topic_id;
+
+    if (packet->type != MQTTS_TYPE_SUBACK) {
+        printf("Was expecting SUBACK packet but received: 0x%2.2x\n", packet->type);
+        exit(-1);
+    }
+
+    // Check Suback return code
+    if (debug)
+        printf("SUBACK return code: 0x%2.2x\n", packet->return_code);
+
+    if (packet->return_code) {
+        exit(packet->return_code);
+    }
+
+    // Check that the Message ID matches
+    received_message_id = ntohs( packet->message_id );
+    if (received_message_id != next_message_id-1) {
+        printf("Warning: message id in SUBACK does not equal message id sent\n");
     }
 
     // Return the topic ID returned by the gateway
