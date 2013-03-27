@@ -36,7 +36,6 @@ uint8_t retain = FALSE;
 uint8_t debug = FALSE;
 uint8_t single_message = FALSE;
 uint8_t clean_session = TRUE;
-uint8_t verbose = FALSE;
 
 
 static void usage()
@@ -51,7 +50,6 @@ static void usage()
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtts_port);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
-    fprintf(stderr, "  -v             print published messages verbosely.\n");
     exit(-1);
 }
 
@@ -60,7 +58,7 @@ static void parse_opts(int argc, char** argv)
     int ch;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "1cdh:i:k:p:t:v?")) != -1)
+    while ((ch = getopt(argc, argv, "1cdh:i:k:p:t:?")) != -1)
         switch (ch) {
         case '1':
             single_message = TRUE;
@@ -92,10 +90,6 @@ static void parse_opts(int argc, char** argv)
 
         case 't':
             topic_name = optarg;
-        break;
-
-        case 'v':
-            verbose = TRUE;
         break;
 
         case '?':
