@@ -100,7 +100,7 @@ typedef struct __attribute__((packed)) {
   char topic_name[MQTTS_MAX_PACKET_LENGTH-5];
 } subscribe_packet_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
   uint8_t length;
   uint8_t type;
   uint8_t flags;
