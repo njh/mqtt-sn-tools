@@ -294,6 +294,10 @@ uint16_t mqtts_recieve_suback(int sock)
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
         printf("Warning: message id in SUBACK does not equal message id sent\n");
+        if (debug) {
+            printf("  Expecting: %d\n", next_message_id-1);
+            printf("  Actual: %d\n", received_message_id);
+        }
     }
 
     // Return the topic ID returned by the gateway
