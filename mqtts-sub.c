@@ -130,6 +130,13 @@ int main(int argc, char* argv[])
         // Subscribe to the topic
         mqtts_send_subscribe(sock, topic_name, 0);
         topic_id = mqtts_recieve_suback(sock);
+        
+        while(1) {
+            publish_packet_t *packet = mqtts_recieve_publish(sock);
+            if (packet) {
+                printf("%s\n", packet->data);
+            }
+        }
 
         // Finally, disconnect
         mqtts_send_disconnect(sock);

@@ -126,6 +126,7 @@ void mqtts_send_disconnect(int sock);
 void mqtts_recieve_connack(int sock);
 uint16_t mqtts_recieve_regack(int sock);
 uint16_t mqtts_recieve_suback(int sock);
+publish_packet_t* mqtts_recieve_publish(int sock);
 
 void mqtts_set_debug(uint8_t value);
 

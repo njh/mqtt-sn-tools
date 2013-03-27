@@ -307,3 +307,19 @@ uint16_t mqtts_recieve_suback(int sock)
 
     return received_topic_id;
 }
+
+publish_packet_t* mqtts_recieve_publish(int sock)
+{
+    while (1) {
+        char* packet = recieve_packet(sock);
+    
+        if (debug)
+            printf("Received length: 0x%2.2x  Type: 0x%2.2x\n", packet[0], packet[1]);
+    
+        if (packet[1] == MQTTS_TYPE_PUBLISH) {
+            return (publish_packet_t*)packet;
+        }
+    }
+    
+    return NULL;
+}
