@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "mqtts.h"
 
@@ -33,6 +34,7 @@
 
 static uint8_t debug = FALSE;
 static uint16_t next_message_id = 1;
+static int timeout = 5;
 
 
 void mqtts_set_debug(uint8_t value)
@@ -42,6 +44,7 @@ void mqtts_set_debug(uint8_t value)
 
 int mqtts_create_socket(const char* host, const char* port)
 {
+    struct timeval tv;
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     int fd, ret;
@@ -88,6 +91,13 @@ int mqtts_create_socket(const char* host, const char* port)
 
     // FIXME: set the Don't Fragment flag
 
+    // Setup timeout on the socket
+    tv.tv_sec = timeout;
+    tv.tv_usec = 0;
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+        perror("Error setting timeout");
+    }
+  
     return fd;
 }
 
@@ -108,10 +118,17 @@ static void* recieve_packet(int sock)
     if (debug)
         printf("waiting for packet...\n");
 
+    // Read in the packet
     bytes_read = recv(sock, buffer, MQTTS_MAX_PACKET_LENGTH, 0);
     if (bytes_read < 0) {
-        perror("recv failed");
-        exit(4);
+        if (errno == EAGAIN) {
+            if (debug)
+                printf("Timed out waiting for packet.\n");
+            return NULL;
+        } else {
+            perror("recv failed");
+            exit(EXIT_FAILURE);
+        }
     }
 
     if (debug)
@@ -120,7 +137,7 @@ static void* recieve_packet(int sock)
     length = buffer[0];
     if (length == 0x01) {
         printf("Error: packet received is longer than this tool can handle\n");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     if (length != bytes_read) {
@@ -226,9 +243,14 @@ void mqtts_recieve_connack(int sock)
 {
     connack_packet_t *packet = recieve_packet(sock);
 
+    if (packet == NULL) {
+        printf("Failed to connect to MQTT-S gateway.\n");
+        exit(EXIT_FAILURE);
+    }
+
     if (packet->type != MQTTS_TYPE_CONNACK) {
         printf("Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     // Check Connack return code
@@ -244,6 +266,11 @@ uint16_t mqtts_recieve_regack(int sock)
 {
     regack_packet_t *packet = recieve_packet(sock);
     uint16_t received_message_id, received_topic_id;
+
+    if (packet == NULL) {
+        printf("Failed to connect to register topic.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (packet->type != MQTTS_TYPE_REGACK) {
         printf("Was expecting REGACK packet but received: 0x%2.2x\n", packet->type);
@@ -276,6 +303,11 @@ uint16_t mqtts_recieve_suback(int sock)
 {
     suback_packet_t *packet = recieve_packet(sock);
     uint16_t received_message_id, received_topic_id;
+
+    if (packet == NULL) {
+        printf("Failed to subscribe to topic.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (packet->type != MQTTS_TYPE_SUBACK) {
         printf("Was expecting SUBACK packet but received: 0x%2.2x\n", packet->type);
