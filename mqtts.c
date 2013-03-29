@@ -111,7 +111,7 @@ static void send_packet(int sock, char* data, size_t len)
 
 static void* recieve_packet(int sock)
 {
-    static uint8_t buffer[MQTTS_MAX_PACKET_LENGTH];
+    static uint8_t buffer[MQTTS_MAX_PACKET_LENGTH+1];
     int length;
     int bytes_read;
 
@@ -143,6 +143,9 @@ static void* recieve_packet(int sock)
     if (length != bytes_read) {
         printf("Error: read %d bytes but packet length is %d bytes.\n", (int)bytes_read, length);
     }
+
+    // NULL-terminate the packet
+    buffer[length] = '\0';
 
     return buffer;
 }
