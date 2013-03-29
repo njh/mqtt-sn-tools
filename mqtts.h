@@ -129,5 +129,6 @@ uint16_t mqtts_recieve_suback(int sock);
 publish_packet_t* mqtts_recieve_publish(int sock);
 
 void mqtts_set_debug(uint8_t value);
+const char* mqtts_type_string(uint8_t type);
 
 #endif

@@ -132,7 +132,7 @@ static void* recieve_packet(int sock)
     }
 
     if (debug)
-        printf("Received %d bytes.\n", (int)bytes_read);
+        printf("Received %d bytes. Type=%s.\n", (int)bytes_read, mqtts_type_string(buffer[1]));
 
     length = buffer[0];
     if (length == 0x01) {
@@ -357,4 +357,38 @@ publish_packet_t* mqtts_recieve_publish(int sock)
     }
     
     return NULL;
+}
+
+const char* mqtts_type_string(uint8_t type)
+{
+    switch(type) {
+        case MQTTS_TYPE_ADVERTISE:     return "ADVERTISE";
+        case MQTTS_TYPE_SEARCHGW:      return "SEARCHGW";
+        case MQTTS_TYPE_GWINFO:        return "GWINFO";
+        case MQTTS_TYPE_CONNECT:       return "CONNECT";
+        case MQTTS_TYPE_CONNACK:       return "CONNACK";
+        case MQTTS_TYPE_WILLTOPICREQ:  return "WILLTOPICREQ";
+        case MQTTS_TYPE_WILLTOPIC:     return "WILLTOPIC";
+        case MQTTS_TYPE_WILLMSGREQ:    return "WILLMSGREQ";
+        case MQTTS_TYPE_WILLMSG:       return "WILLMSG";
+        case MQTTS_TYPE_REGISTER:      return "REGISTER";
+        case MQTTS_TYPE_REGACK:        return "REGACK";
+        case MQTTS_TYPE_PUBLISH:       return "PUBLISH";
+        case MQTTS_TYPE_PUBACK:        return "PUBACK";
+        case MQTTS_TYPE_PUBCOMP:       return "PUBCOMP";
+        case MQTTS_TYPE_PUBREC:        return "PUBREC";
+        case MQTTS_TYPE_PUBREL:        return "PUBREL";
+        case MQTTS_TYPE_SUBSCRIBE:     return "SUBSCRIBE";
+        case MQTTS_TYPE_SUBACK:        return "SUBACK";
+        case MQTTS_TYPE_UNSUBSCRIBE:   return "UNSUBSCRIBE";
+        case MQTTS_TYPE_UNSUBACK:      return "UNSUBACK";
+        case MQTTS_TYPE_PINGREQ:       return "PINGREQ";
+        case MQTTS_TYPE_PINGRESP:      return "PINGRESP";
+        case MQTTS_TYPE_DISCONNECT:    return "DISCONNECT";
+        case MQTTS_TYPE_WILLTOPICUPD:  return "WILLTOPICUPD";
+        case MQTTS_TYPE_WILLTOPICRESP: return "WILLTOPICRESP";
+        case MQTTS_TYPE_WILLMSGUPD:    return "WILLMSGUPD";
+        case MQTTS_TYPE_WILLMSGRESP:   return "WILLMSGRESP";
+        default:                       return "UNKNOWN";
+    }
 }
