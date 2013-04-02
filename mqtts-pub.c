@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "mqtts.h"
 
