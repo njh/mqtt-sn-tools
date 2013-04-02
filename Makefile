@@ -1,6 +1,6 @@
 CC=gcc
 PACKAGE=mqtts-tools
-VERSION=0.0.1
+VERSION=0.0.2
 CFLAGS=-g -Wall -DVERSION=$(VERSION)
 LDFLAGS=
 TARGETS=mqtts-pub mqtts-sub
