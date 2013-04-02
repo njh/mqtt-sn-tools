@@ -131,5 +131,6 @@ publish_packet_t* mqtts_loop(int sock, int timeout);
 
 void mqtts_set_debug(uint8_t value);
 const char* mqtts_type_string(uint8_t type);
+const char* mqtts_return_code_string(uint8_t return_code);
 
 #endif

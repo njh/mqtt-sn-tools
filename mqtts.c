@@ -290,6 +290,7 @@ void mqtts_recieve_connack(int sock)
         fprintf(stderr, "CONNACK return code: 0x%2.2x\n", packet->return_code);
 
     if (packet->return_code) {
+        fprintf(stderr, "CONNECT error: %s\n", mqtts_return_code_string(packet->return_code));
         exit(packet->return_code);
     }
 }
@@ -314,6 +315,7 @@ uint16_t mqtts_recieve_regack(int sock)
         fprintf(stderr, "REGACK return code: 0x%2.2x\n", packet->return_code);
 
     if (packet->return_code) {
+        fprintf(stderr, "REGISTER error: %s\n", mqtts_return_code_string(packet->return_code));
         exit(packet->return_code);
     }
 
@@ -351,6 +353,7 @@ uint16_t mqtts_recieve_suback(int sock)
         fprintf(stderr, "SUBACK return code: 0x%2.2x\n", packet->return_code);
 
     if (packet->return_code) {
+        fprintf(stderr, "SUBSCRIBE error: %s\n", mqtts_return_code_string(packet->return_code));
         exit(packet->return_code);
     }
 
@@ -452,5 +455,16 @@ const char* mqtts_type_string(uint8_t type)
         case MQTTS_TYPE_WILLMSGUPD:    return "WILLMSGUPD";
         case MQTTS_TYPE_WILLMSGRESP:   return "WILLMSGRESP";
         default:                       return "UNKNOWN";
+    }
+}
+
+const char* mqtts_return_code_string(uint8_t return_code)
+{
+    switch(return_code) {
+        case 0x00: return "Accepted";
+        case 0x01: return "Rejected: congestion";
+        case 0x02: return "Rejected: invalid topic ID";
+        case 0x03: return "Rejected: not supported";
+        default:   return "Rejected: unknown reason";
     }
 }
