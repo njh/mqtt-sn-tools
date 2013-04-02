@@ -105,6 +105,18 @@ static void parse_opts(int argc, char** argv)
     }
 }
 
+static void termination_handler (int signum)
+{
+    switch(signum) {
+        case SIGHUP:  printf("Got hangup signal."); break;
+        case SIGTERM: printf("Got termination signal."); break;
+        case SIGINT:  printf("Got interupt signal."); break;
+    }
+
+    // Signal the main thead to stop
+    keep_running = FALSE;
+}
+
 int main(int argc, char* argv[])
 {
     int sock, timeout;
@@ -121,6 +133,11 @@ int main(int argc, char* argv[])
     } else {
         timeout = 10;
     }
+
+    // Setup signal handlers
+    signal(SIGTERM, termination_handler);
+    signal(SIGINT, termination_handler);
+    signal(SIGHUP, termination_handler);
 
     // Create a UDP socket
     sock = mqtts_create_socket(mqtts_host, mqtts_port);
