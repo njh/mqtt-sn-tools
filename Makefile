@@ -1,5 +1,5 @@
 CC=gcc
-PACKAGE=mqtts-client
+PACKAGE=mqtts-tools
 VERSION=0.0.1
 CFLAGS=-g -Wall -DVERSION=$(VERSION)
 LDFLAGS=
