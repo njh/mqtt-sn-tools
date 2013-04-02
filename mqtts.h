@@ -122,11 +122,12 @@ void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive);
 void mqtts_send_register(int sock, const char* topic_name);
 void mqtts_send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, uint8_t retain);
 void mqtts_send_subscribe(int sock, const char* topic_name, uint8_t qos);
+void mqtts_send_pingreq(int sock);
 void mqtts_send_disconnect(int sock);
 void mqtts_recieve_connack(int sock);
 uint16_t mqtts_recieve_regack(int sock);
 uint16_t mqtts_recieve_suback(int sock);
-publish_packet_t* mqtts_recieve_publish(int sock);
+publish_packet_t* mqtts_loop(int sock, int timeout);
 
 void mqtts_set_debug(uint8_t value);
 const char* mqtts_type_string(uint8_t type);

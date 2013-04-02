@@ -30,13 +30,14 @@ const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *mqtts_host = "127.0.0.1";
 const char *mqtts_port = "1883";
-uint16_t keep_alive = 0;
+uint16_t keep_alive = 10;
 uint16_t topic_id = 0;
 uint8_t retain = FALSE;
 uint8_t debug = FALSE;
 uint8_t single_message = FALSE;
 uint8_t clean_session = TRUE;
 
+uint8_t keep_running = TRUE;
 
 static void usage()
 {
@@ -106,13 +107,20 @@ static void parse_opts(int argc, char** argv)
 
 int main(int argc, char* argv[])
 {
-    int sock;
+    int sock, timeout;
 
     // Parse the command-line options
     parse_opts(argc, argv);
     
     // Enable debugging?
     mqtts_set_debug(debug);
+
+    // Work out timeout value for main loop
+    if (keep_alive) {
+        timeout = keep_alive / 2;
+    } else {
+        timeout = 10;
+    }
 
     // Create a UDP socket
     sock = mqtts_create_socket(mqtts_host, mqtts_port);
@@ -124,11 +132,16 @@ int main(int argc, char* argv[])
         // Subscribe to the topic
         mqtts_send_subscribe(sock, topic_name, 0);
         topic_id = mqtts_recieve_suback(sock);
-        
-        while(1) {
-            publish_packet_t *packet = mqtts_recieve_publish(sock);
+
+        // Keep processing packets until process is terminated
+        while(keep_running) {
+            publish_packet_t *packet = mqtts_loop(sock, timeout);
             if (packet) {
                 printf("%s\n", packet->data);
+
+                // Stop if in single message mode
+                if (single_message)
+                    break;
             }
         }
 

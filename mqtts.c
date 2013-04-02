@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <time.h>
 #include <errno.h>
 
 #include "mqtts.h"
@@ -34,7 +35,9 @@
 
 static uint8_t debug = FALSE;
 static uint16_t next_message_id = 1;
-static int timeout = 5;
+static time_t last_transmit = 0;
+static time_t last_receive = 0;
+static time_t keep_alive = 0;
 
 
 void mqtts_set_debug(uint8_t value)
@@ -44,9 +47,9 @@ void mqtts_set_debug(uint8_t value)
 
 int mqtts_create_socket(const char* host, const char* port)
 {
-    struct timeval tv;
     struct addrinfo hints;
     struct addrinfo *result, *rp;
+    struct timeval tv;
     int fd, ret;
 
     // Set options for the resolver
@@ -92,12 +95,12 @@ int mqtts_create_socket(const char* host, const char* port)
     // FIXME: set the Don't Fragment flag
 
     // Setup timeout on the socket
-    tv.tv_sec = timeout;
+    tv.tv_sec = 10;
     tv.tv_usec = 0;
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        perror("Error setting timeout");
+        perror("Error setting timeout on socket");
     }
-  
+
     return fd;
 }
 
@@ -107,6 +110,9 @@ static void send_packet(int sock, char* data, size_t len)
     if (sent != len) {
         fprintf(stderr, "Warning: only sent %d of %d bytes\n", (int)sent, (int)len);
     }
+
+    // Store the last time that we sent a packet
+    last_transmit = time(NULL);
 }
 
 static void* recieve_packet(int sock)
@@ -141,11 +147,14 @@ static void* recieve_packet(int sock)
     }
 
     if (length != bytes_read) {
-        printf("Error: read %d bytes but packet length is %d bytes.\n", (int)bytes_read, length);
+        printf("Warning: read %d bytes but packet length is %d bytes.\n", (int)bytes_read, length);
     }
 
     // NULL-terminate the packet
     buffer[length] = '\0';
+
+    // Store the last time that we received a packet
+    last_receive = time(NULL);
 
     return buffer;
 }
@@ -153,6 +162,8 @@ static void* recieve_packet(int sock)
 void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive)
 {
     connect_packet_t packet;
+
+    // Create the CONNECT packet
     packet.type = MQTTS_TYPE_CONNECT;
     packet.flags = MQTTS_FLAG_CLEAN;
     packet.protocol_id = MQTTS_PROTOCOL_ID;
@@ -171,6 +182,11 @@ void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive)
 
     if (debug)
         printf("Sending CONNECT packet...\n");
+
+    // Store the keep alive period
+    if (keepalive) {
+        keep_alive = keepalive;
+    }
 
     return send_packet(sock, (char*)&packet, packet.length);
 }
@@ -228,6 +244,19 @@ void mqtts_send_subscribe(int sock, const char* topic_name, uint8_t qos)
 
     return send_packet(sock, (char*)&packet, packet.length);
 
+}
+
+void mqtts_send_pingreq(int sock)
+{
+    char packet[2];
+
+    packet[0] = 2;
+    packet[1] = MQTTS_TYPE_PINGREQ;
+
+    if (debug)
+        printf("Sending ping...\n");
+
+    return send_packet(sock, (char*)&packet, 2);
 }
 
 void mqtts_send_disconnect(int sock)
@@ -343,19 +372,52 @@ uint16_t mqtts_recieve_suback(int sock)
     return received_topic_id;
 }
 
-publish_packet_t* mqtts_recieve_publish(int sock)
+publish_packet_t* mqtts_loop(int sock, int timeout)
 {
-    while (1) {
-        char* packet = recieve_packet(sock);
+    time_t now = time(NULL);
+    struct timeval tv;
+    fd_set rfd;
+    int ret;
+
+    // Time to send a ping?
+    if (keep_alive > 0 && (now - last_transmit) >= keep_alive) {
+        mqtts_send_pingreq(sock);
+    }
+
+    FD_ZERO(&rfd);
+    FD_SET(sock, &rfd);
     
-        if (debug)
-            printf("Received length: 0x%2.2x  Type: 0x%2.2x\n", packet[0], packet[1]);
-    
-        if (packet[1] == MQTTS_TYPE_PUBLISH) {
-            return (publish_packet_t*)packet;
+    tv.tv_sec = timeout;
+    tv.tv_usec = 0;
+
+    ret = select(FD_SETSIZE, &rfd, NULL, NULL, &tv);
+    if (ret < 0) {
+        if (errno != EINTR) {
+            // Something is wrong.
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
+    } else if (ret > 0) {
+        char* packet;
+
+        // Receive a packet
+        packet = recieve_packet(sock);
+        if (packet) {
+            if (packet[1] == MQTTS_TYPE_PUBLISH) {
+                return (publish_packet_t*)packet;
+            } else if (packet[1] == MQTTS_TYPE_DISCONNECT) {
+                printf("Warning: Received DISCONNECT from gateway.\n");
+                exit(EXIT_FAILURE);
+            }
         }
     }
-    
+
+    // Check for receive timeout
+    if (keep_alive > 0 && (now - last_receive) >= (keep_alive * 1.5)) {
+        printf("Keep alive error: timed out recieving packet from gateway.\n");
+        exit(EXIT_FAILURE);
+    }
+
     return NULL;
 }
 
