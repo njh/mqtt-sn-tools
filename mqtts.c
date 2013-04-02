@@ -122,14 +122,14 @@ static void* recieve_packet(int sock)
     int bytes_read;
 
     if (debug)
-        printf("waiting for packet...\n");
+        fprintf(stderr, "waiting for packet...\n");
 
     // Read in the packet
     bytes_read = recv(sock, buffer, MQTTS_MAX_PACKET_LENGTH, 0);
     if (bytes_read < 0) {
         if (errno == EAGAIN) {
             if (debug)
-                printf("Timed out waiting for packet.\n");
+                fprintf(stderr, "Timed out waiting for packet.\n");
             return NULL;
         } else {
             perror("recv failed");
@@ -138,16 +138,16 @@ static void* recieve_packet(int sock)
     }
 
     if (debug)
-        printf("Received %d bytes. Type=%s.\n", (int)bytes_read, mqtts_type_string(buffer[1]));
+        fprintf(stderr, "Received %d bytes. Type=%s.\n", (int)bytes_read, mqtts_type_string(buffer[1]));
 
     length = buffer[0];
     if (length == 0x01) {
-        printf("Error: packet received is longer than this tool can handle\n");
+        fprintf(stderr, "Error: packet received is longer than this tool can handle\n");
         exit(EXIT_FAILURE);
     }
 
     if (length != bytes_read) {
-        printf("Warning: read %d bytes but packet length is %d bytes.\n", (int)bytes_read, length);
+        fprintf(stderr, "Warning: read %d bytes but packet length is %d bytes.\n", (int)bytes_read, length);
     }
 
     // NULL-terminate the packet
@@ -181,7 +181,7 @@ void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive)
     packet.length = 0x06 + strlen(packet.client_id);
 
     if (debug)
-        printf("Sending CONNECT packet...\n");
+        fprintf(stderr, "Sending CONNECT packet...\n");
 
     // Store the keep alive period
     if (keepalive) {
@@ -201,7 +201,7 @@ void mqtts_send_register(int sock, const char* topic_name)
     packet.length = 0x06 + strlen(packet.topic_name);
 
     if (debug)
-        printf("Sending REGISTER packet...\n");
+        fprintf(stderr, "Sending REGISTER packet...\n");
 
     return send_packet(sock, (char*)&packet, packet.length);
 }
@@ -219,7 +219,7 @@ void mqtts_send_publish(int sock, uint16_t topic_id, const char* data, uint8_t q
     packet.length = 0x07 + strlen(data);
 
     if (debug)
-        printf("Sending PUBLISH packet...\n");
+        fprintf(stderr, "Sending PUBLISH packet...\n");
 
     return send_packet(sock, (char*)&packet, packet.length);
 }
@@ -240,7 +240,7 @@ void mqtts_send_subscribe(int sock, const char* topic_name, uint8_t qos)
     packet.length = 0x05 + strlen(topic_name);
 
     if (debug)
-        printf("Sending SUBSCRIBE packet...\n");
+        fprintf(stderr, "Sending SUBSCRIBE packet...\n");
 
     return send_packet(sock, (char*)&packet, packet.length);
 
@@ -254,7 +254,7 @@ void mqtts_send_pingreq(int sock)
     packet[1] = MQTTS_TYPE_PINGREQ;
 
     if (debug)
-        printf("Sending ping...\n");
+        fprintf(stderr, "Sending ping...\n");
 
     return send_packet(sock, (char*)&packet, 2);
 }
@@ -266,7 +266,7 @@ void mqtts_send_disconnect(int sock)
     packet.length = 0x02;
 
     if (debug)
-        printf("Sending DISCONNECT packet...\n");
+        fprintf(stderr, "Sending DISCONNECT packet...\n");
 
     return send_packet(sock, (char*)&packet, packet.length);
 }
@@ -276,18 +276,18 @@ void mqtts_recieve_connack(int sock)
     connack_packet_t *packet = recieve_packet(sock);
 
     if (packet == NULL) {
-        printf("Failed to connect to MQTT-S gateway.\n");
+        fprintf(stderr, "Failed to connect to MQTT-S gateway.\n");
         exit(EXIT_FAILURE);
     }
 
     if (packet->type != MQTTS_TYPE_CONNACK) {
-        printf("Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
+        fprintf(stderr, "Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
         exit(EXIT_FAILURE);
     }
 
     // Check Connack return code
     if (debug)
-        printf("CONNACK return code: 0x%2.2x\n", packet->return_code);
+        fprintf(stderr, "CONNACK return code: 0x%2.2x\n", packet->return_code);
 
     if (packet->return_code) {
         exit(packet->return_code);
@@ -300,18 +300,18 @@ uint16_t mqtts_recieve_regack(int sock)
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
-        printf("Failed to connect to register topic.\n");
+        fprintf(stderr, "Failed to connect to register topic.\n");
         exit(EXIT_FAILURE);
     }
 
     if (packet->type != MQTTS_TYPE_REGACK) {
-        printf("Was expecting REGACK packet but received: 0x%2.2x\n", packet->type);
+        fprintf(stderr, "Was expecting REGACK packet but received: 0x%2.2x\n", packet->type);
         exit(-1);
     }
 
     // Check Regack return code
     if (debug)
-        printf("REGACK return code: 0x%2.2x\n", packet->return_code);
+        fprintf(stderr, "REGACK return code: 0x%2.2x\n", packet->return_code);
 
     if (packet->return_code) {
         exit(packet->return_code);
@@ -320,13 +320,13 @@ uint16_t mqtts_recieve_regack(int sock)
     // Check that the Message ID matches
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
-        printf("Warning: message id in Regack does not equal message id sent\n");
+        fprintf(stderr, "Warning: message id in Regack does not equal message id sent\n");
     }
 
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        printf("Topic ID: %d\n", received_topic_id);
+        fprintf(stderr, "Topic ID: %d\n", received_topic_id);
 
     return received_topic_id;
 }
@@ -337,18 +337,18 @@ uint16_t mqtts_recieve_suback(int sock)
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
-        printf("Failed to subscribe to topic.\n");
+        fprintf(stderr, "Failed to subscribe to topic.\n");
         exit(EXIT_FAILURE);
     }
 
     if (packet->type != MQTTS_TYPE_SUBACK) {
-        printf("Was expecting SUBACK packet but received: 0x%2.2x\n", packet->type);
+        fprintf(stderr, "Was expecting SUBACK packet but received: 0x%2.2x\n", packet->type);
         exit(-1);
     }
 
     // Check Suback return code
     if (debug)
-        printf("SUBACK return code: 0x%2.2x\n", packet->return_code);
+        fprintf(stderr, "SUBACK return code: 0x%2.2x\n", packet->return_code);
 
     if (packet->return_code) {
         exit(packet->return_code);
@@ -357,17 +357,17 @@ uint16_t mqtts_recieve_suback(int sock)
     // Check that the Message ID matches
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
-        printf("Warning: message id in SUBACK does not equal message id sent\n");
+        fprintf(stderr, "Warning: message id in SUBACK does not equal message id sent\n");
         if (debug) {
-            printf("  Expecting: %d\n", next_message_id-1);
-            printf("  Actual: %d\n", received_message_id);
+            fprintf(stderr, "  Expecting: %d\n", next_message_id-1);
+            fprintf(stderr, "  Actual: %d\n", received_message_id);
         }
     }
 
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        printf("Topic ID: %d\n", received_topic_id);
+        fprintf(stderr, "Topic ID: %d\n", received_topic_id);
 
     return received_topic_id;
 }
@@ -406,7 +406,7 @@ publish_packet_t* mqtts_loop(int sock, int timeout)
             if (packet[1] == MQTTS_TYPE_PUBLISH) {
                 return (publish_packet_t*)packet;
             } else if (packet[1] == MQTTS_TYPE_DISCONNECT) {
-                printf("Warning: Received DISCONNECT from gateway.\n");
+                fprintf(stderr, "Warning: Received DISCONNECT from gateway.\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -414,7 +414,7 @@ publish_packet_t* mqtts_loop(int sock, int timeout)
 
     // Check for receive timeout
     if (keep_alive > 0 && (now - last_receive) >= (keep_alive * 1.5)) {
-        printf("Keep alive error: timed out recieving packet from gateway.\n");
+        fprintf(stderr, "Keep alive error: timed out receiving packet from gateway.\n");
         exit(EXIT_FAILURE);
     }
 

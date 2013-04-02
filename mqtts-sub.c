@@ -108,9 +108,9 @@ static void parse_opts(int argc, char** argv)
 static void termination_handler (int signum)
 {
     switch(signum) {
-        case SIGHUP:  printf("Got hangup signal."); break;
-        case SIGTERM: printf("Got termination signal."); break;
-        case SIGINT:  printf("Got interupt signal."); break;
+        case SIGHUP:  fprintf(stderr, "Got hangup signal."); break;
+        case SIGTERM: fprintf(stderr, "Got termination signal."); break;
+        case SIGINT:  fprintf(stderr, "Got interupt signal."); break;
     }
 
     // Signal the main thead to stop
