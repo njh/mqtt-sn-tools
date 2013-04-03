@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
         topic_id = mqtts_recieve_regack(sock);
 
         // Publish to the topic
-        mqtts_send_publish(sock, topic_id, message_data, qos, retain);
+        mqtts_send_publish(sock, topic_id, MQTTS_TOPIC_TYPE_NORMAL, message_data, qos, retain);
 
         // Finally, disconnect
         mqtts_send_disconnect(sock);

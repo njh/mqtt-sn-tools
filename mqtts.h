@@ -40,6 +40,10 @@
 #define MQTTS_TYPE_WILLMSGUPD    (0x1C)
 #define MQTTS_TYPE_WILLMSGRESP   (0x1D)
 
+#define MQTTS_TOPIC_TYPE_NORMAL     (0x00)
+#define MQTTS_TOPIC_TYPE_PREDEFINED (0x01)
+#define MQTTS_TOPIC_TYPE_SHORT      (0x02)
+
 
 #define MQTTS_FLAG_DUP     (0x1 << 7)
 #define MQTTS_FLAG_QOS_0   (0x0 << 5)
@@ -120,7 +124,7 @@ typedef struct {
 int mqtts_create_socket(const char* host, const char* port);
 void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive);
 void mqtts_send_register(int sock, const char* topic_name);
-void mqtts_send_publish(int sock, uint16_t topic_id, const char* data, uint8_t qos, uint8_t retain);
+void mqtts_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, uint8_t qos, uint8_t retain);
 void mqtts_send_subscribe(int sock, const char* topic_name, uint8_t qos);
 void mqtts_send_pingreq(int sock);
 void mqtts_send_disconnect(int sock);
