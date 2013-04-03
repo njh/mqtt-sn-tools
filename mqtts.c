@@ -171,7 +171,7 @@ void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive)
 
     // Generate a Client ID if none given
     if (client_id == NULL || client_id[0] == '\0') {
-        snprintf(packet.client_id, sizeof(packet.client_id)-1, "mqtts-client-%d", getpid());
+        snprintf(packet.client_id, sizeof(packet.client_id)-1, "mqtts-tools-%d", getpid());
         packet.client_id[sizeof(packet.client_id) - 1] = '\0';
     } else {
         strncpy(packet.client_id, client_id, sizeof(packet.client_id)-1);

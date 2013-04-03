@@ -48,7 +48,7 @@ static void usage()
     fprintf(stderr, "  -c             disable 'clean session' (store subscription and pending messages when client disconnects).\n");
     fprintf(stderr, "  -d             Enable debug messages.\n");
     fprintf(stderr, "  -h <host>      MQTT-S host to connect to. Defaults to '%s'.\n", mqtts_host);
-    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to mqtts-client- appended with the process id'.\n");
+    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtts-tools-' appended with the process id.\n");
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtts_port);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
