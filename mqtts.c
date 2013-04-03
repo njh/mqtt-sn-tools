@@ -206,13 +206,27 @@ void mqtts_send_register(int sock, const char* topic_name)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void mqtts_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, uint8_t qos, uint8_t retain)
+void mqtts_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain)
 {
     publish_packet_t packet;
     packet.type = MQTTS_TYPE_PUBLISH;
     packet.flags = 0x00;
     if (retain)
         packet.flags += MQTTS_FLAG_RETAIN;
+    switch (qos) {
+        case -1:
+          packet.flags += MQTTS_FLAG_QOS_N1;
+        break;
+        case 0:
+          packet.flags += MQTTS_FLAG_QOS_0;
+        break;
+        case 1:
+          packet.flags += MQTTS_FLAG_QOS_1;
+        break;
+        case 2:
+          packet.flags += MQTTS_FLAG_QOS_2;
+        break;
+    }
     packet.flags += (topic_type & 0x3);
     packet.topic_id = htons(topic_id);
     packet.message_id = htons(next_message_id++);

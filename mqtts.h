@@ -124,7 +124,7 @@ typedef struct {
 int mqtts_create_socket(const char* host, const char* port);
 void mqtts_send_connect(int sock, const char* client_id, uint16_t keepalive);
 void mqtts_send_register(int sock, const char* topic_name);
-void mqtts_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, uint8_t qos, uint8_t retain);
+void mqtts_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain);
 void mqtts_send_subscribe(int sock, const char* topic_name, uint8_t qos);
 void mqtts_send_pingreq(int sock);
 void mqtts_send_disconnect(int sock);
