@@ -34,7 +34,8 @@ const char *mqtts_host = "127.0.0.1";
 const char *mqtts_port = "1883";
 time_t keep_alive = 0;
 uint16_t topic_id = 0;
-uint8_t qos = 0;
+uint8_t topic_id_type = MQTTS_TOPIC_TYPE_NORMAL;
+int8_t qos = 0;
 uint8_t retain = FALSE;
 uint8_t debug = FALSE;
 
@@ -51,6 +52,7 @@ static void usage()
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtts_port);
     fprintf(stderr, "  -r             Message should be retained.\n");
     fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
+    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-T topic ID to publish to.\n");
     exit(-1);
 }
 
@@ -59,7 +61,7 @@ static void parse_opts(int argc, char** argv)
     int ch;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "dh:i:m:np:rt:?")) != -1)
+    while ((ch = getopt(argc, argv, "dh:i:m:np:rt:T:?")) != -1)
         switch (ch) {
         case 'd':
             debug = TRUE;
@@ -93,6 +95,10 @@ static void parse_opts(int argc, char** argv)
             topic_name = optarg;
         break;
 
+        case 'T':
+            topic_id = atoi(optarg);
+        break;
+
         case '?':
         default:
             usage();
@@ -100,8 +106,13 @@ static void parse_opts(int argc, char** argv)
     }
 
     // Missing Parameter?
-    if (!topic_name || !message_data) {
+    if (!(topic_name || topic_id) || !message_data) {
         usage();
+    }
+
+    // Both topic name and topic id?
+    if (topic_name && topic_id) {
+        fprintf(stderr, "Error: please provide either a topic id or a topic name, not both.\n");
     }
 }
 
@@ -111,7 +122,7 @@ int main(int argc, char* argv[])
 
     // Parse the command-line options
     parse_opts(argc, argv);
-    
+
     // Enable debugging?
     mqtts_set_debug(debug);
 
@@ -122,12 +133,22 @@ int main(int argc, char* argv[])
         mqtts_send_connect(sock, client_id, keep_alive);
         mqtts_recieve_connack(sock);
 
-        // Register the topic
-        mqtts_send_register(sock, topic_name);
-        topic_id = mqtts_recieve_regack(sock);
+        if (topic_id) {
+            // Use pre-defined topic ID
+            topic_id_type = MQTTS_TOPIC_TYPE_PREDEFINED;
+        } else if (strlen(topic_name) == 2) {
+            // Convert the 2 character topic name into a 2 byte topic id
+            topic_id = (topic_name[0] << 8) + topic_name[1];
+            topic_id_type = MQTTS_TOPIC_TYPE_SHORT;
+        } else {
+            // Register the topic name
+            mqtts_send_register(sock, topic_name);
+            topic_id = mqtts_recieve_regack(sock);
+            topic_id_type = MQTTS_TOPIC_TYPE_NORMAL;
+        }
 
         // Publish to the topic
-        mqtts_send_publish(sock, topic_id, MQTTS_TOPIC_TYPE_NORMAL, message_data, qos, retain);
+        mqtts_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
 
         // Finally, disconnect
         mqtts_send_disconnect(sock);
