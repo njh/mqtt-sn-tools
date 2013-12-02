@@ -36,12 +36,14 @@ Publishing
 
       -d             Enable debug messages.
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
-      -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' appended with the process id.
+      -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
       -m <message>   Message payload to send.
       -n             Send a null (zero length) message.
       -p <port>      Network port to connect to. Defaults to 1883.
+      -q <qos>       Quality of Service value (0 or -1). Defaults to 0.
       -r             Message should be retained.
       -t <topic>     MQTT topic name to publish to.
+      -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
 
 
 Subscribing
@@ -53,7 +55,7 @@ Subscribing
       -c             disable 'clean session' (store subscription and pending messages when client disconnects).
       -d             Enable debug messages.
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
-      -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' appended with the process id.
-      -k <keepalive> keep alive in seconds for this client. Defaults to 0.
+      -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
+      -k <keepalive> keep alive in seconds for this client. Defaults to 10.
       -p <port>      Network port to connect to. Defaults to 1883.
       -t <topic>     MQTT topic name to subscribe to.
