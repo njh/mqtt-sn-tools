@@ -46,7 +46,7 @@ static void usage()
     fprintf(stderr, "\n");
     fprintf(stderr, "  -d             Enable debug messages.\n");
     fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
-    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' appended with the process id.\n");
+    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.\n");
     fprintf(stderr, "  -m <message>   Message payload to send.\n");
     fprintf(stderr, "  -n             Send a null (zero length) message.\n");
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
