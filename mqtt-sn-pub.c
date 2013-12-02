@@ -30,7 +30,7 @@
 const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *message_data = NULL;
-time_t keep_alive = 0;
+time_t keep_alive = 30;
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = "1883";
 uint16_t topic_id = 0;
