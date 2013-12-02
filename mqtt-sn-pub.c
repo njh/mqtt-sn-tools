@@ -52,7 +52,7 @@ static void usage()
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -r             Message should be retained.\n");
     fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
-    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-T topic ID to publish to.\n");
+    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
     exit(-1);
 }
 
