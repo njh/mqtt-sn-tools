@@ -1,6 +1,6 @@
 CC=gcc
 PACKAGE=mqtt-sn-tools
-VERSION=0.0.2
+VERSION=0.0.3
 CFLAGS=-g -Wall -DVERSION=$(VERSION)
 LDFLAGS=
 TARGETS=mqtt-sn-pub mqtt-sn-sub
