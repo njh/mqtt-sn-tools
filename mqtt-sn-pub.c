@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
         mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
 
         // Finally, disconnect
-        mqtts_send_disconnect(sock);
+        mqtt_sn_send_disconnect(sock);
 
         close(sock);
     }
