@@ -50,6 +50,7 @@ static void usage()
     fprintf(stderr, "  -m <message>   Message payload to send.\n");
     fprintf(stderr, "  -n             Send a null (zero length) message.\n");
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
+    fprintf(stderr, "  -q <qos>       Quality of Service value (0 or -1). Defaults to %d.\n", qos);
     fprintf(stderr, "  -r             Message should be retained.\n");
     fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
@@ -61,7 +62,7 @@ static void parse_opts(int argc, char** argv)
     int ch;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "dh:i:m:np:rt:T:?")) != -1)
+    while ((ch = getopt(argc, argv, "dh:i:m:np:q:rt:T:?")) != -1)
         switch (ch) {
         case 'd':
             debug = TRUE;
@@ -87,6 +88,10 @@ static void parse_opts(int argc, char** argv)
             mqtt_sn_port = optarg;
         break;
 
+        case 'q':
+            qos = atoi(optarg);
+        break;
+
         case 'r':
             retain = TRUE;
         break;
@@ -109,10 +114,22 @@ static void parse_opts(int argc, char** argv)
     if (!(topic_name || topic_id) || !message_data) {
         usage();
     }
+    
+    if (qos != -1 && qos != 0) {
+        fprintf(stderr, "Error: only QoS level 0 or -1 is supported.\n");
+        exit(-1);
+    }
 
     // Both topic name and topic id?
     if (topic_name && topic_id) {
         fprintf(stderr, "Error: please provide either a topic id or a topic name, not both.\n");
+        exit(-1);
+    }
+
+    // Check topic is valid for QoS level -1
+    if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2) {
+        fprintf(stderr, "Error: either a pre-defined topic id or a short topic name must be given for QoS -1.\n");
+        exit(-1);
     }
 }
 
@@ -130,8 +147,10 @@ int main(int argc, char* argv[])
     sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
     if (sock) {
         // Connect to gateway
-        mqtt_sn_send_connect(sock, client_id, keep_alive);
-        mqtt_sn_recieve_connack(sock);
+        if (qos >= 0) {
+            mqtt_sn_send_connect(sock, client_id, keep_alive);
+            mqtt_sn_recieve_connack(sock);
+        }
 
         if (topic_id) {
             // Use pre-defined topic ID
@@ -140,7 +159,7 @@ int main(int argc, char* argv[])
             // Convert the 2 character topic name into a 2 byte topic id
             topic_id = (topic_name[0] << 8) + topic_name[1];
             topic_id_type = MQTT_SN_TOPIC_TYPE_SHORT;
-        } else {
+        } else if (qos >= 0) {
             // Register the topic name
             mqtt_sn_send_register(sock, topic_name);
             topic_id = mqtt_sn_recieve_regack(sock);
@@ -151,7 +170,9 @@ int main(int argc, char* argv[])
         mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
 
         // Finally, disconnect
-        mqtt_sn_send_disconnect(sock);
+        if (qos >= 0) {
+            mqtt_sn_send_disconnect(sock);
+        }
 
         close(sock);
     }
