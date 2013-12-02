@@ -1,27 +1,27 @@
 CC=gcc
-PACKAGE=mqtts-tools
+PACKAGE=mqtt-sn-tools
 VERSION=0.0.2
 CFLAGS=-g -Wall -DVERSION=$(VERSION)
 LDFLAGS=
-TARGETS=mqtts-pub mqtts-sub
+TARGETS=mqtt-sn-pub mqtt-sn-sub
 
 
 all: $(TARGETS)
 
-mqtts-pub: mqtts.o mqtts-pub.o
-	$(CC) $(LDFLAGS) -o mqtts-pub $^
+mqtt-sn-pub: mqtt-sn.o mqtt-sn-pub.o
+	$(CC) $(LDFLAGS) -o mqtt-sn-pub $^
   
-mqtts-pub.o: mqtts-pub.c mqtts.h
-	$(CC) $(CFLAGS) -c mqtts-pub.c
+mqtt-sn-pub.o: mqtt-sn-pub.c mqtt-sn.h
+	$(CC) $(CFLAGS) -c mqtt-sn-pub.c
 
-mqtts-sub: mqtts.o mqtts-sub.o
-	$(CC) $(LDFLAGS) -o mqtts-sub $^
+mqtt-sn-sub: mqtt-sn.o mqtt-sn-sub.o
+	$(CC) $(LDFLAGS) -o mqtt-sn-sub $^
   
-mqtts-sub.o: mqtts-sub.c mqtts.h
-	$(CC) $(CFLAGS) -c mqtts-sub.c
+mqtt-sn-sub.o: mqtt-sn-sub.c mqtt-sn.h
+	$(CC) $(CFLAGS) -c mqtt-sn-sub.c
 
-mqtts.o: mqtts.c mqtts.h
-	$(CC) $(CFLAGS) -c mqtts.c
+mqtt-sn.o: mqtt-sn.c mqtt-sn.h
+	$(CC) $(CFLAGS) -c mqtt-sn.c
 
 clean:
 	rm -f *.o $(TARGETS)

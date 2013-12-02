@@ -1,4 +1,4 @@
-Command line tools written in C for the MQTT-S (MQTT For Sensor Networks) protocol.
+Command line tools written in C for the MQTT-SN (MQTT for Sensor Networks) protocol.
 
 Supported Features
 ------------------
@@ -32,11 +32,11 @@ Just run 'make' on a POSIX system.
 Publishing
 ----------
 
-    Usage: mqtts-pub [opts] -t <topic> -m <message>
+    Usage: mqtt-sn-pub [opts] -t <topic> -m <message>
 
       -d             Enable debug messages.
-      -h <host>      MQTT-S host to connect to. Defaults to '127.0.0.1'.
-      -i <clientid>  ID to use for this client. Defaults to 'mqtts-tools-' appended with the process id.
+      -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
+      -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' appended with the process id.
       -m <message>   Message payload to send.
       -n             Send a null (zero length) message.
       -p <port>      Network port to connect to. Defaults to 1883.
@@ -47,13 +47,13 @@ Publishing
 Subscribing
 -----------
 
-    Usage: mqtts-sub [opts] -t <topic>
+    Usage: mqtt-sn-sub [opts] -t <topic>
 
       -1             exit after receiving a single message.
       -c             disable 'clean session' (store subscription and pending messages when client disconnects).
       -d             Enable debug messages.
-      -h <host>      MQTT-S host to connect to. Defaults to '127.0.0.1'.
-      -i <clientid>  ID to use for this client. Defaults to 'mqtts-tools-' appended with the process id.
+      -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
+      -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' appended with the process id.
       -k <keepalive> keep alive in seconds for this client. Defaults to 0.
       -p <port>      Network port to connect to. Defaults to 1883.
       -t <topic>     MQTT topic name to subscribe to.

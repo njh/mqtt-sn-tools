@@ -1,5 +1,5 @@
 /*
-  MQTT-S command-line publishing client
+  MQTT-SN command-line publishing client
   Copyright (C) 2013 Nicholas Humfrey
 
   This program is free software; you can redistribute it and/or
@@ -25,16 +25,16 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "mqtts.h"
+#include "mqtt-sn.h"
 
 const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *message_data = NULL;
-const char *mqtts_host = "127.0.0.1";
-const char *mqtts_port = "1883";
 time_t keep_alive = 0;
+const char *mqtt_sn_host = "127.0.0.1";
+const char *mqtt_sn_port = "1883";
 uint16_t topic_id = 0;
-uint8_t topic_id_type = MQTTS_TOPIC_TYPE_NORMAL;
+uint8_t topic_id_type = MQTT_SN_TOPIC_TYPE_NORMAL;
 int8_t qos = 0;
 uint8_t retain = FALSE;
 uint8_t debug = FALSE;
@@ -42,14 +42,14 @@ uint8_t debug = FALSE;
 
 static void usage()
 {
-    fprintf(stderr, "Usage: mqtts-pub [opts] -t <topic> -m <message>\n");
+    fprintf(stderr, "Usage: mqtt-sn-pub [opts] -t <topic> -m <message>\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  -d             Enable debug messages.\n");
-    fprintf(stderr, "  -h <host>      MQTT-S host to connect to. Defaults to '%s'.\n", mqtts_host);
-    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtts-tools-' appended with the process id.\n");
+    fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
+    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' appended with the process id.\n");
     fprintf(stderr, "  -m <message>   Message payload to send.\n");
     fprintf(stderr, "  -n             Send a null (zero length) message.\n");
-    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtts_port);
+    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -r             Message should be retained.\n");
     fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-T topic ID to publish to.\n");
@@ -68,7 +68,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'h':
-            mqtts_host = optarg;
+            mqtt_sn_host = optarg;
         break;
 
         case 'i':
@@ -84,7 +84,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'p':
-            mqtts_port = optarg;
+            mqtt_sn_port = optarg;
         break;
 
         case 'r':
@@ -124,31 +124,31 @@ int main(int argc, char* argv[])
     parse_opts(argc, argv);
 
     // Enable debugging?
-    mqtts_set_debug(debug);
+    mqtt_sn_set_debug(debug);
 
     // Create a UDP socket
-    sock = mqtts_create_socket(mqtts_host, mqtts_port);
+    sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
     if (sock) {
         // Connect to gateway
-        mqtts_send_connect(sock, client_id, keep_alive);
-        mqtts_recieve_connack(sock);
+        mqtt_sn_send_connect(sock, client_id, keep_alive);
+        mqtt_sn_recieve_connack(sock);
 
         if (topic_id) {
             // Use pre-defined topic ID
-            topic_id_type = MQTTS_TOPIC_TYPE_PREDEFINED;
+            topic_id_type = MQTT_SN_TOPIC_TYPE_PREDEFINED;
         } else if (strlen(topic_name) == 2) {
             // Convert the 2 character topic name into a 2 byte topic id
             topic_id = (topic_name[0] << 8) + topic_name[1];
-            topic_id_type = MQTTS_TOPIC_TYPE_SHORT;
+            topic_id_type = MQTT_SN_TOPIC_TYPE_SHORT;
         } else {
             // Register the topic name
-            mqtts_send_register(sock, topic_name);
-            topic_id = mqtts_recieve_regack(sock);
-            topic_id_type = MQTTS_TOPIC_TYPE_NORMAL;
+            mqtt_sn_send_register(sock, topic_name);
+            topic_id = mqtt_sn_recieve_regack(sock);
+            topic_id_type = MQTT_SN_TOPIC_TYPE_NORMAL;
         }
 
         // Publish to the topic
-        mqtts_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
+        mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
 
         // Finally, disconnect
         mqtts_send_disconnect(sock);

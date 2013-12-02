@@ -1,5 +1,5 @@
 /*
-  MQTT-S command-line publishing client
+  MQTT-SN command-line publishing client
   Copyright (C) 2013 Nicholas Humfrey
 
   This program is free software; you can redistribute it and/or
@@ -25,12 +25,12 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "mqtts.h"
+#include "mqtt-sn.h"
 
 const char *client_id = NULL;
 const char *topic_name = NULL;
-const char *mqtts_host = "127.0.0.1";
-const char *mqtts_port = "1883";
+const char *mqtt_sn_host = "127.0.0.1";
+const char *mqtt_sn_port = "1883";
 uint16_t keep_alive = 10;
 uint16_t topic_id = 0;
 uint8_t retain = FALSE;
@@ -42,15 +42,15 @@ uint8_t keep_running = TRUE;
 
 static void usage()
 {
-    fprintf(stderr, "Usage: mqtts-sub [opts] -t <topic>\n");
+    fprintf(stderr, "Usage: mqtt-sn-sub [opts] -t <topic>\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  -1             exit after receiving a single message.\n");
     fprintf(stderr, "  -c             disable 'clean session' (store subscription and pending messages when client disconnects).\n");
     fprintf(stderr, "  -d             Enable debug messages.\n");
-    fprintf(stderr, "  -h <host>      MQTT-S host to connect to. Defaults to '%s'.\n", mqtts_host);
-    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtts-tools-' appended with the process id.\n");
+    fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
+    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' appended with the process id.\n");
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
-    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtts_port);
+    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
     exit(-1);
 }
@@ -75,7 +75,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'h':
-            mqtts_host = optarg;
+            mqtt_sn_host = optarg;
         break;
 
         case 'i':
@@ -87,7 +87,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'p':
-            mqtts_port = optarg;
+            mqtt_sn_port = optarg;
         break;
 
         case 't':
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     parse_opts(argc, argv);
     
     // Enable debugging?
-    mqtts_set_debug(debug);
+    mqtt_sn_set_debug(debug);
 
     // Work out timeout value for main loop
     if (keep_alive) {
@@ -141,19 +141,19 @@ int main(int argc, char* argv[])
     signal(SIGHUP, termination_handler);
 
     // Create a UDP socket
-    sock = mqtts_create_socket(mqtts_host, mqtts_port);
+    sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
     if (sock) {
         // Connect to gateway
-        mqtts_send_connect(sock, client_id, keep_alive);
-        mqtts_recieve_connack(sock);
+        mqtt_sn_send_connect(sock, client_id, keep_alive);
+        mqtt_sn_recieve_connack(sock);
 
         // Subscribe to the topic
-        mqtts_send_subscribe(sock, topic_name, 0);
-        topic_id = mqtts_recieve_suback(sock);
+        mqtt_sn_send_subscribe(sock, topic_name, 0);
+        topic_id = mqtt_sn_recieve_suback(sock);
 
         // Keep processing packets until process is terminated
         while(keep_running) {
-            publish_packet_t *packet = mqtts_loop(sock, timeout);
+            publish_packet_t *packet = mqtt_sn_loop(sock, timeout);
             if (packet) {
                 printf("%s\n", packet->data);
 
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
         }
 
         // Finally, disconnect
-        mqtts_send_disconnect(sock);
+        mqtt_sn_send_disconnect(sock);
 
         close(sock);
     }
