@@ -3,7 +3,7 @@ Command line tools written in C for the MQTT-SN (MQTT for Sensor Networks) proto
 Supported Features
 ------------------
 
-- QoS 0
+- QoS 0 and -1
 - Keep alive pings
 - Publishing retained messages
 - Publishing empty messages
@@ -15,7 +15,7 @@ Supported Features
 Unsupported Features
 --------------------
 
-- QoS -1, 1 and 2
+- QoS 1 and 2
 - Last Will and Testament
 - Displaying topic name with each recieved message (aka verbose mode)
 - Packets longer than 255 bytes
