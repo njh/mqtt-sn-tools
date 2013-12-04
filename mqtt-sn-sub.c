@@ -32,11 +32,11 @@ const char *topic_name = NULL;
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = "1883";
 uint16_t keep_alive = 10;
-uint16_t topic_id = 0;
 uint8_t retain = FALSE;
 uint8_t debug = FALSE;
 uint8_t single_message = FALSE;
 uint8_t clean_session = TRUE;
+uint8_t verbose = FALSE;
 
 uint8_t keep_running = TRUE;
 
@@ -52,6 +52,7 @@ static void usage()
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
+    fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
     exit(-1);
 }
 
@@ -60,7 +61,7 @@ static void parse_opts(int argc, char** argv)
     int ch;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "1cdh:i:k:p:t:?")) != -1)
+    while ((ch = getopt(argc, argv, "1cdh:i:k:p:t:v?")) != -1)
         switch (ch) {
         case '1':
             single_message = TRUE;
@@ -94,6 +95,10 @@ static void parse_opts(int argc, char** argv)
             topic_name = optarg;
         break;
 
+        case 'v':
+            verbose = TRUE;
+        break;
+
         case '?':
         default:
             usage();
@@ -121,6 +126,7 @@ static void termination_handler (int signum)
 int main(int argc, char* argv[])
 {
     int sock, timeout;
+    int topic_id;
 
     // Parse the command-line options
     parse_opts(argc, argv);
@@ -150,12 +156,22 @@ int main(int argc, char* argv[])
         // Subscribe to the topic
         mqtt_sn_send_subscribe(sock, topic_name, 0);
         topic_id = mqtt_sn_recieve_suback(sock);
+        if (topic_id) {
+            mqtt_sn_register_topic(topic_id, topic_name);
+        }
 
         // Keep processing packets until process is terminated
         while(keep_running) {
             publish_packet_t *packet = mqtt_sn_loop(sock, timeout);
             if (packet) {
-                printf("%s\n", packet->data);
+            
+                if (verbose) {
+                    int topic_id = ntohs(packet->topic_id);
+                    const char *topic_name = mqtt_sn_lookup_topic(topic_id);
+                    printf("%s: %s\n", topic_name, packet->data);
+                } else {
+                    printf("%s\n", packet->data);
+                }
 
                 // Stop if in single message mode
                 if (single_message)
@@ -168,6 +184,8 @@ int main(int argc, char* argv[])
 
         close(sock);
     }
+    
+    mqtt_sn_cleanup();
 
     return 0;
 }

@@ -39,6 +39,8 @@ static time_t last_transmit = 0;
 static time_t last_receive = 0;
 static time_t keep_alive = 0;
 
+topic_map_t *topic_map = NULL;
+
 
 void mqtt_sn_set_debug(uint8_t value)
 {
@@ -206,6 +208,21 @@ void mqtt_sn_send_register(int sock, const char* topic_name)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
+void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
+{
+    regack_packet_t packet;
+    packet.type = MQTT_SN_TYPE_REGACK;
+    packet.topic_id = htons(topic_id);
+    packet.message_id = htons(mesage_id);
+    packet.return_code = 0x00;
+    packet.length = 0x07;
+
+    if (debug)
+        fprintf(stderr, "Sending REGACK packet...\n");
+
+    return send_packet(sock, (char*)&packet, packet.length);
+}
+
 void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain)
 {
     publish_packet_t packet;
@@ -310,6 +327,79 @@ void mqtt_sn_recieve_connack(int sock)
     }
 }
 
+static int mqtt_sn_process_register(int sock, const register_packet_t *packet)
+{
+    int message_id = ntohs(packet->message_id);
+    int topic_id = ntohs(packet->topic_id);
+    const char* topic_name = packet->topic_name;
+
+    // Add it to the topic map
+    mqtt_sn_register_topic(topic_id, topic_name);
+
+    // Respond to gateway with REGACK
+    mqtt_sn_send_regack(sock, topic_id, message_id);
+
+    return 0;
+}
+
+void mqtt_sn_register_topic(int topic_id, const char* topic_name)
+{
+    topic_map_t **ptr = &topic_map;
+
+    // Check topic ID is valid
+    if (topic_id == 0x0000 || topic_id == 0xFFFF) {
+        fprintf(stderr, "Error: attempted to register invalid topic id: 0x%4.4x\n", topic_id);
+        return;
+    }
+
+    // Check topic name is valid
+    if (topic_name == NULL || strlen(topic_name) < 0) {
+        fprintf(stderr, "Error: attempted to register invalid topic name.\n");
+        return;
+    }
+
+    if (debug)
+        fprintf(stderr, "Registering topic 0x%4.4x: %s\n", topic_id, topic_name);
+
+    // Look for the topic id
+    while (*ptr) {
+        if ((*ptr)->topic_id == topic_id) {
+            break;
+        } else {
+            ptr = &((*ptr)->next);
+        }
+    }
+
+    // Allocate memory for a new entry, if we reached the end of the list
+    if (*ptr == NULL) {
+        *ptr = (topic_map_t *)malloc(sizeof(topic_map_t));
+        if (!*ptr) {
+            fprintf(stderr, "Error: Failed to allocate memory for new topic map entry.\n");
+            exit(EXIT_FAILURE);
+        }
+        (*ptr)->next = NULL;
+    }
+
+    // Copy in the name to the entry
+    strncpy((*ptr)->topic_name, topic_name, MQTT_SN_MAX_TOPIC_LENGTH);
+    (*ptr)->topic_id = topic_id;
+}
+
+const char* mqtt_sn_lookup_topic(int topic_id)
+{
+    topic_map_t **ptr = &topic_map;
+
+    while (*ptr) {
+        if ((*ptr)->topic_id == topic_id) {
+            return (*ptr)->topic_name;
+        }
+        ptr = &((*ptr)->next);
+    }
+
+    fprintf(stderr, "Warning: failed to lookup topic id: 0x%4.4x\n", topic_id);
+    return NULL;
+}
+
 uint16_t mqtt_sn_recieve_regack(int sock)
 {
     regack_packet_t *packet = recieve_packet(sock);
@@ -343,7 +433,7 @@ uint16_t mqtt_sn_recieve_regack(int sock)
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        fprintf(stderr, "Topic ID: %d\n", received_topic_id);
+        fprintf(stderr, "REGACK topic id: 0x%4.4x\n", received_topic_id);
 
     return received_topic_id;
 }
@@ -385,7 +475,7 @@ uint16_t mqtt_sn_recieve_suback(int sock)
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        fprintf(stderr, "Topic ID: %d\n", received_topic_id);
+        fprintf(stderr, "SUBACK topic id: 0x%4.4x\n", received_topic_id);
 
     return received_topic_id;
 }
@@ -421,11 +511,33 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
         // Receive a packet
         packet = recieve_packet(sock);
         if (packet) {
-            if (packet[1] == MQTT_SN_TYPE_PUBLISH) {
-                return (publish_packet_t*)packet;
-            } else if (packet[1] == MQTT_SN_TYPE_DISCONNECT) {
-                fprintf(stderr, "Warning: Received DISCONNECT from gateway.\n");
-                exit(EXIT_FAILURE);
+            switch(packet[1]) {
+                case MQTT_SN_TYPE_PUBLISH: {
+                    return (publish_packet_t*)packet;
+                    break;
+                }
+
+                case MQTT_SN_TYPE_REGISTER: {
+                    mqtt_sn_process_register(sock, (register_packet_t*)packet);
+                    break;
+                };
+
+                case MQTT_SN_TYPE_PINGRESP: {
+                    // do nothing
+                    break;
+                };
+
+                case MQTT_SN_TYPE_DISCONNECT: {
+                    fprintf(stderr, "Warning: Received DISCONNECT from gateway.\n");
+                    exit(EXIT_FAILURE);
+                    break;
+                };
+
+                default: {
+                    const char* type = mqtt_sn_type_string(packet[1]);
+                    fprintf(stderr, "Warning: unexpected packet type: %s.\n", type);
+                    break;
+                }
             }
         }
     }
@@ -483,3 +595,18 @@ const char* mqtt_sn_return_code_string(uint8_t return_code)
         default:   return "Rejected: unknown reason";
     }
 }
+
+void mqtt_sn_cleanup()
+{
+    topic_map_t **ptr = &topic_map;
+    topic_map_t **ptr2 = NULL;
+
+    // Walk through the topic map, deleting each entry
+    while (*ptr) {
+        ptr2 = ptr;
+        ptr = &((*ptr)->next);
+        free(*ptr2);
+        *ptr2 = NULL;
+    }
+}
+

@@ -176,6 +176,8 @@ int main(int argc, char* argv[])
 
         close(sock);
     }
+ 
+    mqtt_sn_cleanup();
 
     return 0;
 }

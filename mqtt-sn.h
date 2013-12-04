@@ -11,6 +11,7 @@
 
 
 #define MQTT_SN_MAX_PACKET_LENGTH  (256)
+#define MQTT_SN_MAX_TOPIC_LENGTH   (MQTT_SN_MAX_PACKET_LENGTH-6)
 
 #define MQTT_SN_TYPE_ADVERTISE     (0x00)
 #define MQTT_SN_TYPE_SEARCHGW      (0x01)
@@ -76,7 +77,7 @@ typedef struct {
   uint8_t type;
   uint16_t topic_id;
   uint16_t message_id;
-  char topic_name[MQTT_SN_MAX_PACKET_LENGTH-6];
+  char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
 } register_packet_t;
 
 typedef struct {
@@ -101,7 +102,7 @@ typedef struct __attribute__((packed)) {
   uint8_t type;
   uint8_t flags;
   uint16_t message_id;
-  char topic_name[MQTT_SN_MAX_PACKET_LENGTH-5];
+  char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
 } subscribe_packet_t;
 
 typedef struct __attribute__((packed)) {
@@ -119,6 +120,12 @@ typedef struct {
   uint16_t duration;
 } disconnect_packet_t;
 
+typedef struct topic_map {
+  uint16_t topic_id;
+  char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
+  struct topic_map *next;
+} topic_map_t;
+
 
 // Library functions
 int mqtt_sn_create_socket(const char* host, const char* port);
@@ -132,6 +139,9 @@ void mqtt_sn_recieve_connack(int sock);
 uint16_t mqtt_sn_recieve_regack(int sock);
 uint16_t mqtt_sn_recieve_suback(int sock);
 publish_packet_t* mqtt_sn_loop(int sock, int timeout);
+void mqtt_sn_register_topic(int topic_id, const char* topic_name);
+const char* mqtt_sn_lookup_topic(int topic_id);
+void mqtt_sn_cleanup();
 
 void mqtt_sn_set_debug(uint8_t value);
 const char* mqtt_sn_type_string(uint8_t type);

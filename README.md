@@ -10,6 +10,7 @@ Supported Features
 - Subscribing to named topic
 - Clean / unclean sessions
 - Manual and automatic client ID generation
+- Displaying topic name with wildcard subscriptions
 
 
 Unsupported Features
@@ -17,7 +18,6 @@ Unsupported Features
 
 - QoS 1 and 2
 - Last Will and Testament
-- Displaying topic name with each recieved message (aka verbose mode)
 - Packets longer than 255 bytes
 - Automatic gateway discovery
 - Pre-defined topic IDs and short topic names
