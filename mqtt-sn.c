@@ -223,27 +223,32 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
+static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
+{
+    switch (qos) {
+        case -1:
+          return MQTT_SN_FLAG_QOS_N1;
+        case 0:
+          return MQTT_SN_FLAG_QOS_0;
+        case 1:
+          return MQTT_SN_FLAG_QOS_1;
+        case 2:
+          return MQTT_SN_FLAG_QOS_2;
+        default:
+          return 0;
+    }
+}
+
 void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain)
 {
     publish_packet_t packet;
+    //size_t len = 
+    
     packet.type = MQTT_SN_TYPE_PUBLISH;
     packet.flags = 0x00;
     if (retain)
         packet.flags += MQTT_SN_FLAG_RETAIN;
-    switch (qos) {
-        case -1:
-          packet.flags += MQTT_SN_FLAG_QOS_N1;
-        break;
-        case 0:
-          packet.flags += MQTT_SN_FLAG_QOS_0;
-        break;
-        case 1:
-          packet.flags += MQTT_SN_FLAG_QOS_1;
-        break;
-        case 2:
-          packet.flags += MQTT_SN_FLAG_QOS_2;
-        break;
-    }
+    packet.flags += mqtt_sn_get_qos_flag(qos);
     packet.flags += (topic_type & 0x3);
     packet.topic_id = htons(topic_id);
     packet.message_id = htons(next_message_id++);
@@ -261,10 +266,11 @@ void mqtt_sn_send_subscribe(int sock, const char* topic_name, uint8_t qos)
     subscribe_packet_t packet;
     packet.type = MQTT_SN_TYPE_SUBSCRIBE;
     packet.flags = 0x00;
-    switch(qos) {
-      case 0: packet.flags += MQTT_SN_FLAG_QOS_0; break;
-      case 1: packet.flags += MQTT_SN_FLAG_QOS_1; break;
-      case 2: packet.flags += MQTT_SN_FLAG_QOS_2; break;
+    packet.flags += mqtt_sn_get_qos_flag(qos);
+    if (strlen(topic_name) == 2) {
+        packet.flags += MQTT_SN_TOPIC_TYPE_SHORT;
+    } else {
+        packet.flags += MQTT_SN_TOPIC_TYPE_NORMAL;
     }
     packet.message_id = htons(next_message_id++);
     strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
