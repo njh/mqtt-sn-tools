@@ -261,7 +261,7 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void mqtt_sn_send_subscribe(int sock, const char* topic_name, uint8_t qos)
+void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos)
 {
     subscribe_packet_t packet;
     packet.type = MQTT_SN_TYPE_SUBSCRIBE;
@@ -281,7 +281,23 @@ void mqtt_sn_send_subscribe(int sock, const char* topic_name, uint8_t qos)
         fprintf(stderr, "Sending SUBSCRIBE packet...\n");
 
     return send_packet(sock, (char*)&packet, packet.length);
+}
 
+void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
+{
+    subscribe_packet_t packet;
+    packet.type = MQTT_SN_TYPE_SUBSCRIBE;
+    packet.flags = 0x00;
+    packet.flags += mqtt_sn_get_qos_flag(qos);
+    packet.flags += MQTT_SN_TOPIC_TYPE_PREDEFINED;
+    packet.message_id = htons(next_message_id++);
+    packet.topic_id = htons(topic_id);
+    packet.length = 0x05 + 2;
+
+    if (debug)
+        fprintf(stderr, "Sending SUBSCRIBE packet...\n");
+
+    return send_packet(sock, (char*)&packet, packet.length);
 }
 
 void mqtt_sn_send_pingreq(int sock)

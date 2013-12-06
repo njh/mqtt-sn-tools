@@ -31,6 +31,7 @@ const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = "1883";
+uint16_t topic_id = 0;
 uint16_t keep_alive = 10;
 uint8_t retain = FALSE;
 uint8_t debug = FALSE;
@@ -52,6 +53,7 @@ static void usage()
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
+    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscrube to.\n");
     fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
     exit(-1);
 }
@@ -61,7 +63,7 @@ static void parse_opts(int argc, char** argv)
     int ch;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "1cdh:i:k:p:t:v?")) != -1)
+    while ((ch = getopt(argc, argv, "1cdh:i:k:p:t:T:v?")) != -1)
         switch (ch) {
         case '1':
             single_message = TRUE;
@@ -95,6 +97,10 @@ static void parse_opts(int argc, char** argv)
             topic_name = optarg;
         break;
 
+        case 'T':
+            topic_id = atoi(optarg);
+        break;
+
         case 'v':
             verbose = TRUE;
         break;
@@ -106,8 +112,14 @@ static void parse_opts(int argc, char** argv)
     }
 
     // Missing Parameter?
-    if (!topic_name) {
+    if (!topic_name && !topic_id) {
         usage();
+    }
+
+    // Both topic name and topic id?
+    if (topic_name && topic_id) {
+        fprintf(stderr, "Error: please provide either a topic id or a topic name, not both.\n");
+        exit(-1);
     }
 }
 
@@ -126,7 +138,6 @@ static void termination_handler (int signum)
 int main(int argc, char* argv[])
 {
     int sock, timeout;
-    int topic_id;
 
     // Parse the command-line options
     parse_opts(argc, argv);
@@ -154,7 +165,13 @@ int main(int argc, char* argv[])
         mqtt_sn_recieve_connack(sock);
 
         // Subscribe to the topic
-        mqtt_sn_send_subscribe(sock, topic_name, 0);
+        if (topic_name) {
+            mqtt_sn_send_subscribe_topic_name(sock, topic_name, 0);
+        } else {
+            mqtt_sn_send_subscribe_topic_id(sock, topic_id, 0);
+        }
+
+        // Wait for the subscription acknowledgement
         topic_id = mqtt_sn_recieve_suback(sock);
         if (topic_id) {
             mqtt_sn_register_topic(topic_id, topic_name);
@@ -164,7 +181,6 @@ int main(int argc, char* argv[])
         while(keep_running) {
             publish_packet_t *packet = mqtt_sn_loop(sock, timeout);
             if (packet) {
-            
                 if (verbose) {
                     int topic_id = ntohs(packet->topic_id);
                     const char *topic_name = mqtt_sn_lookup_topic(topic_id);

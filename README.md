@@ -11,6 +11,7 @@ Supported Features
 - Clean / unclean sessions
 - Manual and automatic client ID generation
 - Displaying topic name with wildcard subscriptions
+- Pre-defined topic IDs and short topic names
 
 
 Unsupported Features
@@ -20,7 +21,6 @@ Unsupported Features
 - Last Will and Testament
 - Packets longer than 255 bytes
 - Automatic gateway discovery
-- Pre-defined topic IDs and short topic names
 
 
 Building
@@ -59,3 +59,5 @@ Subscribing
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
       -p <port>      Network port to connect to. Defaults to 1883.
       -t <topic>     MQTT topic name to subscribe to.
+      -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
+      -v             Print messages verbosely, showing the topic name.

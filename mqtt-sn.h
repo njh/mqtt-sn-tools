@@ -102,7 +102,10 @@ typedef struct __attribute__((packed)) {
   uint8_t type;
   uint8_t flags;
   uint16_t message_id;
-  char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
+  union {
+      char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
+      uint16_t topic_id;
+  };
 } subscribe_packet_t;
 
 typedef struct __attribute__((packed)) {
@@ -132,7 +135,8 @@ int mqtt_sn_create_socket(const char* host, const char* port);
 void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive);
 void mqtt_sn_send_register(int sock, const char* topic_name);
 void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain);
-void mqtt_sn_send_subscribe(int sock, const char* topic_name, uint8_t qos);
+void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos);
+void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos);
 void mqtt_sn_send_pingreq(int sock);
 void mqtt_sn_send_disconnect(int sock);
 void mqtt_sn_recieve_connack(int sock);
