@@ -165,6 +165,12 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
 {
     connect_packet_t packet;
 
+    // Check that it isn't too long
+    if (client_id && strlen(client_id) > 23) {
+        fprintf(stderr, "Error: client id is too long\n");
+        exit(EXIT_FAILURE);
+    }
+
     // Create the CONNECT packet
     packet.type = MQTT_SN_TYPE_CONNECT;
     packet.flags = MQTT_SN_FLAG_CLEAN;
@@ -196,11 +202,18 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
 void mqtt_sn_send_register(int sock, const char* topic_name)
 {
     register_packet_t packet;
+    size_t topic_name_len = strlen(topic_name);
+
+    if (topic_name_len > MQTT_SN_MAX_TOPIC_LENGTH) {
+        fprintf(stderr, "Error: topic name is too long\n");
+        exit(EXIT_FAILURE);
+    }
+
     packet.type = MQTT_SN_TYPE_REGISTER;
     packet.topic_id = 0;
     packet.message_id = htons(next_message_id++);
     strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
-    packet.length = 0x06 + strlen(packet.topic_name);
+    packet.length = 0x06 + topic_name_len;
 
     if (debug)
         fprintf(stderr, "Sending REGISTER packet...\n");
@@ -242,8 +255,13 @@ static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
 void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain)
 {
     publish_packet_t packet;
-    //size_t len = 
-    
+    size_t data_len = strlen(data);
+
+    if (data_len > sizeof(packet.data)) {
+        fprintf(stderr, "Error: payload is too big\n");
+        exit(EXIT_FAILURE);
+    }
+
     packet.type = MQTT_SN_TYPE_PUBLISH;
     packet.flags = 0x00;
     if (retain)
@@ -253,7 +271,7 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     packet.topic_id = htons(topic_id);
     packet.message_id = htons(next_message_id++);
     strncpy(packet.data, data, sizeof(packet.data));
-    packet.length = 0x07 + strlen(data);
+    packet.length = 0x07 + data_len;
 
     if (debug)
         fprintf(stderr, "Sending PUBLISH packet...\n");
@@ -264,10 +282,12 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
 void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos)
 {
     subscribe_packet_t packet;
+    size_t topic_name_len = strlen(topic_name);
+    
     packet.type = MQTT_SN_TYPE_SUBSCRIBE;
     packet.flags = 0x00;
     packet.flags += mqtt_sn_get_qos_flag(qos);
-    if (strlen(topic_name) == 2) {
+    if (topic_name_len == 2) {
         packet.flags += MQTT_SN_TOPIC_TYPE_SHORT;
     } else {
         packet.flags += MQTT_SN_TOPIC_TYPE_NORMAL;
@@ -275,7 +295,7 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
     packet.message_id = htons(next_message_id++);
     strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
     packet.topic_name[sizeof(packet.topic_name)-1] = '\0';
-    packet.length = 0x05 + strlen(topic_name);
+    packet.length = 0x05 + topic_name_len;
 
     if (debug)
         fprintf(stderr, "Sending SUBSCRIBE packet...\n");
