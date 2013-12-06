@@ -14,13 +14,13 @@ Supported Features
 - Pre-defined topic IDs and short topic names
 
 
-Unsupported Features
---------------------
+Limitations
+-----------
 
-- QoS 1 and 2
-- Last Will and Testament
-- Packets longer than 255 bytes
-- Automatic gateway discovery
+- Packets must be 255 or less bytes long
+- No Last Will and Testament
+- No QoS 1 or 2
+- No Automatic gateway discovery
 
 
 Building
