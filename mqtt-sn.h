@@ -63,7 +63,7 @@ typedef struct {
   uint8_t flags;
   uint8_t protocol_id;
   uint16_t duration;
-  char client_id[21];
+  char client_id[23];
 } connect_packet_t;
 
 typedef struct {
