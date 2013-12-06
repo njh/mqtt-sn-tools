@@ -114,7 +114,7 @@ static void parse_opts(int argc, char** argv)
     if (!(topic_name || topic_id) || !message_data) {
         usage();
     }
-    
+
     if (qos != -1 && qos != 0) {
         fprintf(stderr, "Error: only QoS level 0 or -1 is supported.\n");
         exit(-1);
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
         close(sock);
     }
- 
+
     mqtt_sn_cleanup();
 
     return 0;

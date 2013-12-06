@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
     // Parse the command-line options
     parse_opts(argc, argv);
-    
+
     // Enable debugging?
     mqtt_sn_set_debug(debug);
 
@@ -215,7 +215,7 @@ int main(int argc, char* argv[])
 
         close(sock);
     }
-    
+
     mqtt_sn_cleanup();
 
     return 0;

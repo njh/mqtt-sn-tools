@@ -283,7 +283,7 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
 {
     subscribe_packet_t packet;
     size_t topic_name_len = strlen(topic_name);
-    
+
     packet.type = MQTT_SN_TYPE_SUBSCRIBE;
     packet.flags = 0x00;
     packet.flags += mqtt_sn_get_qos_flag(qos);
@@ -536,7 +536,7 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
 
     FD_ZERO(&rfd);
     FD_SET(sock, &rfd);
-    
+
     tv.tv_sec = timeout;
     tv.tv_usec = 0;
 
