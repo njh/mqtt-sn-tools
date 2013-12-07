@@ -61,3 +61,13 @@ Subscribing
       -t <topic>     MQTT topic name to subscribe to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
       -v             Print messages verbosely, showing the topic name.
+
+
+License
+-------
+
+MQTT-SN Tools is licensed under the [BSD 2-Clause License].
+
+
+
+[BSD 2-Clause License]: http://opensource.org/licenses/BSD-2-Clause
