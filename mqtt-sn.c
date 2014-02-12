@@ -17,14 +17,19 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include "simple-udp.h"
+#include "net/uip.h"
+
+
 #include <string.h>
 #include <stdint.h>
-#include <unistd.h>
-#include <time.h>
-#include <errno.h>
+
+//#include <unistd.h>
+//#include <sys/types.h>
+//#include <sys/socket.h>
+//#include <netdb.h>
+//#include <time.h>
+//#include <errno.h>
 
 #include "mqtt-sn.h"
 
@@ -41,82 +46,218 @@ static time_t keep_alive = 0;
 
 topic_map_t *topic_map = NULL;
 
+/*MQTT_SN events*/
+//Ping request
+//static process_event_t pingreq_event;
+//Ping response
+//static process_event_t pingresp_event;
+//PubAck received
+//static process_event_t puback_event;
+//Connack recieved
+static process_event_t connack_event;
+//Regack received
+//static process_event_t regack_event;
+//Willtopic request received
+//Willmsg request received
+//WillTopicResp received
+//WillMsgResp received
+//Disconnect received
+static process_event_t disconnect_event;
+static process_event_t receive_timeout_event;
+static process_event_t send_timeout_event;
 
+PROCESS(mqtt_sn_process, "MQTT_SN process");
+//AUTOSTART_PROCESSES(&mqtt_sn_process);
+
+#if 1
 void mqtt_sn_set_debug(uint8_t value)
 {
     debug = value;
 }
+#endif
 
-int mqtt_sn_create_socket(const char* host, const char* port)
+#if 1
+int mqtt_sn_create_socket(struct mqtt_sn_connection *mqc, uint16_t local_port, uip_ipaddr_t *remote_addr, uint16_t remote_port)
 {
-    struct addrinfo hints;
-    struct addrinfo *result, *rp;
-    struct timeval tv;
-    int fd, ret;
+  simple_udp_register(&(mqc->sock), local_port, remote_addr, remote_port, mqtt_sn_receiver);
+  mqc->stat = DISCONNECTED;
+  mqc->keep_alive=0;
+  mqc->next_message_id = 1;
+  process_start(&mqtt_sn_process, NULL);
+  return 0;
+}
+#endif
 
-    // Set options for the resolver
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
-    hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
-    hints.ai_flags = AI_DEFAULT;    /* Default flags */
-    hints.ai_protocol = 0;          /* Any protocol */
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
-    hints.ai_next = NULL;
-
-    // Lookup address
-    ret = getaddrinfo(host, port, &hints, &result);
-    if (ret != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
-        exit(EXIT_FAILURE);
+#if 1
+//static connack_packet_t last_connack;
+//static regack_packet_t last_regack;
+//static puback_packet_t last_puback;
+//static disconnect_packet_t last_disconnect;
+static void
+mqtt_sn_receiver(struct simple_udp_connection *sock, const uip_ipaddr_t *sender_addr, uint16_t sender_port,
+         const uip_ipaddr_t *receiver_addr, uint16_t receiver_port, const uint8_t *data, uint16_t datalen)
+{
+  uint8_t msg_type;
+  struct mqtt_sn_connection *mqc = (struct mqtt_sn_connection *)sock;
+  if (mqc->keep_alive > 0 && mqc->stat == CONNECTED){
+    ctimer_restart((&(mqc->receive_timer)));
+  }
+  //last_receive = clock_time();
+  if (datalen >= 2)
+  {
+    msg_type = data[1];
+    switch(msg_type) {
+//        case MQTT_SN_TYPE_ADVERTISE:
+//        case MQTT_SN_TYPE_SEARCHGW:
+//        case MQTT_SN_TYPE_GWINFO:
+//        case MQTT_SN_TYPE_CONNECT:
+        case MQTT_SN_TYPE_CONNACK:
+          {
+            memcpy(&(mqc->last_connack),data,sizeof(connack_packet_t));
+            process_post(&mqtt_sn_process, connack_event, mqc);
+            if(mqc->mc->connack_recv != NULL) {
+              mqc->mc->connack_recv(mqc, receiver_addr, data, datalen);
+            }
+            break;
+          }
+//        case MQTT_SN_TYPE_WILLTOPICREQ:
+//        case MQTT_SN_TYPE_WILLTOPIC:
+//        case MQTT_SN_TYPE_WILLMSGREQ:
+//        case MQTT_SN_TYPE_WILLMSG:
+//        case MQTT_SN_TYPE_REGISTER:
+        case MQTT_SN_TYPE_REGACK:
+          {
+            memcpy(&mqc->last_regack,data,sizeof(regack_packet_t));
+            if(mqc->mc->regack_recv != NULL) {
+              mqc->mc->regack_recv(mqc, receiver_addr, data, datalen);
+            }
+            break;
+          }
+//        case MQTT_SN_TYPE_PUBLISH:
+        case MQTT_SN_TYPE_PUBACK:
+          {
+            memcpy(&mqc->last_puback,data,sizeof(puback_packet_t));
+            if(mqc->mc->puback_recv != NULL) {
+              mqc->mc->puback_recv(mqc, receiver_addr, data, datalen);
+            }
+            break;
+          }
+//        case MQTT_SN_TYPE_PUBCOMP:
+//        case MQTT_SN_TYPE_PUBREC:
+//        case MQTT_SN_TYPE_PUBREL:
+//        case MQTT_SN_TYPE_SUBSCRIBE:
+//        case MQTT_SN_TYPE_SUBACK:
+//        case MQTT_SN_TYPE_UNSUBSCRIBE:
+//        case MQTT_SN_TYPE_UNSUBACK:
+        case MQTT_SN_TYPE_PINGREQ:
+          {
+            mqtt_sn_send_pingresp(mqc);
+            if(mqc->mc->pingreq_recv != NULL) {
+              mqc->mc->pingreq_recv(mqc, receiver_addr, data, datalen);
+            }
+            break;
+          }
+        case MQTT_SN_TYPE_PINGRESP:
+          {
+            if(mqc->mc->pingresp_recv != NULL) {
+              mqc->mc->pingresp_recv(mqc, receiver_addr, data, datalen);
+            }
+            break;
+          }
+        case MQTT_SN_TYPE_DISCONNECT:
+          {
+            memcpy(&mqc->last_disconnect,data,sizeof(disconnect_packet_t));
+            process_post(&mqtt_sn_process, disconnect_event, mqc);
+            if(mqc->mc->disconnect_recv != NULL) {
+              mqc->mc->disconnect_recv(mqc, receiver_addr, data, datalen);
+            }
+            break;
+          }
+//        case MQTT_SN_TYPE_WILLTOPICUPD:
+//        case MQTT_SN_TYPE_WILLTOPICRESP:
+//        case MQTT_SN_TYPE_WILLMSGUPD:
+//        case MQTT_SN_TYPE_WILLMSGRESP:
+        default:
+          {
+            if (debug) {
+              printf(" unrecognized received packet...\n");
+            }
+            break;
+          }
     }
+  }
+}
+#endif
 
-    /* getaddrinfo() returns a list of address structures.
-       Try each address until we successfully connect(2).
-       If socket(2) (or connect(2)) fails, we (close the socket and)
-       try the next address. */
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
-        fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (fd == -1)
-            continue;
 
-        // Connect socket to the remote host
-        if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0)
-            break;      // Success
 
-        close(fd);
+static void receive_timer_callback(void *mqc)
+{
+  process_post(&mqtt_sn_process, receive_timeout_event, mqc);
+}
+static void send_timer_callback(void *mqc)
+{
+  process_post(&mqtt_sn_process, send_timeout_event, mqc);
+}
+PROCESS_THREAD(mqtt_sn_process, ev, data)
+{
+  struct mqtt_sn_connection *mqc;
+
+  PROCESS_BEGIN();
+
+  connack_event = process_alloc_event();
+  disconnect_event = process_alloc_event();
+  receive_timeout_event = process_alloc_event();
+  send_timeout_event = process_alloc_event();
+
+  while(1) {
+    PROCESS_WAIT_EVENT();
+    mqc = (struct mqtt_sn_connection *)data;
+    if(ev == connack_event) {
+      //if connection was succesful, set and or start the ctimers.
+      if (mqc->last_connack.return_code == 0x00 && mqc->stat == WAITING_ACK){
+        mqc->stat = CONNECTED;
+        if (mqc->keep_alive > 0){
+          ctimer_set(&mqc->receive_timer, mqc->keep_alive * 2, receive_timer_callback, mqc);
+          ctimer_set(&mqc->send_timer,mqc->keep_alive / 2,send_timer_callback, mqc);
+        }
+      }
     }
-
-    if (rp == NULL) {
-        fprintf(stderr, "Could not connect to remote host.\n");
-        exit(EXIT_FAILURE);
+    else if (ev == disconnect_event){
+      //stop the timers
+      if (mqc->keep_alive > 0){
+        ctimer_stop(&(mqc->receive_timer));
+        ctimer_stop(&(mqc->send_timer));
+      }
+      mqc->stat = DISCONNECTED;
     }
-
-    freeaddrinfo(result);
-
-    // FIXME: set the Don't Fragment flag
-
-    // Setup timeout on the socket
-    tv.tv_sec = 10;
-    tv.tv_usec = 0;
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        perror("Error setting timeout on socket");
+    else if (ev == receive_timeout_event){
+      //if last receive has expired we need to stop and disconnect
+      mqtt_sn_send_disconnect(mqc);
     }
+    else if (ev == send_timeout_event){
+      //if last send has expired, we need to send a pingreq
+      mqtt_sn_send_pingreq(mqc);
+    }
+  }
 
-    return fd;
+  PROCESS_END();
 }
 
-static void send_packet(int sock, char* data, size_t len)
+#if 1
+static void send_packet(struct mqtt_sn_connection *mqc, char* data, size_t len)
 {
-    size_t sent = send(sock, data, len, 0);
-    if (sent != len) {
-        fprintf(stderr, "Warning: only sent %d of %d bytes\n", (int)sent, (int)len);
-    }
-
-    // Store the last time that we sent a packet
-    last_transmit = time(NULL);
+  simple_udp_send(&(mqc->sock), data, len);//these datatypes should all cast fine
+  if (mqc->keep_alive>0 && mqc->stat == CONNECTED)
+  {
+    //normally we would use this to make sure that we are always sending data to keep the connection alive
+    //but since the gateway does not support pubacks, we will always be relying on a
+    //steady stream of pings to ensure that the connection stays alive.
+    //ctimer_restart(&(mqc->send_timer));
+  }
 }
-
+#endif
+#if 0
 static void* recieve_packet(int sock)
 {
     static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH+1];
@@ -160,14 +301,15 @@ static void* recieve_packet(int sock)
 
     return buffer;
 }
-
-void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
+#endif
+#if 1
+void mqtt_sn_send_connect(struct mqtt_sn_connection *mqc, const char* client_id, uint16_t keepalive)
 {
     connect_packet_t packet;
 
     // Check that it isn't too long
     if (client_id && strlen(client_id) > 23) {
-        fprintf(stderr, "Error: client id is too long\n");
+        printf("Error: client id is too long\n");
         exit(EXIT_FAILURE);
     }
 
@@ -175,52 +317,50 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
     packet.type = MQTT_SN_TYPE_CONNECT;
     packet.flags = MQTT_SN_FLAG_CLEAN;
     packet.protocol_id = MQTT_SN_PROTOCOL_ID;
-    packet.duration = htons(keepalive);
+    packet.duration = uip_htons(keepalive);
 
-    // Generate a Client ID if none given
-    if (client_id == NULL || client_id[0] == '\0') {
-        snprintf(packet.client_id, sizeof(packet.client_id)-1, "mqtt-sn-tools-%d", getpid());
-        packet.client_id[sizeof(packet.client_id) - 1] = '\0';
-    } else {
-        strncpy(packet.client_id, client_id, sizeof(packet.client_id)-1);
-        packet.client_id[sizeof(packet.client_id) - 1] = '\0';
-    }
+    strncpy(packet.client_id, client_id, sizeof(packet.client_id)-1);
+    packet.client_id[sizeof(packet.client_id) - 1] = '\0';
 
     packet.length = 0x06 + strlen(packet.client_id);
 
     if (debug)
-        fprintf(stderr, "Sending CONNECT packet...\n");
+        printf("Sending CONNECT packet...\n");
 
     // Store the keep alive period
     if (keepalive) {
-        keep_alive = keepalive;
+        mqc->keep_alive = keepalive*CLOCK_SECOND;
     }
+    mqc->stat = WAITING_ACK;
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return send_packet(mqc, (char*)&packet, packet.length);
 }
-
-void mqtt_sn_send_register(int sock, const char* topic_name)
+#endif
+#if 1
+void mqtt_sn_send_register(struct mqtt_sn_connection *mqc, const char* topic_name)
 {
     register_packet_t packet;
     size_t topic_name_len = strlen(topic_name);
 
     if (topic_name_len > MQTT_SN_MAX_TOPIC_LENGTH) {
-        fprintf(stderr, "Error: topic name is too long\n");
+        printf("Error: topic name is too long\n");
         exit(EXIT_FAILURE);
     }
 
     packet.type = MQTT_SN_TYPE_REGISTER;
     packet.topic_id = 0;
-    packet.message_id = htons(next_message_id++);
+    packet.message_id = uip_htons(mqc->next_message_id++);
     strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
-    packet.length = 0x06 + topic_name_len;
+    packet.length = 0x06 + strlen(packet.topic_name);
 
     if (debug)
-        fprintf(stderr, "Sending REGISTER packet...\n");
+        printf("Sending REGISTER packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return send_packet(mqc, (char*)&packet, packet.length);
 }
+#endif
 
+#if 0
 void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
 {
     regack_packet_t packet;
@@ -235,6 +375,7 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
 
     return send_packet(sock, (char*)&packet, packet.length);
 }
+#endif
 
 static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
 {
@@ -251,14 +392,15 @@ static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
           return 0;
     }
 }
-
-void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain)
+#if 1
+void mqtt_sn_send_publish(struct mqtt_sn_connection *mqc, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain)
 {
     publish_packet_t packet;
+//this needs changed so that data is not assumed to be a null terminated string
     size_t data_len = strlen(data);
 
     if (data_len > sizeof(packet.data)) {
-        fprintf(stderr, "Error: payload is too big\n");
+        printf("Error: payload is too big\n");
         exit(EXIT_FAILURE);
     }
 
@@ -268,18 +410,19 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
         packet.flags += MQTT_SN_FLAG_RETAIN;
     packet.flags += mqtt_sn_get_qos_flag(qos);
     packet.flags += (topic_type & 0x3);
-    packet.topic_id = htons(topic_id);
-    packet.message_id = htons(next_message_id++);
+    packet.topic_id = uip_htons(topic_id);
+    packet.message_id = uip_htons(mqc->next_message_id++);
     strncpy(packet.data, data, sizeof(packet.data));
     packet.length = 0x07 + data_len;
 
     if (debug)
-        fprintf(stderr, "Sending PUBLISH packet...\n");
+        printf("Sending PUBLISH packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return send_packet(mqc, (char*)&packet, packet.length);
 }
-
-void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos)
+#endif
+#if 0
+void mqtt_sn_send_subscribe(int sock, const char* topic_name, uint8_t qos)
 {
     subscribe_packet_t packet;
     size_t topic_name_len = strlen(topic_name);
@@ -301,6 +444,7 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
         fprintf(stderr, "Sending SUBSCRIBE packet...\n");
 
     return send_packet(sock, (char*)&packet, packet.length);
+
 }
 
 void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
@@ -320,37 +464,58 @@ void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
     return send_packet(sock, (char*)&packet, packet.length);
 }
 
-void mqtt_sn_send_pingreq(int sock)
+void mqtt_sn_send_pingreq(struct mqtt_sn_connection *mqc)
 {
     char packet[2];
 
     packet[0] = 2;
     packet[1] = MQTT_SN_TYPE_PINGREQ;
 
-    if (debug)
-        fprintf(stderr, "Sending ping...\n");
+    if (debug) {
+        printf("Sending ping...\n");
+    }
 
-    return send_packet(sock, (char*)&packet, 2);
+    ctimer_restart(&(mqc->send_timer));
+
+
+    return send_packet(mqc, (char*)&packet, 2);
 }
+#if 1
+void mqtt_sn_send_pingresp(struct mqtt_sn_connection *mqc)
+{
+    char packet[2];
 
-void mqtt_sn_send_disconnect(int sock)
+    packet[0] = 2;
+    packet[1] = MQTT_SN_TYPE_PINGRESP;
+
+    if (debug) {
+        printf("Sending ping response...\n");
+    }
+
+    return send_packet(mqc, (char*)&packet, 2);
+}
+#endif
+#if 1
+void mqtt_sn_send_disconnect(struct mqtt_sn_connection *mqc)
 {
     disconnect_packet_t packet;
     packet.type = MQTT_SN_TYPE_DISCONNECT;
     packet.length = 0x02;
 
     if (debug)
-        fprintf(stderr, "Sending DISCONNECT packet...\n");
+        printf("Sending DISCONNECT packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    send_packet(mqc, (char*)&packet, packet.length);
+    process_post(&mqtt_sn_process, disconnect_event, mqc);
 }
-
+#endif
+#if 0
 void mqtt_sn_recieve_connack(int sock)
 {
     connack_packet_t *packet = recieve_packet(sock);
 
     if (packet == NULL) {
-        fprintf(stderr, "Failed to connect to MQTT-SN gateway.\n");
+        fprintf(stderr, "Failed to connect to MQTT-S gateway.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -368,7 +533,8 @@ void mqtt_sn_recieve_connack(int sock)
         exit(packet->return_code);
     }
 }
-
+#endif
+#if 0
 static int mqtt_sn_process_register(int sock, const register_packet_t *packet)
 {
     int message_id = ntohs(packet->message_id);
@@ -475,11 +641,12 @@ uint16_t mqtt_sn_recieve_regack(int sock)
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        fprintf(stderr, "REGACK topic id: 0x%4.4x\n", received_topic_id);
+        fprintf(stderr, "Topic ID: %d\n", received_topic_id);
 
     return received_topic_id;
 }
-
+#endif
+#if 0
 uint16_t mqtt_sn_recieve_suback(int sock)
 {
     suback_packet_t *packet = recieve_packet(sock);
@@ -517,11 +684,12 @@ uint16_t mqtt_sn_recieve_suback(int sock)
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        fprintf(stderr, "SUBACK topic id: 0x%4.4x\n", received_topic_id);
+        fprintf(stderr, "Topic ID: %d\n", received_topic_id);
 
     return received_topic_id;
 }
-
+#endif
+#if 0
 publish_packet_t* mqtt_sn_loop(int sock, int timeout)
 {
     time_t now = time(NULL);
@@ -592,7 +760,8 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
 
     return NULL;
 }
-
+#endif
+#if 1
 const char* mqtt_sn_type_string(uint8_t type)
 {
     switch(type) {
@@ -626,7 +795,8 @@ const char* mqtt_sn_type_string(uint8_t type)
         default:                       return "UNKNOWN";
     }
 }
-
+#endif
+#if 1
 const char* mqtt_sn_return_code_string(uint8_t return_code)
 {
     switch(return_code) {
@@ -637,7 +807,8 @@ const char* mqtt_sn_return_code_string(uint8_t return_code)
         default:   return "Rejected: unknown reason";
     }
 }
-
+#endif
+#if 0
 void mqtt_sn_cleanup()
 {
     topic_map_t **ptr = &topic_map;
@@ -651,4 +822,5 @@ void mqtt_sn_cleanup()
         *ptr2 = NULL;
     }
 }
+#endif
 
