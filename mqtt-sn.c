@@ -15,7 +15,7 @@
 */
 
 #include <stdio.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <stdlib.h>
 #include "simple-udp.h"
 #include "net/uip.h"
@@ -39,10 +39,10 @@
 #endif
 
 static uint8_t debug = FALSE;
-static uint16_t next_message_id = 1;
-static time_t last_transmit = 0;
-static time_t last_receive = 0;
-static time_t keep_alive = 0;
+//static uint16_t next_message_id = 1;
+//static time_t last_transmit = 0;
+//static time_t last_receive = 0;
+//static time_t keep_alive = 0;
 
 topic_map_t *topic_map = NULL;
 
@@ -73,18 +73,6 @@ PROCESS(mqtt_sn_process, "MQTT_SN process");
 void mqtt_sn_set_debug(uint8_t value)
 {
     debug = value;
-}
-#endif
-
-#if 1
-int mqtt_sn_create_socket(struct mqtt_sn_connection *mqc, uint16_t local_port, uip_ipaddr_t *remote_addr, uint16_t remote_port)
-{
-  simple_udp_register(&(mqc->sock), local_port, remote_addr, remote_port, mqtt_sn_receiver);
-  mqc->stat = DISCONNECTED;
-  mqc->keep_alive=0;
-  mqc->next_message_id = 1;
-  process_start(&mqtt_sn_process, NULL);
-  return 0;
 }
 #endif
 
@@ -189,7 +177,17 @@ mqtt_sn_receiver(struct simple_udp_connection *sock, const uip_ipaddr_t *sender_
 }
 #endif
 
-
+#if 1
+int mqtt_sn_create_socket(struct mqtt_sn_connection *mqc, uint16_t local_port, uip_ipaddr_t *remote_addr, uint16_t remote_port)
+{
+  simple_udp_register(&(mqc->sock), local_port, remote_addr, remote_port, mqtt_sn_receiver);
+  mqc->stat = DISCONNECTED;
+  mqc->keep_alive=0;
+  mqc->next_message_id = 1;
+  process_start(&mqtt_sn_process, NULL);
+  return 0;
+}
+#endif
 
 static void receive_timer_callback(void *mqc)
 {
@@ -199,6 +197,7 @@ static void send_timer_callback(void *mqc)
 {
   process_post(&mqtt_sn_process, send_timeout_event, mqc);
 }
+
 PROCESS_THREAD(mqtt_sn_process, ev, data)
 {
   struct mqtt_sn_connection *mqc;
@@ -276,7 +275,7 @@ static void* recieve_packet(int sock)
             return NULL;
         } else {
             perror("recv failed");
-            exit(EXIT_FAILURE);
+            return;
         }
     }
 
@@ -286,7 +285,7 @@ static void* recieve_packet(int sock)
     length = buffer[0];
     if (length == 0x01) {
         fprintf(stderr, "Error: packet received is longer than this tool can handle\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     if (length != bytes_read) {
@@ -310,7 +309,7 @@ void mqtt_sn_send_connect(struct mqtt_sn_connection *mqc, const char* client_id,
     // Check that it isn't too long
     if (client_id && strlen(client_id) > 23) {
         printf("Error: client id is too long\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     // Create the CONNECT packet
@@ -344,7 +343,7 @@ void mqtt_sn_send_register(struct mqtt_sn_connection *mqc, const char* topic_nam
 
     if (topic_name_len > MQTT_SN_MAX_TOPIC_LENGTH) {
         printf("Error: topic name is too long\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     packet.type = MQTT_SN_TYPE_REGISTER;
@@ -401,7 +400,7 @@ void mqtt_sn_send_publish(struct mqtt_sn_connection *mqc, uint16_t topic_id, uin
 
     if (data_len > sizeof(packet.data)) {
         printf("Error: payload is too big\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     packet.type = MQTT_SN_TYPE_PUBLISH;
@@ -446,7 +445,8 @@ void mqtt_sn_send_subscribe(int sock, const char* topic_name, uint8_t qos)
     return send_packet(sock, (char*)&packet, packet.length);
 
 }
-
+#endif
+#if 0
 void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
 {
     subscribe_packet_t packet;
@@ -463,7 +463,8 @@ void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
 
     return send_packet(sock, (char*)&packet, packet.length);
 }
-
+#endif
+#if 1
 void mqtt_sn_send_pingreq(struct mqtt_sn_connection *mqc)
 {
     char packet[2];
@@ -480,6 +481,7 @@ void mqtt_sn_send_pingreq(struct mqtt_sn_connection *mqc)
 
     return send_packet(mqc, (char*)&packet, 2);
 }
+#endif
 #if 1
 void mqtt_sn_send_pingresp(struct mqtt_sn_connection *mqc)
 {
@@ -516,12 +518,12 @@ void mqtt_sn_recieve_connack(int sock)
 
     if (packet == NULL) {
         fprintf(stderr, "Failed to connect to MQTT-S gateway.\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     if (packet->type != MQTT_SN_TYPE_CONNACK) {
         fprintf(stderr, "Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     // Check Connack return code
@@ -583,7 +585,7 @@ void mqtt_sn_register_topic(int topic_id, const char* topic_name)
         *ptr = (topic_map_t *)malloc(sizeof(topic_map_t));
         if (!*ptr) {
             fprintf(stderr, "Error: Failed to allocate memory for new topic map entry.\n");
-            exit(EXIT_FAILURE);
+            return;
         }
         (*ptr)->next = NULL;
     }
@@ -615,7 +617,7 @@ uint16_t mqtt_sn_recieve_regack(int sock)
 
     if (packet == NULL) {
         fprintf(stderr, "Failed to connect to register topic.\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     if (packet->type != MQTT_SN_TYPE_REGACK) {
@@ -654,7 +656,7 @@ uint16_t mqtt_sn_recieve_suback(int sock)
 
     if (packet == NULL) {
         fprintf(stderr, "Failed to subscribe to topic.\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     if (packet->type != MQTT_SN_TYPE_SUBACK) {
@@ -713,7 +715,7 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
         if (errno != EINTR) {
             // Something is wrong.
             perror("select");
-            exit(EXIT_FAILURE);
+            return;
         }
     } else if (ret > 0) {
         char* packet;
@@ -739,7 +741,7 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
 
                 case MQTT_SN_TYPE_DISCONNECT: {
                     fprintf(stderr, "Warning: Received DISCONNECT from gateway.\n");
-                    exit(EXIT_FAILURE);
+                    return;
                     break;
                 };
 
@@ -755,7 +757,7 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
     // Check for receive timeout
     if (keep_alive > 0 && (now - last_receive) >= (keep_alive * 1.5)) {
         fprintf(stderr, "Keep alive error: timed out receiving packet from gateway.\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     return NULL;

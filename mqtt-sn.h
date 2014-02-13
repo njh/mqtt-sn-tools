@@ -222,7 +222,7 @@ uint16_t mqtt_sn_recieve_suback(int sock);
 #if 0
 publish_packet_t* mqtt_sn_loop(int sock, int timeout);
 #endif
-#if 1
+#if 0
 void mqtt_sn_register_topic(int topic_id, const char* topic_name);
 const char* mqtt_sn_lookup_topic(int topic_id);
 void mqtt_sn_cleanup();
@@ -231,5 +231,4 @@ void mqtt_sn_set_debug(uint8_t value);
 const char* mqtt_sn_type_string(uint8_t type);
 const char* mqtt_sn_return_code_string(uint8_t return_code);
 
-#endif
 #endif

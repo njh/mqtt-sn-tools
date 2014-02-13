@@ -1,183 +1,147 @@
-/*
-  MQTT-SN command-line publishing client
-  Copyright (C) 2013 Nicholas Humfrey
-
-  This program is free software; you can redistribute it and/or
-  modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation; either version 2
-  of the License, or (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License (http://www.gnu.org/copyleft/gpl.html)
-  for more details.
-*/
-
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <signal.h>
-
+#include "contiki.h"
+#include "lib/random.h"
+#include "sys/ctimer.h"
+#include "sys/etimer.h"
+#include "net/uip.h"
+#include "net/uip-ds6.h"
+//#include "net/uip-debug.h"
 #include "mqtt-sn.h"
 
-const char *client_id = NULL;
-const char *topic_name = NULL;
+#include "node-id.h"
+
+#include "simple-udp.h"
+//#include "servreg-hack.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#define UDP_PORT 1884
+#define SERVICE_ID 190
+
+#define SEND_INTERVAL		(10 * CLOCK_SECOND)
+#define SEND_TIME		(random_rand() % (SEND_INTERVAL))
+
+static struct mqtt_sn_connection mqtt_sn_c;
+static char *mqtt_client_id="sensor";
+static char topic_name[]="AR";
+static uint16_t mqtt_keep_alive=20;
 const char *message_data = NULL;
-time_t keep_alive = 30;
-const char *mqtt_sn_host = "127.0.0.1";
-const char *mqtt_sn_port = "1883";
-uint16_t topic_id = 0;
-uint8_t topic_id_type = MQTT_SN_TOPIC_TYPE_NORMAL;
-int8_t qos = 0;
+static uint16_t topic_id = 0;
+static uint8_t topic_id_type = MQTT_SN_TOPIC_TYPE_SHORT;
+static int8_t qos = 0;
 uint8_t retain = FALSE;
-uint8_t debug = FALSE;
+//uint8_t debug = FALSE;
 
-
-static void usage()
+enum connection_status
 {
-    fprintf(stderr, "Usage: mqtt-sn-pub [opts] -t <topic> -m <message>\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  -d             Enable debug messages.\n");
-    fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
-    fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.\n");
-    fprintf(stderr, "  -m <message>   Message payload to send.\n");
-    fprintf(stderr, "  -n             Send a null (zero length) message.\n");
-    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
-    fprintf(stderr, "  -q <qos>       Quality of Service value (0 or -1). Defaults to %d.\n", qos);
-    fprintf(stderr, "  -r             Message should be retained.\n");
-    fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
-    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
-    exit(-1);
+  REQUESTED = 0,
+  REJECTED_CONGESTION,
+  REQUEST_TIMEOUT,
+  ACKNOWLEDGED,
+
+};
+
+
+
+/*---------------------------------------------------------------------------*/
+PROCESS(unicast_sender_process, "Unicast sender example process");
+AUTOSTART_PROCESSES(&unicast_sender_process);
+/*---------------------------------------------------------------------------*/
+static void
+puback_receiver(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen)
+{
+  printf("Puback received\n");
+}
+/*---------------------------------------------------------------------------*/
+static void
+connack_receiver(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen)
+{
+  printf("Connack received\n");
+}
+/*---------------------------------------------------------------------------*/
+static void
+set_global_address(void)
+{
+  uip_ipaddr_t ipaddr;
+  int i;
+  uint8_t state;
+
+  uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
+  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+
+  printf("IPv6 addresses: ");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      //uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
+      printf("\n");
+    }
+  }
 }
 
-static void parse_opts(int argc, char** argv)
+/*---------------------------------------------------------------------------*/
+/*Add callbacks here if we make them*/
+static const struct mqtt_sn_callbacks mqtt_sn_call = {NULL,NULL,connack_receiver,NULL,puback_receiver,NULL};
+
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(unicast_sender_process, ev, data)
 {
-    int ch;
+  static struct etimer periodic_timer;
+  static struct etimer send_timer;
+  static uip_ipaddr_t addr;
 
-    // Parse the options/switches
-    while ((ch = getopt(argc, argv, "dh:i:m:np:q:rt:T:?")) != -1)
-        switch (ch) {
-        case 'd':
-            debug = TRUE;
-        break;
+  PROCESS_BEGIN();
 
-        case 'h':
-            mqtt_sn_host = optarg;
-        break;
+  //servreg_hack_init();
 
-        case 'i':
-            client_id = optarg;
-        break;
+  set_global_address();
+  //send to TUN interface for cooja simulation
+  //uip_ip6addr(&addr, 0xaaaa, 0, 0, 0, 0, 0, 0, 1);
+  //uip_ip6addr(&addr, 0x2001, 0x0db8, 1, 0xffff, 0, 0, 0xc0a8, 0xd480);//192.168.212.128 with tayga
+  //uip_ip6addr(&addr, 0xaaaa, 0, 2, 0xeeee, 0, 0, 0xc0a8, 0xd480);//192.168.212.128 with tayga
+  uip_ip6addr(&addr, 0xaaaa, 0, 2, 0xeeee, 0, 0, 0xac10, 0xdc01);//172.16.220.1 with tayga
+  mqtt_sn_create_socket(&mqtt_sn_c,35555, &addr, UDP_PORT);
+  (&mqtt_sn_c)->mc = &mqtt_sn_call;
 
-        case 'm':
-            message_data = optarg;
-        break;
 
-        case 'n':
-            message_data = "";
-        break;
+  //connect, presume ack comes before timer fires
+  //mqtt_sn_send_connect(&unicast_connection,mqtt_client_id,mqtt_keep_alive);
 
-        case 'p':
-            mqtt_sn_port = optarg;
-        break;
+  etimer_set(&periodic_timer, 20*CLOCK_SECOND);
+  PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
+    printf("requesting connection \n ");
+    mqtt_sn_send_connect(&mqtt_sn_c,mqtt_client_id,mqtt_keep_alive);
+    //etimer_reset(&periodic_timer);
+    etimer_set(&send_timer, SEND_TIME);
+  while(1) {
 
-        case 'q':
-            qos = atoi(optarg);
-        break;
 
-        case 'r':
-            retain = TRUE;
-        break;
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&send_timer));
+    printf("publishing \n ");
+    //addr = servreg_hack_lookup(SERVICE_ID);
+    //if(addr != NULL) {
+      static unsigned int message_number;
+      char buf[20];
 
-        case 't':
-            topic_name = optarg;
-        break;
+//      printf("Sending unicast to ");
+//      uip_debug_ipaddr_print(&addr);
+//      printf("\n");
+      sprintf(buf, "Message %d", message_number);
+      message_number++;
 
-        case 'T':
-            topic_id = atoi(optarg);
-        break;
+      topic_id = (topic_name[0] << 8) + topic_name[1];
 
-        case '?':
-        default:
-            usage();
-        break;
-    }
+      mqtt_sn_send_publish(&mqtt_sn_c, topic_id,topic_id_type,buf,qos,retain);
+      etimer_reset(&send_timer);
+      //simple_udp_sendto(&unicast_connection, buf, strlen(buf) + 1, addr);
+    //} else {
+     // printf("Service %d not found\n", SERVICE_ID);
+   // }
+  }
 
-    // Missing Parameter?
-    if (!(topic_name || topic_id) || !message_data) {
-        usage();
-    }
-
-    if (qos != -1 && qos != 0) {
-        fprintf(stderr, "Error: only QoS level 0 or -1 is supported.\n");
-        exit(-1);
-    }
-
-    // Both topic name and topic id?
-    if (topic_name && topic_id) {
-        fprintf(stderr, "Error: please provide either a topic id or a topic name, not both.\n");
-        exit(-1);
-    }
-
-    // Check topic is valid for QoS level -1
-    if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2) {
-        fprintf(stderr, "Error: either a pre-defined topic id or a short topic name must be given for QoS -1.\n");
-        exit(-1);
-    }
+  PROCESS_END();
 }
+/*---------------------------------------------------------------------------*/
 
-int main(int argc, char* argv[])
-{
-    int sock;
-
-    // Parse the command-line options
-    parse_opts(argc, argv);
-
-    // Enable debugging?
-    mqtt_sn_set_debug(debug);
-
-    // Create a UDP socket
-    sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
-    if (sock) {
-        // Connect to gateway
-        if (qos >= 0) {
-            mqtt_sn_send_connect(sock, client_id, keep_alive);
-            mqtt_sn_recieve_connack(sock);
-        }
-
-        if (topic_id) {
-            // Use pre-defined topic ID
-            topic_id_type = MQTT_SN_TOPIC_TYPE_PREDEFINED;
-        } else if (strlen(topic_name) == 2) {
-            // Convert the 2 character topic name into a 2 byte topic id
-            topic_id = (topic_name[0] << 8) + topic_name[1];
-            topic_id_type = MQTT_SN_TOPIC_TYPE_SHORT;
-        } else if (qos >= 0) {
-            // Register the topic name
-            mqtt_sn_send_register(sock, topic_name);
-            topic_id = mqtt_sn_recieve_regack(sock);
-            topic_id_type = MQTT_SN_TOPIC_TYPE_NORMAL;
-        }
-
-        // Publish to the topic
-        mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
-
-        // Finally, disconnect
-        if (qos >= 0) {
-            mqtt_sn_send_disconnect(sock);
-        }
-
-        close(sock);
-    }
-
-    mqtt_sn_cleanup();
-
-    return 0;
-}
