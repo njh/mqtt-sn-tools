@@ -252,7 +252,7 @@ static void send_packet(struct mqtt_sn_connection *mqc, char* data, size_t len)
     //normally we would use this to make sure that we are always sending data to keep the connection alive
     //but since the gateway does not support pubacks, we will always be relying on a
     //steady stream of pings to ensure that the connection stays alive.
-    //ctimer_restart(&(mqc->send_timer));
+    ctimer_restart(&(mqc->send_timer));
   }
 }
 #endif

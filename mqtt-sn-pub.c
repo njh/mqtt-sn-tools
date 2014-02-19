@@ -28,7 +28,7 @@ static uint16_t mqtt_keep_alive=20;
 const char *message_data = NULL;
 static uint16_t topic_id = 0;
 static uint8_t topic_id_type = MQTT_SN_TOPIC_TYPE_SHORT;
-static int8_t qos = 0;
+static int8_t qos = 1;
 uint8_t retain = FALSE;
 //uint8_t debug = FALSE;
 
@@ -102,6 +102,7 @@ PROCESS_THREAD(unicast_sender_process, ev, data)
   //uip_ip6addr(&addr, 0x2001, 0x0db8, 1, 0xffff, 0, 0, 0xc0a8, 0xd480);//192.168.212.128 with tayga
   //uip_ip6addr(&addr, 0xaaaa, 0, 2, 0xeeee, 0, 0, 0xc0a8, 0xd480);//192.168.212.128 with tayga
   uip_ip6addr(&addr, 0xaaaa, 0, 2, 0xeeee, 0, 0, 0xac10, 0xdc01);//172.16.220.1 with tayga
+  //uip_ip6addr(&addr, 0xaaaa, 0, 2, 0xeeee, 0, 0, 0xac10, 0xdc80);//172.16.220.128 with tayga
   mqtt_sn_create_socket(&mqtt_sn_c,35555, &addr, UDP_PORT);
   (&mqtt_sn_c)->mc = &mqtt_sn_call;
 
