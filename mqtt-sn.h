@@ -1,6 +1,12 @@
 #ifndef MQTT_SN_H
 #define MQTT_SN_H
 
+#include "simple-udp.h"
+#include "clock.h"
+#include "etimer.h"
+#include "ctimer.h"
+
+
 #ifndef FALSE
 #define FALSE  (0)
 #endif
@@ -97,6 +103,14 @@ typedef struct __attribute__((packed)) {
   char data[MQTT_SN_MAX_PACKET_LENGTH-7];
 } publish_packet_t;
 
+typedef struct {
+  uint8_t length;
+  uint8_t type;
+  uint16_t topic_id;
+  uint16_t message_id;
+  uint8_t return_code;
+} puback_packet_t;
+
 typedef struct __attribute__((packed)) {
   uint8_t length;
   uint8_t type;
@@ -129,20 +143,86 @@ typedef struct topic_map {
   struct topic_map *next;
 } topic_map_t;
 
+//static void
+//mqtt_sn_receiver(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr, uint16_t sender_port,
+//         const uip_ipaddr_t *receiver_addr, uint16_t receiver_port, const uint8_t *data, uint16_t datalen);
+struct mqtt_sn_connection;
+struct mqtt_sn_callbacks {
+  /** Called when a packet has been received by the mqtt_sn module */
+  void (* pingreq_recv)(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen);
+  void (* pingresp_recv)(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen);
+  void (* connack_recv)(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen);
+  void (* regack_recv)(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen);
+  void (* puback_recv)(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen);
+  void (* disconnect_recv)(struct mqtt_sn_connection *mqc, const uip_ipaddr_t *source_addr, const uint8_t *data, uint16_t datalen);
+};
+
+enum connection_stat {
+    DISCONNECTED=0,
+    CONNECTED,
+    WAITING_ACK
+};
+
+struct mqtt_sn_connection {
+  struct simple_udp_connection sock;
+  //simple udp receive callback, host, port will be registered with sock
+  uint16_t next_message_id;
+  //the keep alive mechanisms could be replaced with event timers
+  struct ctimer receive_timer;
+  struct ctimer send_timer;
+  clock_time_t keep_alive;
+  connack_packet_t last_connack;
+  regack_packet_t last_regack;
+  puback_packet_t last_puback;
+  disconnect_packet_t last_disconnect;
+  const char* client_id;
+  enum connection_stat stat;
+  struct process *client_process;
+  const struct mqtt_sn_callbacks *mc;
+};
+
+
+
+#endif
 
 // Library functions
-int mqtt_sn_create_socket(const char* host, const char* port);
-void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive);
+#if 1
+int mqtt_sn_create_socket(struct mqtt_sn_connection *mqc, uint16_t local_port, uip_ipaddr_t *remote_addr, uint16_t remote_port);
+#endif
+#if 1
+void mqtt_sn_send_connect(struct mqtt_sn_connection *mqc, const char* client_id, uint16_t keepalive);
+#endif
+#if 0
 void mqtt_sn_send_register(int sock, const char* topic_name);
-void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain);
-void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos);
-void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos);
-void mqtt_sn_send_pingreq(int sock);
-void mqtt_sn_send_disconnect(int sock);
+#endif
+#if 1
+void mqtt_sn_send_publish(struct mqtt_sn_connection *mqc, uint16_t topic_id, uint8_t topic_type, const char* data, int8_t qos, uint8_t retain);
+#endif
+#if 0
+void mqtt_sn_send_subscribe(int sock, const char* topic_name, uint8_t qos);
+#endif
+#if 1
+void mqtt_sn_send_pingreq(struct mqtt_sn_connection *mqc);
+#endif
+#if 1
+void mqtt_sn_send_pingresp(struct mqtt_sn_connection *mqc);
+#endif
+#if 1
+void mqtt_sn_send_disconnect(struct mqtt_sn_connection *mqc);
+#endif
+#if 0
 void mqtt_sn_recieve_connack(int sock);
+#endif
+#if 0
 uint16_t mqtt_sn_recieve_regack(int sock);
+#endif
+#if 0
 uint16_t mqtt_sn_recieve_suback(int sock);
+#endif
+#if 0
 publish_packet_t* mqtt_sn_loop(int sock, int timeout);
+#endif
+#if 0
 void mqtt_sn_register_topic(int topic_id, const char* topic_name);
 const char* mqtt_sn_lookup_topic(int topic_id);
 void mqtt_sn_cleanup();

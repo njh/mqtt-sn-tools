@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="mqtt-sn-tools-contiki" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="bin/Release/mqtt-sn-tools-contiki" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="Makefile" />
+		<Unit filename="mqtt-sn-pub.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mqtt-sn-sub.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mqtt-sn.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mqtt-sn.h" />
+		<Unit filename="project-conf.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
