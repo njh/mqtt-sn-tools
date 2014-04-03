@@ -66,8 +66,8 @@ Subscribing
 License
 -------
 
-MQTT-SN Tools is licensed under the [BSD 2-Clause License].
+MQTT-SN Tools is licensed under the [MIT License].
 
 
 
-[BSD 2-Clause License]: http://opensource.org/licenses/BSD-2-Clause
+[MIT License]: http://opensource.org/licenses/MIT
