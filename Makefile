@@ -3,7 +3,7 @@ PACKAGE=mqtt-sn-tools
 VERSION=0.0.3
 CFLAGS=-g -Wall -DVERSION=$(VERSION)
 LDFLAGS=
-TARGETS=mqtt-sn-pub mqtt-sn-sub
+TARGETS=mqtt-sn-pub mqtt-sn-sub mqtt-sn-serial-bridge
 
 
 all: $(TARGETS)
@@ -16,6 +16,9 @@ mqtt-sn-pub.o: mqtt-sn-pub.c mqtt-sn.h
 
 mqtt-sn-sub: mqtt-sn.o mqtt-sn-sub.o
 	$(CC) $(LDFLAGS) -o mqtt-sn-sub $^
+
+mqtt-sn-serial-bridge: mqtt-sn.o mqtt-sn-serial-bridge.o
+	$(CC) $(LDFLAGS) -o mqtt-sn-serial-bridge $^
   
 mqtt-sn-sub.o: mqtt-sn-sub.c mqtt-sn.h
 	$(CC) $(CFLAGS) -c mqtt-sn-sub.c

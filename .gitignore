@@ -1,4 +1,5 @@
 mqtt-sn-pub
 mqtt-sn-sub
+mqtt-sn-serial-bridge
 *.o
 *.tar.gz
