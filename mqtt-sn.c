@@ -114,7 +114,7 @@ int mqtt_sn_create_socket(const char* host, const char* port)
     return fd;
 }
 
-static void send_packet(int sock, char* data, size_t len)
+void mqtt_sn_send_packet(int sock, char* data, size_t len)
 {
     size_t sent = send(sock, data, len, 0);
     if (sent != len) {
@@ -204,7 +204,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
         keep_alive = keepalive;
     }
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
 void mqtt_sn_send_register(int sock, const char* topic_name)
@@ -226,7 +226,7 @@ void mqtt_sn_send_register(int sock, const char* topic_name)
     if (debug)
         fprintf(stderr, "Sending REGISTER packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
 void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
@@ -241,7 +241,7 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
     if (debug)
         fprintf(stderr, "Sending REGACK packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
 static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
@@ -284,7 +284,7 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     if (debug)
         fprintf(stderr, "Sending PUBLISH packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
 void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos)
@@ -308,7 +308,7 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
     if (debug)
         fprintf(stderr, "Sending SUBSCRIBE packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
 void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
@@ -325,7 +325,7 @@ void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
     if (debug)
         fprintf(stderr, "Sending SUBSCRIBE packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
 void mqtt_sn_send_pingreq(int sock)
@@ -338,7 +338,7 @@ void mqtt_sn_send_pingreq(int sock)
     if (debug)
         fprintf(stderr, "Sending ping...\n");
 
-    return send_packet(sock, (char*)&packet, 2);
+    return mqtt_sn_send_packet(sock, (char*)&packet, 2);
 }
 
 void mqtt_sn_send_disconnect(int sock)
@@ -350,7 +350,7 @@ void mqtt_sn_send_disconnect(int sock)
     if (debug)
         fprintf(stderr, "Sending DISCONNECT packet...\n");
 
-    return send_packet(sock, (char*)&packet, packet.length);
+    return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
 void mqtt_sn_recieve_connack(int sock)
