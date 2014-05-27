@@ -149,6 +149,47 @@ static int open_serial_port(const char* device_path)
     return fd;
 }
 
+static int read_packet_from_serial(int fd, char *buf)
+{
+    // First get the length of the packet
+    int len = read(fd, buf, 1);
+    if (len != 1) {
+        fprintf(stderr, "Error reading packet length from serial port: %d, %d\n", len, errno);
+        return 0;
+    }
+
+    if (buf[0] == 0x00) {
+        fprintf(stderr, "Error: packets of length 0 are invalid.\n");
+        return 0;
+    }
+
+    if (buf[0] == 0x01) {
+        fprintf(stderr, "Error: packet received is longer than this tool can handle\n");
+        return 0;
+    }
+
+    // Read in the rest of the packet
+    len = read(fd, &buf[1], buf[0]-1);
+    if (len <= 0) {
+        fprintf(stderr, "Error reading rest of packet from serial port: %d, %d\n", len, errno);
+    } else {
+        len += 1;
+    }
+
+    // Check the length read is correct
+    if (len != buf[0]) {
+        fprintf(stderr, "Error: length of MQTT-SN packet doesn't match number of bytes read.\n");
+        return 0;
+    }
+
+    if (debug) {
+        const char* type = mqtt_sn_type_string(buf[1]);
+        fprintf(stderr, "Read packet (len=%d, type=%s)\n", len, type);
+    }
+
+    return len;
+}
+
 static void termination_handler (int signum)
 {
     switch(signum) {
@@ -164,9 +205,9 @@ static void termination_handler (int signum)
 
 int main(int argc, char* argv[])
 {
-    int fd, ret;
     char buf[255];
-    int sock;
+    int fd = -1;
+    int sock = -1;
 
     // Parse the command-line options
     parse_opts(argc, argv);
@@ -190,21 +231,9 @@ int main(int argc, char* argv[])
 
 
     while (keep_running) {
-        int len = read(fd, buf, sizeof(buf));
-
-        if (len > 0) {
-            if (len != buf[0]) {
-                fprintf(stderr, "Error: length of MQTT-SN packet doesn't match number of bytes read.\n");
-                continue;
-            }
-        
-            if (debug) {
-                const char* type = mqtt_sn_type_string(buf[1]);
-                fprintf(stderr, "Sending packet (len=%d, type=%s)\n", len, type);
-            }
+        int len = read_packet_from_serial(fd, buf);
+        if (len) {
             mqtt_sn_send_packet(sock, buf, len);
-        } else {
-            fprintf(stderr, "Error reading packet from serial port: %d, %d\n", ret, errno);
         }
     }
 
