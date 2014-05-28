@@ -163,9 +163,9 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
 void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos);
 void mqtt_sn_send_pingreq(int sock);
 void mqtt_sn_send_disconnect(int sock);
-void mqtt_sn_recieve_connack(int sock);
-uint16_t mqtt_sn_recieve_regack(int sock);
-uint16_t mqtt_sn_recieve_suback(int sock);
+void mqtt_sn_receive_connack(int sock);
+uint16_t mqtt_sn_receive_regack(int sock);
+uint16_t mqtt_sn_receive_suback(int sock);
 publish_packet_t* mqtt_sn_loop(int sock, int timeout);
 void mqtt_sn_register_topic(int topic_id, const char* topic_name);
 const char* mqtt_sn_lookup_topic(int topic_id);

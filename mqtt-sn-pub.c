@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
         // Connect to gateway
         if (qos >= 0) {
             mqtt_sn_send_connect(sock, client_id, keep_alive);
-            mqtt_sn_recieve_connack(sock);
+            mqtt_sn_receive_connack(sock);
         }
 
         if (topic_id) {
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
         } else if (qos >= 0) {
             // Register the topic name
             mqtt_sn_send_register(sock, topic_name);
-            topic_id = mqtt_sn_recieve_regack(sock);
+            topic_id = mqtt_sn_receive_regack(sock);
             topic_id_type = MQTT_SN_TOPIC_TYPE_NORMAL;
         }
 

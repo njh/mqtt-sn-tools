@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
     if (sock) {
         // Connect to gateway
         mqtt_sn_send_connect(sock, client_id, keep_alive);
-        mqtt_sn_recieve_connack(sock);
+        mqtt_sn_receive_connack(sock);
 
         // Subscribe to the topic
         if (topic_name) {
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
         }
 
         // Wait for the subscription acknowledgement
-        topic_id = mqtt_sn_recieve_suback(sock);
+        topic_id = mqtt_sn_receive_suback(sock);
         if (topic_id) {
             mqtt_sn_register_topic(topic_id, topic_name);
         }

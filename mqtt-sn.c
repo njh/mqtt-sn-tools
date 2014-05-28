@@ -353,7 +353,7 @@ void mqtt_sn_send_disconnect(int sock)
     return mqtt_sn_send_packet(sock, (char*)&packet, packet.length);
 }
 
-void mqtt_sn_recieve_connack(int sock)
+void mqtt_sn_receive_connack(int sock)
 {
     connack_packet_t *packet = mqtt_sn_receive_packet(sock);
 
@@ -450,7 +450,7 @@ const char* mqtt_sn_lookup_topic(int topic_id)
     return NULL;
 }
 
-uint16_t mqtt_sn_recieve_regack(int sock)
+uint16_t mqtt_sn_receive_regack(int sock)
 {
     regack_packet_t *packet = mqtt_sn_receive_packet(sock);
     uint16_t received_message_id, received_topic_id;
@@ -488,7 +488,7 @@ uint16_t mqtt_sn_recieve_regack(int sock)
     return received_topic_id;
 }
 
-uint16_t mqtt_sn_recieve_suback(int sock)
+uint16_t mqtt_sn_receive_suback(int sock)
 {
     suback_packet_t *packet = mqtt_sn_receive_packet(sock);
     uint16_t received_message_id, received_topic_id;
