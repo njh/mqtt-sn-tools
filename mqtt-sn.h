@@ -175,6 +175,7 @@ void mqtt_sn_set_debug(uint8_t value);
 const char* mqtt_sn_type_string(uint8_t type);
 const char* mqtt_sn_return_code_string(uint8_t return_code);
 
+uint8_t mqtt_sn_validate_packet(const void *packet, size_t length);
 void mqtt_sn_send_packet(int sock, const void* data);
 void* mqtt_sn_receive_packet(int sock);
 

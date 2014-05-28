@@ -127,10 +127,31 @@ void mqtt_sn_send_packet(int sock, const void* data)
     last_transmit = time(NULL);
 }
 
+uint8_t mqtt_sn_validate_packet(const void *packet, size_t length)
+{
+    const uint8_t* buf = packet;
+
+    if (buf[0] == 0x00) {
+        fprintf(stderr, "Error: packet length header is not valid\n");
+        return FALSE;
+    }
+
+    if (buf[0] == 0x01) {
+        fprintf(stderr, "Error: packet received is longer than this tool can handle\n");
+        return FALSE;
+    }
+
+    if (buf[0] != length) {
+        fprintf(stderr, "Error: read %d bytes but packet length is %d bytes.\n", (int)length, (int)buf[0]);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void* mqtt_sn_receive_packet(int sock)
 {
     static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH+1];
-    int length;
     int bytes_read;
 
     if (debug)
@@ -152,18 +173,12 @@ void* mqtt_sn_receive_packet(int sock)
     if (debug)
         fprintf(stderr, "Received %d bytes. Type=%s.\n", (int)bytes_read, mqtt_sn_type_string(buffer[1]));
 
-    length = buffer[0];
-    if (length == 0x01) {
-        fprintf(stderr, "Error: packet received is longer than this tool can handle\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (length != bytes_read) {
-        fprintf(stderr, "Warning: read %d bytes but packet length is %d bytes.\n", (int)bytes_read, length);
+    if (mqtt_sn_validate_packet(buffer, bytes_read) == FALSE) {
+        return NULL;
     }
 
     // NULL-terminate the packet
-    buffer[length] = '\0';
+    buffer[bytes_read] = '\0';
 
     // Store the last time that we received a packet
     last_receive = time(NULL);
