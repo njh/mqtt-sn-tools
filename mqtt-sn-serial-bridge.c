@@ -231,9 +231,23 @@ int main(int argc, char* argv[])
     fd = open_serial_port(serial_device);
 
     while (keep_running) {
-        void* buf = read_packet_from_serial(fd);
-        if (buf) {
-            mqtt_sn_send_packet(sock, buf);
+        fd_set fdset;
+
+        FD_ZERO(&fdset);
+        FD_SET(fd, &fdset);
+
+        if (select(FD_SETSIZE, &fdset, NULL, NULL, NULL) < 0) {
+            if (errno != EINTR) {
+                perror("select");
+            }
+            break;
+        }
+
+        if (FD_ISSET(fd, &fdset)) {
+            void *buf = read_packet_from_serial(fd);
+            if (buf) {
+                mqtt_sn_send_packet(sock, buf);
+            }
         }
     }
 
