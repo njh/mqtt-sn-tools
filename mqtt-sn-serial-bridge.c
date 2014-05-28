@@ -146,6 +146,10 @@ static int open_serial_port(const char* device_path)
 
     tcsetattr(fd, TCSAFLUSH, &tios);
 
+    // Flush the input buffer
+    sleep(1);
+    tcflush(fd, TCIOFLUSH);
+
     return fd;
 }
 
@@ -224,10 +228,6 @@ int main(int argc, char* argv[])
 
     // Open the serial port
     fd = open_serial_port(serial_device);
-
-    // Flush the input buffer
-    sleep(1);
-    tcflush(fd, TCIOFLUSH);
 
 
     while (keep_running) {
