@@ -153,45 +153,43 @@ static int open_serial_port(const char* device_path)
     return fd;
 }
 
-static int read_packet_from_serial(int fd, char *buf)
+static void* read_packet_from_serial(int fd)
 {
+    static uint8_t buf[MQTT_SN_MAX_PACKET_LENGTH+1];
+
     // First get the length of the packet
-    int len = read(fd, buf, 1);
-    if (len != 1) {
-        fprintf(stderr, "Error reading packet length from serial port: %d, %d\n", len, errno);
-        return 0;
+    int bytes_read = read(fd, buf, 1);
+    if (bytes_read != 1) {
+        fprintf(stderr, "Error reading packet length from serial port: %d, %d\n", bytes_read, errno);
+        return NULL;
     }
 
     if (buf[0] == 0x00) {
         fprintf(stderr, "Error: packets of length 0 are invalid.\n");
-        return 0;
-    }
-
-    if (buf[0] == 0x01) {
-        fprintf(stderr, "Error: packet received is longer than this tool can handle\n");
-        return 0;
+        return NULL;
     }
 
     // Read in the rest of the packet
-    len = read(fd, &buf[1], buf[0]-1);
-    if (len <= 0) {
-        fprintf(stderr, "Error reading rest of packet from serial port: %d, %d\n", len, errno);
+    bytes_read = read(fd, &buf[1], buf[0]-1);
+    if (bytes_read <= 0) {
+        fprintf(stderr, "Error reading rest of packet from serial port: %d, %d\n", bytes_read, errno);
     } else {
-        len += 1;
+        bytes_read += 1;
     }
 
-    // Check the length read is correct
-    if (len != buf[0]) {
-        fprintf(stderr, "Error: length of MQTT-SN packet doesn't match number of bytes read.\n");
-        return 0;
+    if (mqtt_sn_validate_packet(buf, bytes_read) == FALSE) {
+        return NULL;
     }
+
+    // NULL-terminate the packet
+    buf[bytes_read] = '\0';
 
     if (debug) {
         const char* type = mqtt_sn_type_string(buf[1]);
-        fprintf(stderr, "Read packet (len=%d, type=%s)\n", len, type);
+        fprintf(stderr, "Read packet (bytes_read=%d, type=%s)\n", bytes_read, type);
     }
 
-    return len;
+    return buf;
 }
 
 static void termination_handler (int signum)
@@ -209,7 +207,6 @@ static void termination_handler (int signum)
 
 int main(int argc, char* argv[])
 {
-    char buf[255];
     int fd = -1;
     int sock = -1;
 
@@ -229,11 +226,10 @@ int main(int argc, char* argv[])
     // Open the serial port
     fd = open_serial_port(serial_device);
 
-
     while (keep_running) {
-        int len = read_packet_from_serial(fd, buf);
-        if (len) {
-            mqtt_sn_send_packet(sock, buf, len);
+        void* buf = read_packet_from_serial(fd);
+        if (buf) {
+            mqtt_sn_send_packet(sock, buf);
         }
     }
 
