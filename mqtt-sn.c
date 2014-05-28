@@ -125,7 +125,7 @@ void mqtt_sn_send_packet(int sock, char* data, size_t len)
     last_transmit = time(NULL);
 }
 
-static void* recieve_packet(int sock)
+void* mqtt_sn_receive_packet(int sock)
 {
     static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH+1];
     int length;
@@ -355,7 +355,7 @@ void mqtt_sn_send_disconnect(int sock)
 
 void mqtt_sn_recieve_connack(int sock)
 {
-    connack_packet_t *packet = recieve_packet(sock);
+    connack_packet_t *packet = mqtt_sn_receive_packet(sock);
 
     if (packet == NULL) {
         fprintf(stderr, "Failed to connect to MQTT-SN gateway.\n");
@@ -452,7 +452,7 @@ const char* mqtt_sn_lookup_topic(int topic_id)
 
 uint16_t mqtt_sn_recieve_regack(int sock)
 {
-    regack_packet_t *packet = recieve_packet(sock);
+    regack_packet_t *packet = mqtt_sn_receive_packet(sock);
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
@@ -490,7 +490,7 @@ uint16_t mqtt_sn_recieve_regack(int sock)
 
 uint16_t mqtt_sn_recieve_suback(int sock)
 {
-    suback_packet_t *packet = recieve_packet(sock);
+    suback_packet_t *packet = mqtt_sn_receive_packet(sock);
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
@@ -559,7 +559,7 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
         char* packet;
 
         // Receive a packet
-        packet = recieve_packet(sock);
+        packet = mqtt_sn_receive_packet(sock);
         if (packet) {
             switch(packet[1]) {
                 case MQTT_SN_TYPE_PUBLISH: {
