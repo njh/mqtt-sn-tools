@@ -107,6 +107,10 @@ static int open_serial_port(const char* device_path)
     struct termios tios;
     int fd;
 
+    if (debug) {
+        fprintf(stderr, "Opening %s\n", device_path);
+    }
+
     fd = open(device_path, O_RDONLY | O_NOCTTY | O_NDELAY );
     if (fd < 0) {perror(device_path); exit(EXIT_FAILURE); }
 
