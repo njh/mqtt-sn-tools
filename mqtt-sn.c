@@ -648,7 +648,7 @@ const char* mqtt_sn_type_string(uint8_t type)
         case MQTT_SN_TYPE_WILLTOPICRESP: return "WILLTOPICRESP";
         case MQTT_SN_TYPE_WILLMSGUPD:    return "WILLMSGUPD";
         case MQTT_SN_TYPE_WILLMSGRESP:   return "WILLMSGRESP";
-        default:                       return "UNKNOWN";
+        default:                         return "UNKNOWN";
     }
 }
 
