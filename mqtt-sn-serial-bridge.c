@@ -102,7 +102,7 @@ static void parse_opts(int argc, char** argv)
 }
 
 
-static int open_serial_port(const char* device_path)
+static int serial_open(const char* device_path)
 {
     struct termios tios;
     int fd;
@@ -157,7 +157,7 @@ static int open_serial_port(const char* device_path)
     return fd;
 }
 
-static void* read_packet_from_serial(int fd)
+static void* serial_read_packet(int fd)
 {
     static uint8_t buf[MQTT_SN_MAX_PACKET_LENGTH+1];
 
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
     sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
 
     // Open the serial port
-    fd = open_serial_port(serial_device);
+    fd = serial_open(serial_device);
 
     while (keep_running) {
         fd_set fdset;
@@ -244,9 +244,11 @@ int main(int argc, char* argv[])
         }
 
         if (FD_ISSET(fd, &fdset)) {
-            void *buf = read_packet_from_serial(fd);
-            if (buf) {
-                mqtt_sn_send_packet(sock, buf);
+            void *packet = serial_read_packet(fd);
+            if (packet) {
+                mqtt_sn_send_packet(sock, packet);
+            }
+        }
             }
         }
     }
