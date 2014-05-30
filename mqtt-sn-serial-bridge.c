@@ -111,7 +111,7 @@ static int serial_open(const char* device_path)
         fprintf(stderr, "Opening %s\n", device_path);
     }
 
-    fd = open(device_path, O_RDONLY | O_NOCTTY | O_NDELAY );
+    fd = open(device_path, O_RDWR | O_NOCTTY | O_NDELAY );
     if (fd < 0) {perror(device_path); exit(EXIT_FAILURE); }
 
     // Turn back on blocking reads
@@ -196,6 +196,16 @@ static void* serial_read_packet(int fd)
     return buf;
 }
 
+void serial_write_packet(int fd, const void* packet)
+{
+    size_t sent, len = ((uint8_t*)packet)[0];
+
+    sent = write(fd, packet, len);
+    if (sent != len) {
+        fprintf(stderr, "Warning: only sent %d of %d bytes\n", (int)sent, (int)len);
+    }
+}
+
 static void termination_handler (int signum)
 {
     switch(signum) {
@@ -235,6 +245,7 @@ int main(int argc, char* argv[])
 
         FD_ZERO(&fdset);
         FD_SET(fd, &fdset);
+        FD_SET(sock, &fdset);
 
         if (select(FD_SETSIZE, &fdset, NULL, NULL, NULL) < 0) {
             if (errno != EINTR) {
@@ -249,6 +260,11 @@ int main(int argc, char* argv[])
                 mqtt_sn_send_packet(sock, packet);
             }
         }
+
+        if (FD_ISSET(sock, &fdset)) {
+            void *packet = mqtt_sn_receive_packet(sock);
+            if (packet) {
+                serial_write_packet(fd, packet);
             }
         }
     }
