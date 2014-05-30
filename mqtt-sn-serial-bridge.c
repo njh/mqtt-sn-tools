@@ -47,7 +47,7 @@ const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = "1883";
 const char *serial_device = NULL;
 speed_t serial_baud = B9600;
-uint8_t debug = FALSE;
+uint8_t debug = 0;
 
 uint8_t keep_running = TRUE;
 
@@ -75,7 +75,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'd':
-            debug = TRUE;
+            debug++;
         break;
 
         case 'h':
@@ -191,7 +191,15 @@ static void* serial_read_packet(int fd)
 
     if (debug) {
         const char* type = mqtt_sn_type_string(buf[1]);
-        fprintf(stderr, "Read packet (bytes_read=%d, type=%s)\n", bytes_read, type);
+        fprintf(stderr, "Serial -> UDP (bytes_read=%d, type=%s)\n", bytes_read, type);
+        if (debug > 1) {
+            int i;
+            fprintf(stderr, "  ");
+            for (i=0; i<buf[0]; i++) {
+                fprintf(stderr, "0x%2.2X ", buf[i]);
+            }
+            fprintf(stderr, "\n");
+        }
     }
 
     return buf;
