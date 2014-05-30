@@ -177,6 +177,7 @@ static void* serial_read_packet(int fd)
     bytes_read = read(fd, &buf[1], buf[0]-1);
     if (bytes_read <= 0) {
         fprintf(stderr, "Error reading rest of packet from serial port: %d, %d\n", bytes_read, errno);
+        return NULL;
     } else {
         bytes_read += 1;
     }
