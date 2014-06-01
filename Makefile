@@ -9,7 +9,7 @@ TARGETS=mqtt-sn-pub mqtt-sn-sub mqtt-sn-serial-bridge
 all: $(TARGETS)
 
 $(TARGETS): %: mqtt-sn.o %.o
-	$(CC) $(LDFLAGS) -o $@ $?
+	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o : %.c mqtt-sn.h
 	$(CC) $(CFLAGS) -c $<
