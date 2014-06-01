@@ -420,7 +420,7 @@ void mqtt_sn_register_topic(int topic_id, const char* topic_name)
     }
 
     // Check topic name is valid
-    if (topic_name == NULL || strlen(topic_name) < 0) {
+    if (topic_name == NULL || strlen(topic_name) <= 0) {
         fprintf(stderr, "Error: attempted to register invalid topic name.\n");
         return;
     }
