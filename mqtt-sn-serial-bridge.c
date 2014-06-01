@@ -58,6 +58,7 @@ static void usage()
     fprintf(stderr, "\n");
     fprintf(stderr, "  -b <baud>      Set the baud rate. Defaults to %d.\n", (int)serial_baud);
     fprintf(stderr, "  -d             Enable debug messages.\n");
+    fprintf(stderr, "  -dd            Enable extended debugging - display packets in hex.\n");
     fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     exit(-1);
