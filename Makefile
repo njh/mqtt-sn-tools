@@ -1,4 +1,4 @@
-CC=gcc
+CC=cc
 PACKAGE=mqtt-sn-tools
 VERSION=0.0.3
 CFLAGS=-g -Wall -DVERSION=$(VERSION)
