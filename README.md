@@ -63,6 +63,22 @@ Subscribing
       -v             Print messages verbosely, showing the topic name.
 
 
+Serial Port Bridge
+------------------
+
+The Serial Port bridge can be used to relay packets from a remote device on the end of a 
+serial port and convert them into UDP packets, which are sent and received from a broker 
+or MQTT-SN gateway.
+
+    Usage: mqtt-sn-serial-bridge [opts] <device>
+
+      -b <baud>      Set the baud rate. Defaults to 9600.
+      -d             Enable debug messages.
+      -dd            Enable extended debugging - display packets in hex.
+      -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
+      -p <port>      Network port to connect to. Defaults to 1883.
+
+
 License
 -------
 
