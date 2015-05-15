@@ -1,5 +1,8 @@
 mqtt-sn-pub
 mqtt-sn-sub
 mqtt-sn-serial-bridge
+mqtt-sn-pub.exe
+mqtt-sn-sub.exe
+mqtt-sn-serial-bridge.exe
 *.o
 *.tar.gz
