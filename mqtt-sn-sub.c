@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -42,7 +43,7 @@ const char *mqtt_sn_port = "1883";
 uint16_t topic_id = 0;
 uint16_t keep_alive = 10;
 uint8_t retain = FALSE;
-uint8_t debug = FALSE;
+uint8_t debug = 0;
 uint8_t single_message = FALSE;
 uint8_t clean_session = TRUE;
 uint8_t verbose = FALSE;
@@ -62,16 +63,28 @@ static void usage()
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscrube to.\n");
+    fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n" );
+    fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n" );
     fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
     exit(-1);
 }
 
 static void parse_opts(int argc, char** argv)
 {
+
+	static struct option long_options[] =
+	{
+		{"fe" ,    no_argument ,       0 , 'f' } ,
+		{"wlnid" , optional_argument , 0 , 'w' } ,
+		{0, 0, 0, 0}
+	} ;
+
     int ch;
+	/* getopt_long stores the option index here. */
+	int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "1cdh:i:k:p:t:T:v?")) != -1)
+    while ((ch = getopt_long (argc , argv , "1cdh:i:k:p:t:T:v?" , long_options , &option_index )) != -1)
         switch (ch) {
         case '1':
             single_message = TRUE;
@@ -82,7 +95,7 @@ static void parse_opts(int argc, char** argv)
         break;
 
         case 'd':
-            debug = TRUE;
+            debug ++ ;
         break;
 
         case 'h':
@@ -109,6 +122,14 @@ static void parse_opts(int argc, char** argv)
             topic_id = atoi(optarg);
         break;
 
+        case 'f':
+            mqtt_sn_enable_frwdencap() ;
+        break;
+
+        case 'w' :
+        	mqtt_sn_set_frwdencap_parameters( (uint8_t*)optarg , strlen(optarg) ) ;
+		break;
+
         case 'v':
             verbose = TRUE;
         break;
@@ -134,9 +155,9 @@ static void parse_opts(int argc, char** argv)
 static void termination_handler (int signum)
 {
     switch(signum) {
-        case SIGHUP:  fprintf(stderr, "Got hangup signal."); break;
-        case SIGTERM: fprintf(stderr, "Got termination signal."); break;
-        case SIGINT:  fprintf(stderr, "Got interupt signal."); break;
+        case SIGHUP:  fprintf(stderr, "Got hangup signal.\n"); break;
+        case SIGTERM: fprintf(stderr, "Got termination signal.\n"); break;
+        case SIGINT:  fprintf(stderr, "Got interupt signal.\n"); break;
     }
 
     // Signal the main thead to stop
@@ -146,6 +167,8 @@ static void termination_handler (int signum)
 int main(int argc, char* argv[])
 {
     int sock, timeout;
+
+    mqtt_sn_disable_frwdencap() ;
 
     // Parse the command-line options
     parse_opts(argc, argv);
@@ -167,7 +190,8 @@ int main(int argc, char* argv[])
 
     // Create a UDP socket
     sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
-    if (sock) {
+    if (sock)
+    {
         // Connect to gateway
         mqtt_sn_send_connect(sock, client_id, keep_alive);
         mqtt_sn_receive_connack(sock);
@@ -186,9 +210,11 @@ int main(int argc, char* argv[])
         }
 
         // Keep processing packets until process is terminated
-        while(keep_running) {
+        while(keep_running)
+        {
             publish_packet_t *packet = mqtt_sn_loop(sock, timeout);
-            if (packet) {
+            if (packet)
+            {
                 if (verbose) {
                     int topic_type = packet->flags & 0x3;
                     int topic_id = ntohs(packet->topic_id);
