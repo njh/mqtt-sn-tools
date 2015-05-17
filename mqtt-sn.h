@@ -153,6 +153,10 @@ typedef struct topic_map {
   struct topic_map *next;
 } topic_map_t;
 
+// Logging stuff
+time_t rawtime ;
+char tm_buffer [40];
+#define __CUR_TIME__ time( &rawtime) ; strftime (tm_buffer , 40 ,"%T", localtime(&rawtime) ) ;
 
 // Library functions
 int mqtt_sn_create_socket(const char* host, const char* port);
