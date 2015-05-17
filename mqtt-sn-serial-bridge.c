@@ -300,7 +300,7 @@ int main(int argc, char* argv[])
             void *packet = serial_read_packet(fd);
             if (packet) {
 				if ( frwdencap ) {
-					mqtt_sn_send_frwdencap_packet(sock , packet , null, 0) ;
+					mqtt_sn_send_frwdencap_packet(sock , packet , NULL, 0) ;
 				} else {
 					mqtt_sn_send_packet(sock, packet);
 				}
