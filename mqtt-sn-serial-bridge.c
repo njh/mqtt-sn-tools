@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -48,6 +49,7 @@ const char *mqtt_sn_port = "1883";
 const char *serial_device = NULL;
 speed_t serial_baud = B9600;
 uint8_t debug = 0;
+uint8_t frwdencap = FALSE ;
 
 uint8_t keep_running = TRUE;
 
@@ -56,42 +58,61 @@ static void usage()
 {
     fprintf(stderr, "Usage: mqtt-sn-serial-bridge [opts] <device>\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  -b <baud>      Set the baud rate. Defaults to %d.\n", (int)serial_baud);
-    fprintf(stderr, "  -d             Enable debug messages.\n");
-    fprintf(stderr, "  -dd            Enable extended debugging - display packets in hex.\n");
-    fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
-    fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
+    fprintf(stderr, "  -b <baud>             Set the baud rate. Defaults to %d.\n", (int)serial_baud);
+    fprintf(stderr, "  -d                    Enable debug messages.\n");
+    fprintf(stderr, "  -dd                   Enable extended debugging - display packets in hex.\n");
+    fprintf(stderr, "  -h <host>             MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
+    fprintf(stderr, "  -p <port>             Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
+    fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n" );	
     exit(-1);
 }
 
 static void parse_opts(int argc, char** argv)
 {
-    int ch;
+
+	static struct option long_options[] =
+	{
+		{"fe" ,    no_argument ,       0 , 'f' } ,
+		{0, 0, 0, 0}
+	} ;
+
+	int ch;
+	/* getopt_long stores the option index here. */
+	int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "b:dh:p:?")) != -1)
-        switch (ch) {
-        case 'b':
-            serial_baud = atoi(optarg);
-        break;
+	while ((ch = getopt_long (argc , argv , "b:dh:p:?" , long_options , &option_index )) != -1 ) 
+	{
 
-        case 'd':
-            debug++;
-        break;
+		switch (ch) 
+		{
+			case 'b' :
+				serial_baud = atoi(optarg);
+				break;
 
-        case 'h':
-            mqtt_sn_host = optarg;
-        break;
+	        case 'd' :
+	        	debug ++ ;
+	        	break ;
 
-        case 'p':
-            mqtt_sn_port = optarg;
-        break;
+	        case 'h' :
+	        	mqtt_sn_host = optarg;
+	        	break;
 
-        case '?':
-        default:
-            usage();
-        break;
-    }
+			case 'p' :
+	        	mqtt_sn_port = optarg;
+	        	break;
+
+			case 'f':
+            	mqtt_sn_enable_frwdencap() ;
+            	frwdencap = TRUE ;
+        	break;
+
+	        case '?' :
+	        default:
+	        	usage() ;
+	        break ;
+		} // switch
+	} // while
 
     // Final argument is the serial port device path
     if (argc-optind < 1) {
@@ -107,6 +128,8 @@ static int serial_open(const char* device_path)
 {
     struct termios tios;
     int fd;
+
+    mqtt_sn_disable_frwdencap() ;
 
     if (debug) {
         fprintf(stderr, "Opening %s\n", device_path);
@@ -165,19 +188,22 @@ static void* serial_read_packet(int fd)
     // First get the length of the packet
     int bytes_read = read(fd, buf, 1);
     if (bytes_read != 1) {
-        fprintf(stderr, "Error reading packet length from serial port: %d, %d\n", bytes_read, errno);
+    	__CUR_TIME__
+        fprintf(stderr, "%s Error reading packet length from serial port: %d, %d\n", tm_buffer , bytes_read, errno);
         return NULL;
     }
 
     if (buf[0] == 0x00) {
-        fprintf(stderr, "Error: packets of length 0 are invalid.\n");
+    	__CUR_TIME__
+        fprintf(stderr, "%s Error: packets of length 0 are invalid.\n" , tm_buffer ) ;
         return NULL;
     }
 
     // Read in the rest of the packet
     bytes_read = read(fd, &buf[1], buf[0]-1);
     if (bytes_read <= 0) {
-        fprintf(stderr, "Error reading rest of packet from serial port: %d, %d\n", bytes_read, errno);
+    	__CUR_TIME__
+        fprintf(stderr, "%s Error reading rest of packet from serial port: %d, %d\n", tm_buffer , bytes_read, errno);
         return NULL;
     } else {
         bytes_read += 1;
@@ -192,7 +218,8 @@ static void* serial_read_packet(int fd)
 
     if (debug) {
         const char* type = mqtt_sn_type_string(buf[1]);
-        fprintf(stderr, "Serial -> UDP (bytes_read=%d, type=%s)\n", bytes_read, type);
+        __CUR_TIME__
+        fprintf(stderr, "%s Serial -> UDP (bytes_read=%d, type=%s)\n", tm_buffer , bytes_read, type);
         if (debug > 1) {
             int i;
             fprintf(stderr, "  ");
@@ -212,19 +239,20 @@ void serial_write_packet(int fd, const void* packet)
 
     sent = write(fd, packet, len);
     if (sent != len) {
-        fprintf(stderr, "Warning: only sent %d of %d bytes\n", (int)sent, (int)len);
+    	__CUR_TIME__
+        fprintf(stderr, "%s Warning: only sent %d of %d bytes\n", tm_buffer , (int)sent, (int)len);
     }
 }
 
 static void termination_handler (int signum)
 {
     switch(signum) {
-        case SIGHUP:  fprintf(stderr, "Got hangup signal."); break;
-        case SIGTERM: fprintf(stderr, "Got termination signal."); break;
-        case SIGINT:  fprintf(stderr, "Got interupt signal."); break;
+        case SIGHUP:  fprintf(stderr, "Got hangup signal.\n"); break;
+        case SIGTERM: fprintf(stderr, "Got termination signal.\n"); break;
+        case SIGINT:  fprintf(stderr, "Got interrupt signal.\n"); break;
     }
 
-    // Signal the main thead to stop
+    // Signal the main thread to stop
     keep_running = FALSE;
 }
 
@@ -236,6 +264,9 @@ int main(int argc, char* argv[])
 
     // Parse the command-line options
     parse_opts(argc, argv);
+	if (debug){
+		fprintf(stderr, "Debug level:    %i\n", debug ) ;
+	}
 
     mqtt_sn_set_debug(debug);
 
@@ -253,9 +284,9 @@ int main(int argc, char* argv[])
     while (keep_running) {
         fd_set fdset;
 
-        FD_ZERO(&fdset);
-        FD_SET(fd, &fdset);
-        FD_SET(sock, &fdset);
+        FD_ZERO(&fdset);			// Clear the socket set
+        FD_SET(fd, &fdset);			// Add serial into fdset
+        FD_SET(sock, &fdset);		// Add socket into fdset
 
         if (select(FD_SETSIZE, &fdset, NULL, NULL, NULL) < 0) {
             if (errno != EINTR) {
@@ -264,10 +295,15 @@ int main(int argc, char* argv[])
             break;
         }
 
+        // Read serial line
         if (FD_ISSET(fd, &fdset)) {
             void *packet = serial_read_packet(fd);
             if (packet) {
-                mqtt_sn_send_packet(sock, packet);
+				if ( frwdencap ) {
+					mqtt_sn_send_frwdencap_packet(sock , packet , NULL, 0) ;
+				} else {
+					mqtt_sn_send_packet(sock, packet);
+				}
             }
         }
 

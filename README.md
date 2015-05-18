@@ -12,6 +12,7 @@ Supported Features
 - Manual and automatic client ID generation
 - Displaying topic name with wildcard subscriptions
 - Pre-defined topic IDs and short topic names
+- Forwarder encapsulation according to MQTT-SN Protocol Specification v1.2.
 
 
 Limitations
@@ -44,6 +45,8 @@ Publishing
       -r             Message should be retained.
       -t <topic>     MQTT topic name to publish to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
+      --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
+      --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.
 
 
 Subscribing
@@ -60,14 +63,16 @@ Subscribing
       -p <port>      Network port to connect to. Defaults to 1883.
       -t <topic>     MQTT topic name to subscribe to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
+      --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
+      --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.
       -v             Print messages verbosely, showing the topic name.
 
 
 Serial Port Bridge
 ------------------
 
-The Serial Port bridge can be used to relay packets from a remote device on the end of a 
-serial port and convert them into UDP packets, which are sent and received from a broker 
+The Serial Port bridge can be used to relay packets from a remote device on the end of a
+serial port and convert them into UDP packets, which are sent and received from a broker
 or MQTT-SN gateway.
 
     Usage: mqtt-sn-serial-bridge [opts] <device>
@@ -77,6 +82,7 @@ or MQTT-SN gateway.
       -dd            Enable extended debugging - display packets in hex.
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
       -p <port>      Network port to connect to. Defaults to 1883.
+      --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
 
 
 License
