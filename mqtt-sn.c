@@ -601,8 +601,8 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
                 };
 
                 default: {
-                    const char* type = mqtt_sn_type_string(packet[1]);
-                    fprintf(stderr, "Warning: unexpected packet type: %s.\n", type);
+                    const char* typestr = mqtt_sn_type_string(packet[1]);
+                    fprintf(stderr, "Warning: unexpected packet type: %s.\n", typestr);
                     break;
                 }
             }
