@@ -665,15 +665,15 @@ const char* mqtt_sn_return_code_string(uint8_t return_code)
 
 void mqtt_sn_cleanup()
 {
-    topic_map_t **ptr = &topic_map;
-    topic_map_t **ptr2 = NULL;
+    topic_map_t *ptr = topic_map;
+    topic_map_t *ptr2 = NULL;
 
     // Walk through the topic map, deleting each entry
-    while (*ptr) {
+    while (ptr) {
         ptr2 = ptr;
-        ptr = &((*ptr)->next);
-        free(*ptr2);
-        *ptr2 = NULL;
+        ptr = ptr->next;
+        free(ptr2);
     }
+    topic_map = NULL ;
 }
 
