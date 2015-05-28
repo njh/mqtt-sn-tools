@@ -370,6 +370,32 @@ void mqtt_sn_send_disconnect(int sock)
     return mqtt_sn_send_packet(sock, &packet);
 }
 
+
+void mqtt_sn_receive_disconnect(int sock)
+{
+    connack_packet_t *packet = mqtt_sn_receive_packet(sock);
+
+    if (packet == NULL) {
+        fprintf(stderr, "Failed to disconnect from MQTT-SN gateway.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (packet->type != MQTT_SN_TYPE_DISCONNECT) {
+        fprintf(stderr, "Was expecting DISCONNECT packet but received: %s\n", mqtt_sn_type_string(packet->type));
+        exit(EXIT_FAILURE);
+    }
+
+    // Check Disconnect return code
+    if (debug)
+        fprintf(stderr, "DISCONNECT return code: 0x%2.2x\n", packet->return_code);
+
+    if (packet->return_code) {
+        fprintf(stderr, "DISCONNECT error: %s\n", mqtt_sn_return_code_string(packet->return_code));
+        exit(packet->return_code);
+    }
+}
+
+
 void mqtt_sn_receive_connack(int sock)
 {
     connack_packet_t *packet = mqtt_sn_receive_packet(sock);
@@ -380,7 +406,7 @@ void mqtt_sn_receive_connack(int sock)
     }
 
     if (packet->type != MQTT_SN_TYPE_CONNACK) {
-        fprintf(stderr, "Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
+        fprintf(stderr, "Was expecting CONNACK packet but received: %s\n", mqtt_sn_type_string(packet->type));
         exit(EXIT_FAILURE);
     }
 
