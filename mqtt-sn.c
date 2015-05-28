@@ -380,7 +380,7 @@ void mqtt_sn_receive_connack(int sock)
     }
 
     if (packet->type != MQTT_SN_TYPE_CONNACK) {
-        fprintf(stderr, "Was expecting CONNACK packet but received: 0x%2.2x\n", packet->type);
+        fprintf(stderr, "Was expecting CONNACK packet but received: %s\n", mqtt_sn_type_string(packet->type));
         exit(EXIT_FAILURE);
     }
 
@@ -478,7 +478,7 @@ uint16_t mqtt_sn_receive_regack(int sock)
     }
 
     if (packet->type != MQTT_SN_TYPE_REGACK) {
-        fprintf(stderr, "Was expecting REGACK packet but received: 0x%2.2x\n", packet->type);
+        fprintf(stderr, "Was expecting REGACK packet but received: %s\n", mqtt_sn_type_string(packet->type));
         exit(-1);
     }
 
@@ -516,7 +516,7 @@ uint16_t mqtt_sn_receive_suback(int sock)
     }
 
     if (packet->type != MQTT_SN_TYPE_SUBACK) {
-        fprintf(stderr, "Was expecting SUBACK packet but received: 0x%2.2x\n", packet->type);
+        fprintf(stderr, "Was expecting SUBACK packet but received: %s\n", mqtt_sn_type_string(packet->type));
         exit(-1);
     }
 
