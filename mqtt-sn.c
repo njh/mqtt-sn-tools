@@ -370,6 +370,28 @@ void mqtt_sn_send_disconnect(int sock)
     return mqtt_sn_send_packet(sock, &packet);
 }
 
+
+void mqtt_sn_receive_disconnect(int sock)
+{
+    disconnect_packet_t *packet = mqtt_sn_receive_packet(sock);
+
+    if (packet == NULL) {
+        fprintf(stderr, "Failed to disconnect from MQTT-SN gateway.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (packet->type != MQTT_SN_TYPE_DISCONNECT) {
+        fprintf(stderr, "Was expecting DISCONNECT packet but received: %s\n", mqtt_sn_type_string(packet->type));
+        exit(EXIT_FAILURE);
+    }
+
+    // Check Disconnect return duration
+    if (packet->length == 4) {
+        fprintf(stderr, "DISCONNECT warning. Gateway returned duration in disconnect packet: 0x%2.2x\n", packet->duration);
+    }
+}
+
+
 void mqtt_sn_receive_connack(int sock)
 {
     connack_packet_t *packet = mqtt_sn_receive_packet(sock);
