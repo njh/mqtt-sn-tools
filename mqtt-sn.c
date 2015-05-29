@@ -373,7 +373,7 @@ void mqtt_sn_send_disconnect(int sock)
 
 void mqtt_sn_receive_disconnect(int sock)
 {
-    connack_packet_t *packet = mqtt_sn_receive_packet(sock);
+    disconnect_packet_t *packet = mqtt_sn_receive_packet(sock);
 
     if (packet == NULL) {
         fprintf(stderr, "Failed to disconnect from MQTT-SN gateway.\n");
@@ -385,13 +385,9 @@ void mqtt_sn_receive_disconnect(int sock)
         exit(EXIT_FAILURE);
     }
 
-    // Check Disconnect return code
-    if (debug)
-        fprintf(stderr, "DISCONNECT return code: 0x%2.2x\n", packet->return_code);
-
-    if (packet->return_code) {
-        fprintf(stderr, "DISCONNECT error: %s\n", mqtt_sn_return_code_string(packet->return_code));
-        exit(packet->return_code);
+    // Check Disconnect return duration
+    if (packet->length == 4) {
+        fprintf(stderr, "DISCONNECT warning. Broker returned duration in disconnect packet: 0x%2.2x\n", packet->duration);
     }
 }
 
