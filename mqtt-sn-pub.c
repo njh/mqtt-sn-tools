@@ -180,6 +180,7 @@ int main(int argc, char* argv[])
         // Finally, disconnect
         if (qos >= 0) {
             mqtt_sn_send_disconnect(sock);
+            mqtt_sn_receive_disconnect(sock);
         }
 
         close(sock);

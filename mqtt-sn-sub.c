@@ -220,6 +220,7 @@ int main(int argc, char* argv[])
 
         // Finally, disconnect
         mqtt_sn_send_disconnect(sock);
+        mqtt_sn_receive_disconnect(sock);
 
         close(sock);
     }
