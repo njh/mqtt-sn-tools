@@ -1,5 +1,10 @@
 mqtt-sn-pub
 mqtt-sn-sub
 mqtt-sn-serial-bridge
+*.exe
 *.o
 *.tar.gz
+
+.settings
+.cproject
+.project
