@@ -5,6 +5,7 @@ mqtt-sn-serial-bridge
 *.o
 *.tar.gz
 
+# Eclipse project metafiles
 .settings
 .cproject
 .project
