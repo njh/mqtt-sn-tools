@@ -74,49 +74,49 @@ static void parse_opts(int argc, char** argv)
         switch (ch) {
         case 'd':
             debug = TRUE;
-        break;
+            break;
 
         case 'h':
             mqtt_sn_host = optarg;
-        break;
+            break;
 
         case 'i':
             client_id = optarg;
-        break;
+            break;
 
         case 'm':
             message_data = optarg;
-        break;
+            break;
 
         case 'n':
             message_data = "";
-        break;
+            break;
 
         case 'p':
             mqtt_sn_port = optarg;
-        break;
+            break;
 
         case 'q':
             qos = atoi(optarg);
-        break;
+            break;
 
         case 'r':
             retain = TRUE;
-        break;
+            break;
 
         case 't':
             topic_name = optarg;
-        break;
+            break;
 
         case 'T':
             topic_id = atoi(optarg);
-        break;
+            break;
 
         case '?':
         default:
             usage();
-        break;
-    }
+            break;
+        }
 
     // Missing Parameter?
     if (!(topic_name || topic_id) || !message_data) {

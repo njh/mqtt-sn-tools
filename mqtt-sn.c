@@ -267,16 +267,16 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
 static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
 {
     switch (qos) {
-        case -1:
-          return MQTT_SN_FLAG_QOS_N1;
-        case 0:
-          return MQTT_SN_FLAG_QOS_0;
-        case 1:
-          return MQTT_SN_FLAG_QOS_1;
-        case 2:
-          return MQTT_SN_FLAG_QOS_2;
-        default:
-          return 0;
+    case -1:
+        return MQTT_SN_FLAG_QOS_N1;
+    case 0:
+        return MQTT_SN_FLAG_QOS_0;
+    case 1:
+        return MQTT_SN_FLAG_QOS_1;
+    case 2:
+        return MQTT_SN_FLAG_QOS_2;
+    default:
+        return 0;
     }
 }
 
@@ -604,32 +604,32 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
         packet = mqtt_sn_receive_packet(sock);
         if (packet) {
             switch(packet[1]) {
-                case MQTT_SN_TYPE_PUBLISH: {
-                    return (publish_packet_t*)packet;
-                    break;
-                }
+            case MQTT_SN_TYPE_PUBLISH: {
+                return (publish_packet_t*)packet;
+                break;
+            }
 
-                case MQTT_SN_TYPE_REGISTER: {
-                    mqtt_sn_process_register(sock, (register_packet_t*)packet);
-                    break;
-                };
+            case MQTT_SN_TYPE_REGISTER: {
+                mqtt_sn_process_register(sock, (register_packet_t*)packet);
+                break;
+            };
 
-                case MQTT_SN_TYPE_PINGRESP: {
-                    // do nothing
-                    break;
-                };
+            case MQTT_SN_TYPE_PINGRESP: {
+                // do nothing
+                break;
+            };
 
-                case MQTT_SN_TYPE_DISCONNECT: {
-                    log_warn("Received DISCONNECT from gateway.\n");
-                    exit(EXIT_FAILURE);
-                    break;
-                };
+            case MQTT_SN_TYPE_DISCONNECT: {
+                log_warn("Received DISCONNECT from gateway.\n");
+                exit(EXIT_FAILURE);
+                break;
+            };
 
-                default: {
-                    const char* typestr = mqtt_sn_type_string(packet[1]);
-                    log_warn("Unexpected packet type: %s.\n", typestr);
-                    break;
-                }
+            default: {
+                const char* typestr = mqtt_sn_type_string(packet[1]);
+                log_warn("Unexpected packet type: %s.\n", typestr);
+                break;
+            }
             }
         }
     }
@@ -704,37 +704,34 @@ void mqtt_sn_cleanup()
 
 void log_msg(const char* level, const char* format, va_list arglist )
 {
-    time( &log_time) ;
-    strftime (tm_buffer , 40 ,"%F %T ", localtime(&log_time) ) ;
-    fputs ( tm_buffer, stderr );
-    fputs ( level, stderr );
+    time(&log_time) ;
+    strftime(tm_buffer, 40, "%F %T ", localtime(&log_time));
+    fputs(tm_buffer, stderr);
+    fputs(level, stderr);
 
-    vfprintf( stderr, format, arglist );
+    vfprintf(stderr, format, arglist);
 }
 
-void log_debug(const char * format, ... )
+void log_debug(const char * format, ...)
 {
     va_list arglist;
-    va_start( arglist, format );
-    log_msg( "DEBUG ", format, arglist ) ;
-    va_end( arglist );
+    va_start(arglist, format);
+    log_msg("DEBUG ", format, arglist);
+    va_end(arglist);
 }
 
-
-void log_warn(const char * format, ... )
+void log_warn(const char * format, ...)
 {
     va_list arglist;
-    va_start( arglist, format );
-    log_msg( "WARN  ", format, arglist ) ;
-    va_end( arglist );
+    va_start(arglist, format);
+    log_msg("WARN  ", format, arglist);
+    va_end(arglist);
 }
 
-
-void log_err(const char * format, ... )
+void log_err(const char * format, ...)
 {
     va_list arglist;
-    va_start( arglist, format );
-    log_msg( "ERROR ", format, arglist ) ;
-    va_end( arglist );
+    va_start(arglist, format );
+    log_msg("ERROR ", format, arglist);
+    va_end(arglist);
 }
-

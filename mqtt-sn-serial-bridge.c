@@ -73,25 +73,25 @@ static void parse_opts(int argc, char** argv)
         switch (ch) {
         case 'b':
             serial_baud = atoi(optarg);
-        break;
+            break;
 
         case 'd':
             debug++;
-        break;
+            break;
 
         case 'h':
             mqtt_sn_host = optarg;
-        break;
+            break;
 
         case 'p':
             mqtt_sn_port = optarg;
-        break;
+            break;
 
         case '?':
         default:
             usage();
-        break;
-    }
+            break;
+        }
 
     // Final argument is the serial port device path
     if (argc-optind < 1) {
@@ -113,7 +113,10 @@ static int serial_open(const char* device_path)
     }
 
     fd = open(device_path, O_RDWR | O_NOCTTY | O_NDELAY );
-    if (fd < 0) {perror(device_path); exit(EXIT_FAILURE); }
+    if (fd < 0) {
+        perror(device_path);
+        exit(EXIT_FAILURE);
+    }
 
     // Turn back on blocking reads
     fcntl(fd, F_SETFL, 0);
@@ -219,9 +222,15 @@ void serial_write_packet(int fd, const void* packet)
 static void termination_handler (int signum)
 {
     switch(signum) {
-        case SIGHUP:  log_debug("Got hangup signal.\n"); break;
-        case SIGTERM: log_debug("Got termination signal.\n"); break;
-        case SIGINT:  log_debug("Got interrupt signal.\n"); break;
+    case SIGHUP:
+        log_debug("Got hangup signal.\n");
+        break;
+    case SIGTERM:
+        log_debug("Got termination signal.\n");
+        break;
+    case SIGINT:
+        log_debug("Got interrupt signal.\n");
+        break;
     }
 
     // Signal the main thead to stop

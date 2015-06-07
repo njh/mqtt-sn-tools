@@ -75,49 +75,49 @@ static void parse_opts(int argc, char** argv)
         switch (ch) {
         case '1':
             single_message = TRUE;
-        break;
+            break;
 
         case 'c':
             clean_session = FALSE;
-        break;
+            break;
 
         case 'd':
             debug = TRUE;
-        break;
+            break;
 
         case 'h':
             mqtt_sn_host = optarg;
-        break;
+            break;
 
         case 'i':
             client_id = optarg;
-        break;
+            break;
 
         case 'k':
             keep_alive = atoi(optarg);
-        break;
+            break;
 
         case 'p':
             mqtt_sn_port = optarg;
-        break;
+            break;
 
         case 't':
             topic_name = optarg;
-        break;
+            break;
 
         case 'T':
             topic_id = atoi(optarg);
-        break;
+            break;
 
         case 'v':
             verbose = TRUE;
-        break;
+            break;
 
         case '?':
         default:
             usage();
-        break;
-    }
+            break;
+        }
 
     // Missing Parameter?
     if (!topic_name && !topic_id) {
@@ -134,9 +134,15 @@ static void parse_opts(int argc, char** argv)
 static void termination_handler (int signum)
 {
     switch(signum) {
-        case SIGHUP:  log_debug("Got hangup signal.\n"); break;
-        case SIGTERM: log_debug("Got termination signal.\n"); break;
-        case SIGINT:  log_debug("Got interrupt signal.\n"); break;
+    case SIGHUP:
+        log_debug("Got hangup signal.\n");
+        break;
+    case SIGTERM:
+        log_debug("Got termination signal.\n");
+        break;
+    case SIGINT:
+        log_debug("Got interrupt signal.\n");
+        break;
     }
 
     // Signal the main thead to stop
@@ -193,20 +199,20 @@ int main(int argc, char* argv[])
                     int topic_type = packet->flags & 0x3;
                     int topic_id = ntohs(packet->topic_id);
                     switch (topic_type) {
-                        case MQTT_SN_TOPIC_TYPE_NORMAL: {
-                            const char *topic_name = mqtt_sn_lookup_topic(topic_id);
-                            printf("%s: %s\n", topic_name, packet->data);
-                            break;
-                        };
-                        case MQTT_SN_TOPIC_TYPE_PREDEFINED: {
-                            printf("%4.4x: %s\n", topic_id, packet->data);
-                            break;
-                        };
-                        case MQTT_SN_TOPIC_TYPE_SHORT: {
-                            const char *str = (const char*)&packet->topic_id;
-                            printf("%c%c: %s\n", str[0], str[1], packet->data);
-                            break;
-                        };
+                    case MQTT_SN_TOPIC_TYPE_NORMAL: {
+                        const char *topic_name = mqtt_sn_lookup_topic(topic_id);
+                        printf("%s: %s\n", topic_name, packet->data);
+                        break;
+                    };
+                    case MQTT_SN_TOPIC_TYPE_PREDEFINED: {
+                        printf("%4.4x: %s\n", topic_id, packet->data);
+                        break;
+                    };
+                    case MQTT_SN_TOPIC_TYPE_SHORT: {
+                        const char *str = (const char*)&packet->topic_id;
+                        printf("%c%c: %s\n", str[0], str[1], packet->data);
+                        break;
+                    };
                     }
                 } else {
                     printf("%s\n", packet->data);
