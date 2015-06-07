@@ -21,6 +21,7 @@
   OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+#include <stdarg.h>
 
 #ifndef MQTT_SN_H
 #define MQTT_SN_H
@@ -180,5 +181,8 @@ uint8_t mqtt_sn_validate_packet(const void *packet, size_t length);
 void mqtt_sn_send_packet(int sock, const void* data);
 void* mqtt_sn_receive_packet(int sock);
 
+void log_debug(const char * format, ... );
+void log_warn(const char * format, ... );
+void log_err(const char * format, ... );
 
 #endif
