@@ -78,7 +78,7 @@ int mqtt_sn_create_socket(const char* host, const char* port)
     // Lookup address
     ret = getaddrinfo(host, port, &hints, &result);
     if (ret != 0) {
-        log_err("getaddrinfo: %s\n", gai_strerror(ret));
+        log_err("getaddrinfo: %s", gai_strerror(ret));
         exit(EXIT_FAILURE);
     }
 
@@ -99,7 +99,7 @@ int mqtt_sn_create_socket(const char* host, const char* port)
     }
 
     if (rp == NULL) {
-        log_err("Could not connect to remote host.\n");
+        log_err("Could not connect to remote host.");
         exit(EXIT_FAILURE);
     }
 
@@ -123,7 +123,7 @@ void mqtt_sn_send_packet(int sock, const void* data)
 
     sent = send(sock, data, len, 0);
     if (sent != len) {
-        log_warn("Only sent %d of %d bytes\n", (int)sent, (int)len);
+        log_warn("Only sent %d of %d bytes", (int)sent, (int)len);
     }
 
     // Store the last time that we sent a packet
@@ -135,17 +135,17 @@ uint8_t mqtt_sn_validate_packet(const void *packet, size_t length)
     const uint8_t* buf = packet;
 
     if (buf[0] == 0x00) {
-        log_err("Packet length header is not valid\n");
+        log_err("Packet length header is not valid");
         return FALSE;
     }
 
     if (buf[0] == 0x01) {
-        log_err("Packet received is longer than this tool can handle\n");
+        log_err("Packet received is longer than this tool can handle");
         return FALSE;
     }
 
     if (buf[0] != length) {
-        log_err("Read %d bytes but packet length is %d bytes.\n", (int)length, (int)buf[0]);
+        log_err("Read %d bytes but packet length is %d bytes.", (int)length, (int)buf[0]);
         return FALSE;
     }
 
@@ -158,14 +158,14 @@ void* mqtt_sn_receive_packet(int sock)
     int bytes_read;
 
     if (debug)
-        log_debug("waiting for packet...\n");
+        log_debug("waiting for packet...");
 
     // Read in the packet
     bytes_read = recv(sock, buffer, MQTT_SN_MAX_PACKET_LENGTH, 0);
     if (bytes_read < 0) {
         if (errno == EAGAIN) {
             if (debug)
-                log_debug("Timed out waiting for packet.\n");
+                log_debug("Timed out waiting for packet.");
             return NULL;
         } else {
             perror("recv failed");
@@ -174,7 +174,7 @@ void* mqtt_sn_receive_packet(int sock)
     }
 
     if (debug)
-        log_debug("Received %d bytes. Type=%s.\n", (int)bytes_read, mqtt_sn_type_string(buffer[1]));
+        log_debug("Received %d bytes. Type=%s.", (int)bytes_read, mqtt_sn_type_string(buffer[1]));
 
     if (mqtt_sn_validate_packet(buffer, bytes_read) == FALSE) {
         return NULL;
@@ -195,7 +195,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
 
     // Check that it isn't too long
     if (client_id && strlen(client_id) > 23) {
-        log_err("Client id is too long\n");
+        log_err("Client id is too long");
         exit(EXIT_FAILURE);
     }
 
@@ -217,7 +217,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
     packet.length = 0x06 + strlen(packet.client_id);
 
     if (debug)
-        log_debug("Sending CONNECT packet...\n");
+        log_debug("Sending CONNECT packet...");
 
     // Store the keep alive period
     if (keepalive) {
@@ -233,7 +233,7 @@ void mqtt_sn_send_register(int sock, const char* topic_name)
     size_t topic_name_len = strlen(topic_name);
 
     if (topic_name_len > MQTT_SN_MAX_TOPIC_LENGTH) {
-        log_err("Topic name is too long\n");
+        log_err("Topic name is too long");
         exit(EXIT_FAILURE);
     }
 
@@ -244,7 +244,7 @@ void mqtt_sn_send_register(int sock, const char* topic_name)
     packet.length = 0x06 + topic_name_len;
 
     if (debug)
-        log_debug("Sending REGISTER packet...\n");
+        log_debug("Sending REGISTER packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -259,7 +259,7 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
     packet.length = 0x07;
 
     if (debug)
-        log_debug("Sending REGACK packet...\n");
+        log_debug("Sending REGACK packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -286,7 +286,7 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     size_t data_len = strlen(data);
 
     if (data_len > sizeof(packet.data)) {
-        log_err("Payload is too big\n");
+        log_err("Payload is too big");
         exit(EXIT_FAILURE);
     }
 
@@ -302,7 +302,7 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     packet.length = 0x07 + data_len;
 
     if (debug)
-        log_debug("Sending PUBLISH packet...\n");
+        log_debug("Sending PUBLISH packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -326,7 +326,7 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
     packet.length = 0x05 + topic_name_len;
 
     if (debug)
-        log_debug("Sending SUBSCRIBE packet...\n");
+        log_debug("Sending SUBSCRIBE packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -343,7 +343,7 @@ void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
     packet.length = 0x05 + 2;
 
     if (debug)
-        log_debug("Sending SUBSCRIBE packet...\n");
+        log_debug("Sending SUBSCRIBE packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -356,7 +356,7 @@ void mqtt_sn_send_pingreq(int sock)
     packet[1] = MQTT_SN_TYPE_PINGREQ;
 
     if (debug)
-        log_debug("Sending ping...\n");
+        log_debug("Sending ping...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -368,7 +368,7 @@ void mqtt_sn_send_disconnect(int sock)
     packet.length = 0x02;
 
     if (debug)
-        log_debug("Sending DISCONNECT packet...\n");
+        log_debug("Sending DISCONNECT packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -379,18 +379,18 @@ void mqtt_sn_receive_disconnect(int sock)
     disconnect_packet_t *packet = mqtt_sn_receive_packet(sock);
 
     if (packet == NULL) {
-        log_err("Failed to disconnect from MQTT-SN gateway.\n");
+        log_err("Failed to disconnect from MQTT-SN gateway.");
         exit(EXIT_FAILURE);
     }
 
     if (packet->type != MQTT_SN_TYPE_DISCONNECT) {
-        log_err("Was expecting DISCONNECT packet but received: %s\n", mqtt_sn_type_string(packet->type));
+        log_err("Was expecting DISCONNECT packet but received: %s", mqtt_sn_type_string(packet->type));
         exit(EXIT_FAILURE);
     }
 
     // Check Disconnect return duration
     if (packet->length == 4) {
-        log_warn("DISCONNECT warning. Gateway returned duration in disconnect packet: 0x%2.2x\n", packet->duration);
+        log_warn("DISCONNECT warning. Gateway returned duration in disconnect packet: 0x%2.2x", packet->duration);
     }
 }
 
@@ -400,21 +400,21 @@ void mqtt_sn_receive_connack(int sock)
     connack_packet_t *packet = mqtt_sn_receive_packet(sock);
 
     if (packet == NULL) {
-        log_err("Failed to connect to MQTT-SN gateway.\n");
+        log_err("Failed to connect to MQTT-SN gateway.");
         exit(EXIT_FAILURE);
     }
 
     if (packet->type != MQTT_SN_TYPE_CONNACK) {
-        log_err("Was expecting CONNACK packet but received: %s\n", mqtt_sn_type_string(packet->type));
+        log_err("Was expecting CONNACK packet but received: %s", mqtt_sn_type_string(packet->type));
         exit(EXIT_FAILURE);
     }
 
     // Check Connack return code
     if (debug)
-        log_debug("CONNACK return code: 0x%2.2x\n", packet->return_code);
+        log_debug("CONNACK return code: 0x%2.2x", packet->return_code);
 
     if (packet->return_code) {
-        log_err("CONNECT error: %s\n", mqtt_sn_return_code_string(packet->return_code));
+        log_err("CONNECT error: %s", mqtt_sn_return_code_string(packet->return_code));
         exit(packet->return_code);
     }
 }
@@ -440,18 +440,18 @@ void mqtt_sn_register_topic(int topic_id, const char* topic_name)
 
     // Check topic ID is valid
     if (topic_id == 0x0000 || topic_id == 0xFFFF) {
-        log_err("Attempted to register invalid topic id: 0x%4.4x\n", topic_id);
+        log_err("Attempted to register invalid topic id: 0x%4.4x", topic_id);
         return;
     }
 
     // Check topic name is valid
     if (topic_name == NULL || strlen(topic_name) <= 0) {
-        log_err("Attempted to register invalid topic name.\n");
+        log_err("Attempted to register invalid topic name.");
         return;
     }
 
     if (debug)
-        log_debug("Registering topic 0x%4.4x: %s\n", topic_id, topic_name);
+        log_debug("Registering topic 0x%4.4x: %s", topic_id, topic_name);
 
     // Look for the topic id
     while (*ptr) {
@@ -466,7 +466,7 @@ void mqtt_sn_register_topic(int topic_id, const char* topic_name)
     if (*ptr == NULL) {
         *ptr = (topic_map_t *)malloc(sizeof(topic_map_t));
         if (!*ptr) {
-            log_err("Failed to allocate memory for new topic map entry.\n");
+            log_err("Failed to allocate memory for new topic map entry.");
             exit(EXIT_FAILURE);
         }
         (*ptr)->next = NULL;
@@ -488,7 +488,7 @@ const char* mqtt_sn_lookup_topic(int topic_id)
         ptr = &((*ptr)->next);
     }
 
-    log_warn("Failed to lookup topic id: 0x%4.4x\n", topic_id);
+    log_warn("Failed to lookup topic id: 0x%4.4x", topic_id);
     return NULL;
 }
 
@@ -498,34 +498,34 @@ uint16_t mqtt_sn_receive_regack(int sock)
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
-        log_err("Failed to connect to register topic.\n");
+        log_err("Failed to connect to register topic.");
         exit(EXIT_FAILURE);
     }
 
     if (packet->type != MQTT_SN_TYPE_REGACK) {
-        log_err("Was expecting REGACK packet but received: %s\n", mqtt_sn_type_string(packet->type));
+        log_err("Was expecting REGACK packet but received: %s", mqtt_sn_type_string(packet->type));
         exit(-1);
     }
 
     // Check Regack return code
     if (debug)
-        log_debug("REGACK return code: 0x%2.2x\n", packet->return_code);
+        log_debug("REGACK return code: 0x%2.2x", packet->return_code);
 
     if (packet->return_code) {
-        log_err("REGISTER error: %s\n", mqtt_sn_return_code_string(packet->return_code));
+        log_err("REGISTER error: %s", mqtt_sn_return_code_string(packet->return_code));
         exit(packet->return_code);
     }
 
     // Check that the Message ID matches
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
-        log_warn("Message id in Regack does not equal message id sent\n");
+        log_warn("Message id in Regack does not equal message id sent");
     }
 
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        log_debug("REGACK topic id: 0x%4.4x\n", received_topic_id);
+        log_debug("REGACK topic id: 0x%4.4x", received_topic_id);
 
     return received_topic_id;
 }
@@ -536,38 +536,38 @@ uint16_t mqtt_sn_receive_suback(int sock)
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
-        log_err("Failed to subscribe to topic.\n");
+        log_err("Failed to subscribe to topic.");
         exit(EXIT_FAILURE);
     }
 
     if (packet->type != MQTT_SN_TYPE_SUBACK) {
-        log_err("Was expecting SUBACK packet but received: %s\n", mqtt_sn_type_string(packet->type));
+        log_err("Was expecting SUBACK packet but received: %s", mqtt_sn_type_string(packet->type));
         exit(-1);
     }
 
     // Check Suback return code
     if (debug)
-        log_debug("SUBACK return code: 0x%2.2x\n", packet->return_code);
+        log_debug("SUBACK return code: 0x%2.2x", packet->return_code);
 
     if (packet->return_code) {
-        log_err("SUBSCRIBE error: %s\n", mqtt_sn_return_code_string(packet->return_code));
+        log_err("SUBSCRIBE error: %s", mqtt_sn_return_code_string(packet->return_code));
         exit(packet->return_code);
     }
 
     // Check that the Message ID matches
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
-        log_warn("Message id in SUBACK does not equal message id sent\n");
+        log_warn("Message id in SUBACK does not equal message id sent");
         if (debug) {
-            log_debug("  Expecting: %d\n", next_message_id-1);
-            log_debug("  Actual: %d\n", received_message_id);
+            log_debug("  Expecting: %d", next_message_id-1);
+            log_debug("  Actual: %d", received_message_id);
         }
     }
 
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
     if (debug)
-        log_debug("SUBACK topic id: 0x%4.4x\n", received_topic_id);
+        log_debug("SUBACK topic id: 0x%4.4x", received_topic_id);
 
     return received_topic_id;
 }
@@ -620,14 +620,14 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
             };
 
             case MQTT_SN_TYPE_DISCONNECT: {
-                log_warn("Received DISCONNECT from gateway.\n");
+                log_warn("Received DISCONNECT from gateway.");
                 exit(EXIT_FAILURE);
                 break;
             };
 
             default: {
                 const char* typestr = mqtt_sn_type_string(packet[1]);
-                log_warn("Unexpected packet type: %s.\n", typestr);
+                log_warn("Unexpected packet type: %s.", typestr);
                 break;
             }
             }
@@ -636,7 +636,7 @@ publish_packet_t* mqtt_sn_loop(int sock, int timeout)
 
     // Check for receive timeout
     if (keep_alive > 0 && (now - last_receive) >= (keep_alive * 1.5)) {
-        log_err("Keep alive error: timed out receiving packet from gateway.\n");
+        log_err("Keep alive error: timed out receiving packet from gateway.");
         exit(EXIT_FAILURE);
     }
 
@@ -706,10 +706,11 @@ void log_msg(const char* level, const char* format, va_list arglist )
 {
     time(&log_time) ;
     strftime(tm_buffer, 40, "%F %T ", localtime(&log_time));
+
     fputs(tm_buffer, stderr);
     fputs(level, stderr);
-
     vfprintf(stderr, format, arglist);
+    fputs("\n", stderr);
 }
 
 void log_debug(const char * format, ...)
