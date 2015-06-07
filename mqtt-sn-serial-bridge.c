@@ -109,7 +109,7 @@ static int serial_open(const char* device_path)
     int fd;
 
     if (debug) {
-        fprintf(stderr, "Opening %s\n", device_path);
+        log_debug("Opening %s\n", device_path);
     }
 
     fd = open(device_path, O_RDWR | O_NOCTTY | O_NDELAY );
@@ -165,19 +165,19 @@ static void* serial_read_packet(int fd)
     // First get the length of the packet
     int bytes_read = read(fd, buf, 1);
     if (bytes_read != 1) {
-        fprintf(stderr, "Error reading packet length from serial port: %d, %d\n", bytes_read, errno);
+        log_err("Error reading packet length from serial port: %d, %d\n", bytes_read, errno);
         return NULL;
     }
 
     if (buf[0] == 0x00) {
-        fprintf(stderr, "Error: packets of length 0 are invalid.\n");
+        log_err("Packets of length 0 are invalid.\n");
         return NULL;
     }
 
     // Read in the rest of the packet
     bytes_read = read(fd, &buf[1], buf[0]-1);
     if (bytes_read <= 0) {
-        fprintf(stderr, "Error reading rest of packet from serial port: %d, %d\n", bytes_read, errno);
+        log_err("Error reading rest of packet from serial port: %d, %d\n", bytes_read, errno);
         return NULL;
     } else {
         bytes_read += 1;
@@ -192,7 +192,7 @@ static void* serial_read_packet(int fd)
 
     if (debug) {
         const char* type = mqtt_sn_type_string(buf[1]);
-        fprintf(stderr, "Serial -> UDP (bytes_read=%d, type=%s)\n", bytes_read, type);
+        log_debug("Serial -> UDP (bytes_read=%d, type=%s)\n", bytes_read, type);
         if (debug > 1) {
             int i;
             fprintf(stderr, "  ");
@@ -212,16 +212,16 @@ void serial_write_packet(int fd, const void* packet)
 
     sent = write(fd, packet, len);
     if (sent != len) {
-        fprintf(stderr, "Warning: only sent %d of %d bytes\n", (int)sent, (int)len);
+        log_warn("Warning: only sent %d of %d bytes\n", (int)sent, (int)len);
     }
 }
 
 static void termination_handler (int signum)
 {
     switch(signum) {
-        case SIGHUP:  fprintf(stderr, "Got hangup signal."); break;
-        case SIGTERM: fprintf(stderr, "Got termination signal."); break;
-        case SIGINT:  fprintf(stderr, "Got interupt signal."); break;
+        case SIGHUP:  log_debug("Got hangup signal.\n"); break;
+        case SIGTERM: log_debug("Got termination signal.\n"); break;
+        case SIGINT:  log_debug("Got interrupt signal.\n"); break;
     }
 
     // Signal the main thead to stop

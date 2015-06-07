@@ -126,7 +126,7 @@ static void parse_opts(int argc, char** argv)
 
     // Both topic name and topic id?
     if (topic_name && topic_id) {
-        fprintf(stderr, "Error: please provide either a topic id or a topic name, not both.\n");
+        log_err("Please provide either a topic id or a topic name, not both.\n");
         exit(-1);
     }
 }
@@ -134,9 +134,9 @@ static void parse_opts(int argc, char** argv)
 static void termination_handler (int signum)
 {
     switch(signum) {
-        case SIGHUP:  fprintf(stderr, "Got hangup signal."); break;
-        case SIGTERM: fprintf(stderr, "Got termination signal."); break;
-        case SIGINT:  fprintf(stderr, "Got interupt signal."); break;
+        case SIGHUP:  log_debug("Got hangup signal.\n"); break;
+        case SIGTERM: log_debug("Got termination signal.\n"); break;
+        case SIGINT:  log_debug("Got interrupt signal.\n"); break;
     }
 
     // Signal the main thead to stop

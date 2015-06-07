@@ -124,19 +124,19 @@ static void parse_opts(int argc, char** argv)
     }
 
     if (qos != -1 && qos != 0) {
-        fprintf(stderr, "Error: only QoS level 0 or -1 is supported.\n");
+        log_err("Only QoS level 0 or -1 is supported.\n");
         exit(-1);
     }
 
     // Both topic name and topic id?
     if (topic_name && topic_id) {
-        fprintf(stderr, "Error: please provide either a topic id or a topic name, not both.\n");
+        log_err("Please provide either a topic id or a topic name, not both.\n");
         exit(-1);
     }
 
     // Check topic is valid for QoS level -1
     if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2) {
-        fprintf(stderr, "Error: either a pre-defined topic id or a short topic name must be given for QoS -1.\n");
+        log_err("Either a pre-defined topic id or a short topic name must be given for QoS -1.\n");
         exit(-1);
     }
 }
