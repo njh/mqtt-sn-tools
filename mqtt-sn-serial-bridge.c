@@ -108,9 +108,7 @@ static int serial_open(const char* device_path)
     struct termios tios;
     int fd;
 
-    if (debug) {
-        log_debug("Opening %s", device_path);
-    }
+    log_debug("Opening %s", device_path);
 
     fd = open(device_path, O_RDWR | O_NOCTTY | O_NDELAY );
     if (fd < 0) {

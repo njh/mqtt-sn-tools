@@ -42,7 +42,7 @@
 #define AI_DEFAULT (AI_ADDRCONFIG|AI_V4MAPPED)
 #endif
 
-static uint8_t debug = FALSE;
+static uint8_t debug_enabled = FALSE;
 static uint16_t next_message_id = 1;
 static time_t last_transmit = 0;
 static time_t last_receive = 0;
@@ -55,7 +55,7 @@ topic_map_t *topic_map = NULL;
 
 void mqtt_sn_set_debug(uint8_t value)
 {
-    debug = value;
+    debug_enabled = value;
 }
 
 int mqtt_sn_create_socket(const char* host, const char* port)
@@ -157,15 +157,13 @@ void* mqtt_sn_receive_packet(int sock)
     static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH+1];
     int bytes_read;
 
-    if (debug)
-        log_debug("waiting for packet...");
+    log_debug("waiting for packet...");
 
     // Read in the packet
     bytes_read = recv(sock, buffer, MQTT_SN_MAX_PACKET_LENGTH, 0);
     if (bytes_read < 0) {
         if (errno == EAGAIN) {
-            if (debug)
-                log_debug("Timed out waiting for packet.");
+            log_debug("Timed out waiting for packet.");
             return NULL;
         } else {
             perror("recv failed");
@@ -173,8 +171,7 @@ void* mqtt_sn_receive_packet(int sock)
         }
     }
 
-    if (debug)
-        log_debug("Received %d bytes. Type=%s.", (int)bytes_read, mqtt_sn_type_string(buffer[1]));
+    log_debug("Received %d bytes. Type=%s.", (int)bytes_read, mqtt_sn_type_string(buffer[1]));
 
     if (mqtt_sn_validate_packet(buffer, bytes_read) == FALSE) {
         return NULL;
@@ -216,8 +213,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
 
     packet.length = 0x06 + strlen(packet.client_id);
 
-    if (debug)
-        log_debug("Sending CONNECT packet...");
+    log_debug("Sending CONNECT packet...");
 
     // Store the keep alive period
     if (keepalive) {
@@ -243,8 +239,7 @@ void mqtt_sn_send_register(int sock, const char* topic_name)
     strncpy(packet.topic_name, topic_name, sizeof(packet.topic_name));
     packet.length = 0x06 + topic_name_len;
 
-    if (debug)
-        log_debug("Sending REGISTER packet...");
+    log_debug("Sending REGISTER packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -258,8 +253,7 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
     packet.return_code = 0x00;
     packet.length = 0x07;
 
-    if (debug)
-        log_debug("Sending REGACK packet...");
+    log_debug("Sending REGACK packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -301,8 +295,7 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     strncpy(packet.data, data, sizeof(packet.data));
     packet.length = 0x07 + data_len;
 
-    if (debug)
-        log_debug("Sending PUBLISH packet...");
+    log_debug("Sending PUBLISH packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -325,8 +318,7 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
     packet.topic_name[sizeof(packet.topic_name)-1] = '\0';
     packet.length = 0x05 + topic_name_len;
 
-    if (debug)
-        log_debug("Sending SUBSCRIBE packet...");
+    log_debug("Sending SUBSCRIBE packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -342,8 +334,7 @@ void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
     packet.topic_id = htons(topic_id);
     packet.length = 0x05 + 2;
 
-    if (debug)
-        log_debug("Sending SUBSCRIBE packet...");
+    log_debug("Sending SUBSCRIBE packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -355,8 +346,7 @@ void mqtt_sn_send_pingreq(int sock)
     packet[0] = 2;
     packet[1] = MQTT_SN_TYPE_PINGREQ;
 
-    if (debug)
-        log_debug("Sending ping...");
+    log_debug("Sending PINGREQ packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -367,8 +357,7 @@ void mqtt_sn_send_disconnect(int sock)
     packet.type = MQTT_SN_TYPE_DISCONNECT;
     packet.length = 0x02;
 
-    if (debug)
-        log_debug("Sending DISCONNECT packet...");
+    log_debug("Sending DISCONNECT packet...");
 
     return mqtt_sn_send_packet(sock, &packet);
 }
@@ -410,8 +399,7 @@ void mqtt_sn_receive_connack(int sock)
     }
 
     // Check Connack return code
-    if (debug)
-        log_debug("CONNACK return code: 0x%2.2x", packet->return_code);
+    log_debug("CONNACK return code: 0x%2.2x", packet->return_code);
 
     if (packet->return_code) {
         log_err("CONNECT error: %s", mqtt_sn_return_code_string(packet->return_code));
@@ -450,8 +438,7 @@ void mqtt_sn_register_topic(int topic_id, const char* topic_name)
         return;
     }
 
-    if (debug)
-        log_debug("Registering topic 0x%4.4x: %s", topic_id, topic_name);
+    log_debug("Registering topic 0x%4.4x: %s", topic_id, topic_name);
 
     // Look for the topic id
     while (*ptr) {
@@ -508,8 +495,7 @@ uint16_t mqtt_sn_receive_regack(int sock)
     }
 
     // Check Regack return code
-    if (debug)
-        log_debug("REGACK return code: 0x%2.2x", packet->return_code);
+    log_debug("REGACK return code: 0x%2.2x", packet->return_code);
 
     if (packet->return_code) {
         log_err("REGISTER error: %s", mqtt_sn_return_code_string(packet->return_code));
@@ -524,8 +510,7 @@ uint16_t mqtt_sn_receive_regack(int sock)
 
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
-    if (debug)
-        log_debug("REGACK topic id: 0x%4.4x", received_topic_id);
+    log_debug("REGACK topic id: 0x%4.4x", received_topic_id);
 
     return received_topic_id;
 }
@@ -546,8 +531,7 @@ uint16_t mqtt_sn_receive_suback(int sock)
     }
 
     // Check Suback return code
-    if (debug)
-        log_debug("SUBACK return code: 0x%2.2x", packet->return_code);
+    log_debug("SUBACK return code: 0x%2.2x", packet->return_code);
 
     if (packet->return_code) {
         log_err("SUBSCRIBE error: %s", mqtt_sn_return_code_string(packet->return_code));
@@ -558,16 +542,13 @@ uint16_t mqtt_sn_receive_suback(int sock)
     received_message_id = ntohs( packet->message_id );
     if (received_message_id != next_message_id-1) {
         log_warn("Message id in SUBACK does not equal message id sent");
-        if (debug) {
-            log_debug("  Expecting: %d", next_message_id-1);
-            log_debug("  Actual: %d", received_message_id);
-        }
+        log_debug("  Expecting: %d", next_message_id-1);
+        log_debug("  Actual: %d", received_message_id);
     }
 
     // Return the topic ID returned by the gateway
     received_topic_id = ntohs( packet->topic_id );
-    if (debug)
-        log_debug("SUBACK topic id: 0x%4.4x", received_topic_id);
+    log_debug("SUBACK topic id: 0x%4.4x", received_topic_id);
 
     return received_topic_id;
 }
@@ -715,10 +696,12 @@ void log_msg(const char* level, const char* format, va_list arglist )
 
 void log_debug(const char * format, ...)
 {
-    va_list arglist;
-    va_start(arglist, format);
-    log_msg("DEBUG ", format, arglist);
-    va_end(arglist);
+    if (debug_enabled) {
+        va_list arglist;
+        va_start(arglist, format);
+        log_msg("DEBUG ", format, arglist);
+        va_end(arglist);
+    }
 }
 
 void log_warn(const char * format, ...)
