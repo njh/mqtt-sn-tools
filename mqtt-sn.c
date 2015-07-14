@@ -224,7 +224,7 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id , ui
 {
     *wireless_node_id = NULL ;
     *wireless_node_id_len = 0 ;
-    static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH + MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH + 4  + 1];
+    static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH + MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH + 3  + 1];
     uint8_t *packet = buffer ;
     int bytes_read;
 
@@ -260,8 +260,8 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id , ui
 
     if (packet[1] == MQTT_SN_TYPE_FRWDENCAP)
     {
-        *wireless_node_id = &packet[4] ;
-        *wireless_node_id_len = packet[0] - 4 ;
+        *wireless_node_id = &packet[3] ;
+        *wireless_node_id_len = packet[0] - 3 ;
         // Shift packet by the actual length of FRWDENCAP header
         packet += packet[0] ;
     }
@@ -812,7 +812,7 @@ frwdencap_packet_t* mqtt_sn_create_frwdencap_packet( const uint8_t *data , size_
         memcpy(packet->wireless_node_id, wireless_node_id, wireless_node_id_len);
     }
 
-    packet->length = 0x04 + wireless_node_id_len ;
+    packet->length = wireless_node_id_len + 3;
 
     // Copy mqtt-sn packet into forwarder encapsulation packet
     memcpy( &(packet->wireless_node_id[wireless_node_id_len]) , data , ((uint8_t*)data)[0] ) ;

@@ -153,7 +153,7 @@ typedef struct {
 typedef struct __attribute__((packed)) {
   uint8_t length;
   uint8_t type;
-  uint16_t ctrl;
+  uint8_t ctrl;
   uint8_t wireless_node_id[MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH];
   char data[MQTT_SN_MAX_PACKET_LENGTH];
 } frwdencap_packet_t;
