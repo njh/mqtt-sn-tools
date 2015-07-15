@@ -37,6 +37,7 @@
 
 #define MQTT_SN_MAX_PACKET_LENGTH  (255)
 #define MQTT_SN_MAX_TOPIC_LENGTH   (MQTT_SN_MAX_PACKET_LENGTH-6)
+#define MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH  (252)
 
 #define MQTT_SN_TYPE_ADVERTISE     (0x00)
 #define MQTT_SN_TYPE_SEARCHGW      (0x01)
@@ -65,6 +66,7 @@
 #define MQTT_SN_TYPE_WILLTOPICRESP (0x1B)
 #define MQTT_SN_TYPE_WILLMSGUPD    (0x1C)
 #define MQTT_SN_TYPE_WILLMSGRESP   (0x1D)
+#define MQTT_SN_TYPE_FRWDENCAP     (0xFE)
 
 #define MQTT_SN_TOPIC_TYPE_NORMAL     (0x00)
 #define MQTT_SN_TOPIC_TYPE_PREDEFINED (0x01)
@@ -148,6 +150,14 @@ typedef struct {
   uint16_t duration;
 } disconnect_packet_t;
 
+typedef struct __attribute__((packed)) {
+  uint8_t length;
+  uint8_t type;
+  uint8_t ctrl;
+  uint8_t wireless_node_id[MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH];
+  char data[MQTT_SN_MAX_PACKET_LENGTH];
+} frwdencap_packet_t;
+
 typedef struct topic_map {
   uint16_t topic_id;
   char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
@@ -178,8 +188,21 @@ const char* mqtt_sn_type_string(uint8_t type);
 const char* mqtt_sn_return_code_string(uint8_t return_code);
 
 uint8_t mqtt_sn_validate_packet(const void *packet, size_t length);
-void mqtt_sn_send_packet(int sock, const void* data);
+void mqtt_sn_send_packet(int sock, void* data);
+void mqtt_sn_send_frwdencap_packet(int sock, void* data, const uint8_t *wireless_node_id , uint8_t wireless_node_id_len );
 void* mqtt_sn_receive_packet(int sock);
+void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id , uint8_t *wireless_node_id_len);
+
+// Functions to turn on and off forwarder encapsulation according to MQTT-SN Protocol Specification v1.2,
+// chapter 5.5 Forwarder Encapsulation.
+uint8_t mqtt_sn_enable_frwdencap();
+uint8_t mqtt_sn_disable_frwdencap();
+// Set wireless node ID and wireless node ID length
+void mqtt_sn_set_frwdencap_parameters( const uint8_t *wlnid, uint8_t wlnid_len ) ;
+// Wrap mqtt-sn packet into a forwarder encapsulation packet
+frwdencap_packet_t* mqtt_sn_create_frwdencap_packet( const uint8_t *data , size_t *len , const uint8_t *wireless_node_id , uint8_t wireless_node_id_len ) ;
+// Print content of a buffer in hexadecimal format into a stream. It is used to log wireless node ID.
+void fprint_wlnid( FILE * stream , const uint8_t *wireless_node_id , uint8_t wireless_node_id_len ) ;
 
 void log_debug(const char * format, ... );
 void log_warn(const char * format, ... );
