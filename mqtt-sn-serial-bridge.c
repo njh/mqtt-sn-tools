@@ -127,7 +127,7 @@ static int serial_open(const char* device_path)
     int fd;
 
     mqtt_sn_disable_frwdencap() ;
-	
+
     log_debug("Opening %s", device_path);
 
     fd = open(device_path, O_RDWR | O_NOCTTY | O_NDELAY );

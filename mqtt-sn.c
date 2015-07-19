@@ -134,10 +134,10 @@ void mqtt_sn_send_packet(int sock, void* data)
     if (debug > 1) {
         if (forwarder_encapsulation) {
             log_debug( "Sending  %2lu bytes. Type=%s with %s inside on Socket: %d." , (long unsigned int)len ,
-                    mqtt_sn_type_string(((uint8_t*)data)[1]) , mqtt_sn_type_string(origPacketType) , sock ) ;
+                       mqtt_sn_type_string(((uint8_t*)data)[1]) , mqtt_sn_type_string(origPacketType) , sock ) ;
         } else {
             log_debug( "Sending  %2lu bytes. Type=%s on Socket: %d." , (long unsigned int)len ,
-                    mqtt_sn_type_string(((uint8_t*)data)[1]) , sock ) ;
+                       mqtt_sn_type_string(((uint8_t*)data)[1]) , sock ) ;
         }
     }
 
@@ -166,7 +166,7 @@ void mqtt_sn_send_frwdencap_packet(int sock, void* data, const uint8_t *wireless
 
     if (debug > 1) {
         log_debug( "Sending  %2lu bytes. Type=%s with %s inside on Socket: %d." , (long unsigned int)len ,
-                mqtt_sn_type_string(((uint8_t*)data)[1]) , mqtt_sn_type_string(origPacketType) , sock ) ;
+                   mqtt_sn_type_string(((uint8_t*)data)[1]) , mqtt_sn_type_string(origPacketType) , sock ) ;
     }
 
     sent = send(sock, data, len, 0);
@@ -206,7 +206,7 @@ uint8_t mqtt_sn_validate_packet(const void *packet, size_t length)
     if (    (buf[1] == MQTT_SN_TYPE_FRWDENCAP && buf[0] + buf[buf[0]] != length) ||
             (buf[1] != MQTT_SN_TYPE_FRWDENCAP && buf[0] != length) ) {
         log_err( "Read %d bytes but packet length is %d bytes.", (int)length ,
-                buf[1] != MQTT_SN_TYPE_FRWDENCAP ? (int)buf[0] : (int)(buf[0] + buf[buf[0]]) );
+                 buf[1] != MQTT_SN_TYPE_FRWDENCAP ? (int)buf[0] : (int)(buf[0] + buf[buf[0]]) );
         return FALSE;
     }
 
@@ -245,10 +245,10 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id , ui
 
     if (packet[1] == MQTT_SN_TYPE_FRWDENCAP) {
         log_debug( "Received %2d bytes. Type=%s with %s inside on Socket: %d" , (int)bytes_read ,
-                mqtt_sn_type_string(buffer[1]) , mqtt_sn_type_string(packet[packet[0] + 1]) , sock) ;
+                   mqtt_sn_type_string(buffer[1]) , mqtt_sn_type_string(packet[packet[0] + 1]) , sock) ;
     } else {
         log_debug( "Received %2d bytes. Type=%s on Socket: %d" , (int)bytes_read ,
-                mqtt_sn_type_string(buffer[1]) , sock ) ;
+                   mqtt_sn_type_string(buffer[1]) , sock ) ;
     }
 
     if (mqtt_sn_validate_packet(buffer, bytes_read) == FALSE) {
@@ -781,7 +781,7 @@ uint8_t mqtt_sn_disable_frwdencap() {
 }
 
 
-void mqtt_sn_set_frwdencap_parameters( const uint8_t *wlnid, uint8_t wlnid_len ){
+void mqtt_sn_set_frwdencap_parameters( const uint8_t *wlnid, uint8_t wlnid_len ) {
     wireless_node_id = wlnid ;
     wireless_node_id_len = wlnid_len ;
 }
@@ -831,14 +831,14 @@ frwdencap_packet_t* mqtt_sn_create_frwdencap_packet( const uint8_t *data , size_
         *(++buf_ptr) = '\0';
 
         log_debug("Node id: 0x%s, N. id len: %d, Wrapped packet len: %d, Total len: %lu" ,
-                wlnd , wireless_node_id_len , ((uint8_t*)data)[0] , (long unsigned int)*len ) ;
+                  wlnd , wireless_node_id_len , ((uint8_t*)data)[0] , (long unsigned int)*len ) ;
     }
 
     return packet ;
 }
 
 
-void fprint_wlnid( FILE * stream , const uint8_t *wireless_node_id , uint8_t wireless_node_id_len ){
+void fprint_wlnid( FILE * stream , const uint8_t *wireless_node_id , uint8_t wireless_node_id_len ) {
     int i ;
     for (i = 0 ; i < wireless_node_id_len ; i++)
         fprintf( stream , "%02X", wireless_node_id[i]);
