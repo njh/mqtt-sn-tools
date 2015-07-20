@@ -79,6 +79,21 @@ class MQTT::SN::FakeServer
     end
   end
 
+  def wait_for_port_number
+    while @port.to_i == 0
+      Thread.pass
+    end
+    @port
+  end
+  
+  def wait_for_publish(timeout=2)
+    @last_publish = nil
+    yield
+    Timeout.timeout(timeout) do
+      Thread.pass while @last_publish.nil?
+    end
+    @last_publish
+  end
 
   protected
 
