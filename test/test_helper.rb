@@ -9,7 +9,7 @@ require 'fake_server'
 CMD_DIR = File.realpath('../..', __FILE__)
 
 def run_cmd(name, args=[])
-  cmd = [name] + args.flatten.map {|i| i.to_s}
+  cmd = [CMD_DIR + '/' + name] + args.flatten.map {|i| i.to_s}
   IO.popen([*cmd, :err => [:child, :out]], 'rb') do |io|
     io.readlines
   end
