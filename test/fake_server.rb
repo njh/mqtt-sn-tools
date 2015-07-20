@@ -1,17 +1,17 @@
 #!/usr/bin/env ruby
 #
-# This is a 'fake' MQTT server to help with testing client implementations
+# This is a 'fake' MQTT-SN server to help with testing client implementations
 #
 # It behaves in the following ways:
-#   * Responses to CONNECT with a successful CONACK
-#   * Responses to PUBLISH by echoing the packet back
-#   * Responses to SUBSCRIBE with SUBACK and a PUBLISH to the topic
-#   * Responses to PINGREQ with PINGRESP
-#   * Responses to DISCONNECT by closing the socket
+#   * Responds to CONNECT with a successful CONACK
+#   * Responds to PUBLISH by keeping a copy of the packet
+#   * Responds to SUBSCRIBE with SUBACK and a PUBLISH to the topic
+#   * Responds to PINGREQ with PINGRESP and keeps a count
+#   * Responds to DISCONNECT with a DISCONNECT packet
 #
 # It has the following restrictions
 #   * Doesn't deal with timeouts
-#   * Only handles a single connection at a time
+#   * Only handles a single client
 #
 
 require 'logger'
@@ -19,25 +19,21 @@ require 'socket'
 require 'mqtt'
 
 
-class MQTT::FakeServer
+class MQTT::SN::FakeServer
   attr_reader :address, :port
-  attr_reader :last_publish
   attr_reader :thread
+  attr_reader :last_publish
   attr_reader :pings_received
-  attr_accessor :respond_to_pings
-  attr_accessor :just_one_connection
   attr_accessor :logger
 
   # Create a new fake MQTT server
   #
   # If no port is given, bind to a random port number
   # If no bind address is given, bind to localhost
-  def initialize(port=nil, bind_address='127.0.0.1')
+  def initialize(port=0, bind_address='127.0.0.1')
     @port = port
     @address = bind_address
     @pings_received = 0
-    @just_one_connection = false
-    @respond_to_pings = true
   end
 
   # Get the logger used by the server
@@ -47,27 +43,28 @@ class MQTT::FakeServer
 
   # Start the thread and open the socket that will process client connections
   def start
-    @socket ||= TCPServer.new(@address, @port)
-    @address = @socket.addr[3]
-    @port = @socket.addr[1]
     @thread ||= Thread.new do
-      logger.info "Started a fake MQTT server on #{@address}:#{@port}"
-      loop do
-        # Wait for a client to connect
-        client = @socket.accept
-        @pings_received = 0
-        handle_client(client)
-        break if just_one_connection
+      Socket.udp_server_sockets(@address, @port) do |sockets|
+        @address = sockets.first.local_address.ip_address
+        @port = sockets.first.local_address.ip_port
+        logger.info "Started a fake MQTT-SN server on #{@address}:#{@port}"
+        Socket.udp_server_loop_on(sockets) do |data, client|
+          response = process_packet(data)
+          unless response.nil?
+            response = [response] unless response.kind_of?(Enumerable)
+            response.each do |packet|
+              logger.debug "Replying with: #{packet.inspect}"
+              client.reply(packet.to_s)
+            end
+          end
+        end
       end
     end
   end
 
   # Stop the thread and close the socket
   def stop
-    logger.info "Stopping fake MQTT server"
-    @socket.close unless @socket.nil?
-    @socket = nil
-
+    logger.info "Stopping fake MQTT-SN server"
     @thread.kill if @thread and @thread.alive?
     @thread = nil
   end
@@ -85,49 +82,41 @@ class MQTT::FakeServer
 
   protected
 
-  # Given a client socket, process MQTT packets from the client
-  def handle_client(client)
-    loop do
-      packet = MQTT::Packet.read(client)
-      logger.debug packet.inspect
+  def process_packet(data)
+    packet = MQTT::SN::Packet.parse(data)
+    logger.debug "Received: #{packet.inspect}"
 
-      case packet
-        when MQTT::Packet::Connect
-          client.write MQTT::Packet::Connack.new(:return_code => 0)
-        when MQTT::Packet::Publish
-          client.write packet
-          @last_publish = packet
-        when MQTT::Packet::Subscribe
-          client.write MQTT::Packet::Suback.new(
-            :id => packet.id,
-            :return_codes => 0
-          )
-          topic = packet.topics[0][0]
-          client.write MQTT::Packet::Publish.new(
-            :topic => topic,
-            :payload => "hello #{topic}",
-            :retain => true
-          )
-        when MQTT::Packet::Pingreq
-          @pings_received += 1
-          if respond_to_pings
-            client.write MQTT::Packet::Pingresp.new
-          end
-        when MQTT::Packet::Disconnect
-          client.close
-        break
-      end
+    case packet
+      when MQTT::SN::Packet::Connect
+        MQTT::SN::Packet::Connack.new(:return_code => 0)
+      when MQTT::SN::Packet::Publish
+        @last_publish = packet
+        nil
+      when MQTT::SN::Packet::Pingreq
+        @pings_received += 1
+        MQTT::SN::Packet::Pingresp.new
+      when MQTT::SN::Packet::Subscribe
+        [ 
+          MQTT::SN::Packet::Suback.new(:id => packet.id, :topic_id => 1, :return_code => 0),
+          MQTT::SN::Packet::Publish.new(:topic_id => 1, :data => 'Hello World')
+        ]
+      when MQTT::SN::Packet::Disconnect
+        MQTT::SN::Packet::Disconnect.new
+      when MQTT::SN::Packet::Register
+        MQTT::SN::Packet::Regack.new(:id => packet.id, :topic_id => 1, :return_code => 0)
+      else
+        logger.warn "Unhandled packet type: #{packet.class}"
+        nil
     end
 
-    rescue MQTT::ProtocolException => e
-      logger.warn "Protocol error, closing connection: #{e}"
-      client.close
+    rescue MQTT::SN::ProtocolException => e
+      logger.warn "Protocol error: #{e}"
+      nil
   end
-
 end
 
 if __FILE__ == $0
-  server = MQTT::FakeServer.new(MQTT::DEFAULT_PORT)
+  server = MQTT::SN::FakeServer.new(MQTT::SN::DEFAULT_PORT)
   server.logger.level = Logger::DEBUG
   server.run
 end
