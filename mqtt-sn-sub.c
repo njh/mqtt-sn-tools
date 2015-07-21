@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <signal.h>
+#include <time.h>
 
 #include "mqtt-sn.h"
 
@@ -46,7 +47,9 @@ uint8_t retain = FALSE;
 uint8_t debug = 0;
 uint8_t single_message = FALSE;
 uint8_t clean_session = TRUE;
-uint8_t verbose = FALSE;
+uint8_t verbose = 0;
+time_t rcv_time;
+char tm_buffer [40];
 
 uint8_t keep_running = TRUE;
 
@@ -66,6 +69,7 @@ static void usage()
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n" );
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n" );
     fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
+    fprintf(stderr, "  -V             Print messages verbosely, showing current time and the topic name.\n");
     exit(-1);
 }
 
@@ -84,7 +88,7 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc , argv , "1cdh:i:k:p:t:T:v?" , long_options , &option_index )) != -1)
+    while ((ch = getopt_long (argc , argv , "1cdh:i:k:p:t:T:vV?" , long_options , &option_index )) != -1)
         switch (ch) {
         case '1':
             single_message = TRUE;
@@ -131,7 +135,11 @@ static void parse_opts(int argc, char** argv)
             break;
 
         case 'v':
-            verbose = TRUE;
+            verbose = verbose == 0 ? 1 : verbose;
+            break;
+
+        case 'V':
+            verbose = 2;
             break;
 
         case '?':
@@ -221,6 +229,11 @@ int main(int argc, char* argv[])
                 if (verbose) {
                     int topic_type = packet->flags & 0x3;
                     int topic_id = ntohs(packet->topic_id);
+                    if (verbose == 2) {
+                        time(&rcv_time) ;
+                        strftime(tm_buffer, 40, "%F %T ", localtime(&rcv_time));
+                        fputs(tm_buffer, stdout);
+                    }
                     switch (topic_type) {
                     case MQTT_SN_TOPIC_TYPE_NORMAL: {
                         const char *topic_name = mqtt_sn_lookup_topic(topic_id);
