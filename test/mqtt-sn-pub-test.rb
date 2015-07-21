@@ -4,6 +4,11 @@ require 'test_helper'
 
 class MqttSnPubTest < MiniTest::Unit::TestCase
 
+  def test_usage
+    @cmd_result = run_cmd('mqtt-sn-pub', '-?')
+    assert_match /^Usage: mqtt-sn-pub/, @cmd_result[0]
+  end
+
   def test_publish_qos_n1
     fake_server do |fs|
       @packet = fs.wait_for_publish do
