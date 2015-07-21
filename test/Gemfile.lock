@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    minitest (5.7.0)
     mqtt (0.4.0)
     rake (10.4.2)
 
@@ -9,5 +10,9 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (>= 1.5.0)
+  minitest (>= 5.0.0)
   mqtt (>= 0.4.0)
   rake (>= 0.10.0)
+
+BUNDLED WITH
+   1.10.5

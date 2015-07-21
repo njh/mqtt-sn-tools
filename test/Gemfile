@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
-ruby "2.1.2"
+ruby "2.2.2"
 
 gem 'bundler',  '>= 1.5.0'
 gem 'rake',     '>= 0.10.0'
 gem 'mqtt',     '>= 0.4.0'
+gem 'minitest', '>= 5.0.0'
