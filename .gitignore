@@ -5,6 +5,11 @@ mqtt-sn-serial-bridge
 *.o
 *.tar.gz
 
+# Code coverage files
+*.gcda
+*.gcno
+coverage*.html
+
 # Eclipse project metafiles
 .settings
 .cproject

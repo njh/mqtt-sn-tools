@@ -8,7 +8,7 @@ prefix=/usr/local
 
 TARGETS=mqtt-sn-pub mqtt-sn-sub mqtt-sn-serial-bridge
 
-.PHONY : all install uninstall clean dist test
+.PHONY : all install uninstall clean dist test coverage
 
 
 all: $(TARGETS)
@@ -30,7 +30,7 @@ uninstall:
 	done
 
 clean:
-	-rm -f *.o $(TARGETS)
+	-rm -f *.o *.gcda *.gcno $(TARGETS)
 
 dist:
 	distdir='$(PACKAGE)-$(VERSION)'; mkdir $$distdir || exit 1; \
@@ -43,4 +43,7 @@ dist:
 test: all
 	cd test && rake test
 
-.PHONY: all clean dist
+coverage: CFLAGS += --coverage
+coverage: LDFLAGS += --coverage
+coverage: clean test
+	gcovr --html --html-details --root=. --output=coverage.html
