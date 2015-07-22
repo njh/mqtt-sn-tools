@@ -49,7 +49,7 @@ const char *mqtt_sn_port = "1883";
 const char *serial_device = NULL;
 speed_t serial_baud = B9600;
 uint8_t debug = 0;
-uint8_t frwdencap = FALSE ;
+uint8_t frwdencap = FALSE;
 
 uint8_t keep_running = TRUE;
 
@@ -63,7 +63,7 @@ static void usage()
     fprintf(stderr, "  -dd            Enable extended debugging - display packets in hex.\n");
     fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
-    fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n" );
+    fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     exit(-1);
 }
 
@@ -72,16 +72,16 @@ static void parse_opts(int argc, char** argv)
 
     static struct option long_options[] =
     {
-        {"fe" ,    no_argument ,       0 , 'f' } ,
+        {"fe",    no_argument,       0, 'f' },
         {0, 0, 0, 0}
-    } ;
+    };
 
     int ch;
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc , argv , "b:dh:p:?" , long_options , &option_index )) != -1 )
+    while ((ch = getopt_long (argc, argv, "b:dh:p:?", long_options, &option_index)) != -1)
     {
         switch (ch) {
         case 'b':
@@ -126,11 +126,11 @@ static int serial_open(const char* device_path)
     struct termios tios;
     int fd;
 
-    mqtt_sn_disable_frwdencap() ;
+    mqtt_sn_disable_frwdencap();
 
     log_debug("Opening %s", device_path);
 
-    fd = open(device_path, O_RDWR | O_NOCTTY | O_NDELAY );
+    fd = open(device_path, O_RDWR | O_NOCTTY | O_NDELAY);
     if (fd < 0) {
         perror(device_path);
         exit(EXIT_FAILURE);
@@ -295,8 +295,8 @@ int main(int argc, char* argv[])
         if (FD_ISSET(fd, &fdset)) {
             void *packet = serial_read_packet(fd);
             if (packet) {
-                if ( frwdencap ) {
-                    mqtt_sn_send_frwdencap_packet(sock , packet , NULL, 0) ;
+                if (frwdencap) {
+                    mqtt_sn_send_frwdencap_packet(sock, packet, NULL, 0);
                 } else {
                     mqtt_sn_send_packet(sock, packet);
                 }

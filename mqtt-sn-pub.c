@@ -63,8 +63,8 @@ static void usage()
     fprintf(stderr, "  -r             Message should be retained.\n");
     fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
-    fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n" );
-    fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n" );
+    fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
+    fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
     exit(-1);
 }
 
@@ -73,21 +73,21 @@ static void parse_opts(int argc, char** argv)
 
     static struct option long_options[] =
     {
-        {"fe" ,    no_argument ,       0 , 'f' } ,
-        {"wlnid" , required_argument , 0 , 'w' } ,
+        {"fe",    no_argument,       0, 'f' },
+        {"wlnid", required_argument, 0, 'w' },
         {0, 0, 0, 0}
-    } ;
+    };
 
     int ch;
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc , argv , "dh:i:m:np:q:rt:T:?" , long_options , &option_index )) != -1 )
+    while ((ch = getopt_long (argc, argv, "dh:i:m:np:q:rt:T:?", long_options, &option_index)) != -1)
     {
         switch (ch) {
         case 'd':
-            debug++ ;
+            debug++;
             break;
 
         case 'h':
@@ -127,11 +127,11 @@ static void parse_opts(int argc, char** argv)
             break;
 
         case 'f':
-            mqtt_sn_enable_frwdencap() ;
+            mqtt_sn_enable_frwdencap();
             break;
 
         case 'w' :
-            mqtt_sn_set_frwdencap_parameters( (uint8_t*)optarg , strlen(optarg) ) ;
+            mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
             break;
 
         case '?':
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
 {
     int sock;
 
-    mqtt_sn_disable_frwdencap() ;
+    mqtt_sn_disable_frwdencap();
 
     // Parse the command-line options
     parse_opts(argc, argv);

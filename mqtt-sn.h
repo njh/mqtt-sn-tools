@@ -85,83 +85,87 @@
 #define MQTT_SN_PROTOCOL_ID  (0x01)
 
 typedef struct {
-  uint8_t length;
-  uint8_t type;
-  uint8_t flags;
-  uint8_t protocol_id;
-  uint16_t duration;
-  char client_id[23];
+    uint8_t length;
+    uint8_t type;
+    uint8_t flags;
+    uint8_t protocol_id;
+    uint16_t duration;
+    char client_id[23];
 } connect_packet_t;
 
 typedef struct {
-  uint8_t length;
-  uint8_t type;
-  uint8_t return_code;
+    uint8_t length;
+    uint8_t type;
+    uint8_t return_code;
 } connack_packet_t;
 
 typedef struct {
-  uint8_t length;
-  uint8_t type;
-  uint16_t topic_id;
-  uint16_t message_id;
-  char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
+    uint8_t length;
+    uint8_t type;
+    uint16_t topic_id;
+    uint16_t message_id;
+    char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
 } register_packet_t;
 
 typedef struct {
-  uint8_t length;
-  uint8_t type;
-  uint16_t topic_id;
-  uint16_t message_id;
-  uint8_t return_code;
+    uint8_t length;
+    uint8_t type;
+    uint16_t topic_id;
+    uint16_t message_id;
+    uint8_t return_code;
 } regack_packet_t;
 
 typedef struct __attribute__((packed)) {
-  uint8_t length;
-  uint8_t type;
-  uint8_t flags;
-  uint16_t topic_id;
-  uint16_t message_id;
-  char data[MQTT_SN_MAX_PACKET_LENGTH-7];
-} publish_packet_t;
+    uint8_t length;
+    uint8_t type;
+    uint8_t flags;
+    uint16_t topic_id;
+    uint16_t message_id;
+    char data[MQTT_SN_MAX_PACKET_LENGTH-7];
+}
+publish_packet_t;
 
 typedef struct __attribute__((packed)) {
-  uint8_t length;
-  uint8_t type;
-  uint8_t flags;
-  uint16_t message_id;
-  union {
-      char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
-      uint16_t topic_id;
-  };
-} subscribe_packet_t;
+    uint8_t length;
+    uint8_t type;
+    uint8_t flags;
+    uint16_t message_id;
+    union {
+        char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
+        uint16_t topic_id;
+    };
+}
+subscribe_packet_t;
 
 typedef struct __attribute__((packed)) {
-  uint8_t length;
-  uint8_t type;
-  uint8_t flags;
-  uint16_t topic_id;
-  uint16_t message_id;
-  uint8_t return_code;
-} suback_packet_t;
+    uint8_t length;
+    uint8_t type;
+    uint8_t flags;
+    uint16_t topic_id;
+    uint16_t message_id;
+    uint8_t return_code;
+}
+suback_packet_t;
 
 typedef struct {
-  uint8_t length;
-  uint8_t type;
-  uint16_t duration;
+    uint8_t length;
+    uint8_t type;
+    uint16_t duration;
 } disconnect_packet_t;
 
 typedef struct __attribute__((packed)) {
-  uint8_t length;
-  uint8_t type;
-  uint8_t ctrl;
-  uint8_t wireless_node_id[MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH];
-  char data[MQTT_SN_MAX_PACKET_LENGTH];
-} frwdencap_packet_t;
+    uint8_t length;
+    uint8_t type;
+    uint8_t ctrl;
+    uint8_t wireless_node_id[MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH];
+    char data[MQTT_SN_MAX_PACKET_LENGTH];
+}
+frwdencap_packet_t;
 
 typedef struct topic_map {
-  uint16_t topic_id;
-  char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
-  struct topic_map *next;
+    uint16_t topic_id;
+    char topic_name[MQTT_SN_MAX_TOPIC_LENGTH];
+    struct topic_map *next;
 } topic_map_t;
 
 
@@ -189,23 +193,26 @@ const char* mqtt_sn_return_code_string(uint8_t return_code);
 
 uint8_t mqtt_sn_validate_packet(const void *packet, size_t length);
 void mqtt_sn_send_packet(int sock, void* data);
-void mqtt_sn_send_frwdencap_packet(int sock, void* data, const uint8_t *wireless_node_id , uint8_t wireless_node_id_len );
+void mqtt_sn_send_frwdencap_packet(int sock, void* data, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len);
 void* mqtt_sn_receive_packet(int sock);
-void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id , uint8_t *wireless_node_id_len);
+void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uint8_t *wireless_node_id_len);
 
 // Functions to turn on and off forwarder encapsulation according to MQTT-SN Protocol Specification v1.2,
 // chapter 5.5 Forwarder Encapsulation.
 uint8_t mqtt_sn_enable_frwdencap();
 uint8_t mqtt_sn_disable_frwdencap();
-// Set wireless node ID and wireless node ID length
-void mqtt_sn_set_frwdencap_parameters( const uint8_t *wlnid, uint8_t wlnid_len ) ;
-// Wrap mqtt-sn packet into a forwarder encapsulation packet
-frwdencap_packet_t* mqtt_sn_create_frwdencap_packet( const uint8_t *data , size_t *len , const uint8_t *wireless_node_id , uint8_t wireless_node_id_len ) ;
-// Print content of a buffer in hexadecimal format into a stream. It is used to log wireless node ID.
-void fprint_wlnid( FILE * stream , const uint8_t *wireless_node_id , uint8_t wireless_node_id_len ) ;
 
-void log_debug(const char * format, ... );
-void log_warn(const char * format, ... );
-void log_err(const char * format, ... );
+// Set wireless node ID and wireless node ID length
+void mqtt_sn_set_frwdencap_parameters(const uint8_t *wlnid, uint8_t wlnid_len);
+
+// Wrap mqtt-sn packet into a forwarder encapsulation packet
+frwdencap_packet_t* mqtt_sn_create_frwdencap_packet(const uint8_t *data, size_t *len, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len);
+
+// Print content of a buffer in hexadecimal format into a stream. It is used to log wireless node ID.
+void fprint_wlnid(FILE * stream, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len);
+
+void log_debug(const char * format, ...);
+void log_warn(const char * format, ...);
+void log_err(const char * format, ...);
 
 #endif
