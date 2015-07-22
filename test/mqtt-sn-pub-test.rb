@@ -27,6 +27,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal :predefined, @packet.topic_id_type
     assert_equal 'test_publish_qos_n1', @packet.data
     assert_equal -1, @packet.qos
+    assert_equal false, @packet.retain
   end
 
   def test_publish_qos_0
@@ -47,6 +48,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal :normal, @packet.topic_id_type
     assert_equal 'test_publish_qos_0', @packet.data
     assert_equal 0, @packet.qos
+    assert_equal false, @packet.retain
   end
 
   def test_publish_qos_0_short
@@ -67,6 +69,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal :short, @packet.topic_id_type
     assert_equal 'test_publish_qos_0_short', @packet.data
     assert_equal 0, @packet.qos
+    assert_equal false, @packet.retain
   end
 
   def test_publish_qos_0_predefined
@@ -87,6 +90,28 @@ class MqttSnPubTest < Minitest::Test
     assert_equal :predefined, @packet.topic_id_type
     assert_equal 'test_publish_qos_0_predefined', @packet.data
     assert_equal 0, @packet.qos
+    assert_equal false, @packet.retain
+  end
+
+  def test_publish_qos_0_retained
+    fake_server do |fs|
+      @packet = fs.wait_for_publish do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          ['-r',
+          '-t', 'topic',
+          '-m', 'test_publish_retained',
+          '-p', fs.port]
+        )
+      end
+    end
+
+    assert_empty @cmd_result
+    assert_equal 1, @packet.topic_id
+    assert_equal :normal, @packet.topic_id_type
+    assert_equal 'test_publish_retained', @packet.data
+    assert_equal 0, @packet.qos
+    assert_equal true, @packet.retain
   end
 
 end
