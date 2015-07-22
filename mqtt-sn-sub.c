@@ -134,7 +134,7 @@ static void parse_opts(int argc, char** argv)
 
         case 'v':
             // Prevent -v setting verbose level back down to 1 if already set to 2 by -V
-            verbose = (verbose == 0 ? 1 : verbose);
+            verbose = (verbose == 0) ? 1 : verbose;
             break;
 
         case 'V':
