@@ -42,7 +42,8 @@ dist:
 	rm -fr $$distdir
 
 test: all
-	cd test && rake test
+	@(which bundle > /dev/null) || (echo "Ruby Bundler is not installed"; exit -1)
+	cd test && bundle install && rake test
 
 coverage: CFLAGS += --coverage
 coverage: LDFLAGS += --coverage
