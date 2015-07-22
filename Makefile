@@ -31,6 +31,7 @@ uninstall:
 
 clean:
 	-rm -f *.o *.gcda *.gcno $(TARGETS)
+	-rm -Rf coverage
 
 dist:
 	distdir='$(PACKAGE)-$(VERSION)'; mkdir $$distdir || exit 1; \
@@ -46,4 +47,13 @@ test: all
 coverage: CFLAGS += --coverage
 coverage: LDFLAGS += --coverage
 coverage: clean test
-	gcovr --html --html-details --root=. --output=coverage.html
+	mkdir -p coverage
+	lcov \
+    --capture \
+    --directory . \
+    --no-external \
+    --output coverage/lcov.info
+	genhtml \
+    --title 'MQTT-SN Tools' \
+    --output-directory coverage \
+    coverage/lcov.info 

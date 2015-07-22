@@ -8,7 +8,7 @@ mqtt-sn-serial-bridge
 # Code coverage files
 *.gcda
 *.gcno
-coverage*.html
+coverage/*
 
 # Eclipse project metafiles
 .settings
