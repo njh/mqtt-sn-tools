@@ -47,8 +47,6 @@ static uint16_t next_message_id = 1;
 static time_t last_transmit = 0;
 static time_t last_receive = 0;
 static time_t keep_alive = 0;
-static time_t log_time;
-static char tm_buffer [40];
 static uint8_t forwarder_encapsulation = FALSE;
 const uint8_t *wireless_node_id = NULL;
 uint8_t wireless_node_id_len  = 0;
@@ -846,8 +844,11 @@ void fprint_wlnid(FILE * stream, const uint8_t *wireless_node_id, uint8_t wirele
 
 void log_msg(const char* level, const char* format, va_list arglist)
 {
+    time_t log_time;
+    char tm_buffer[40];
+
     time(&log_time);
-    strftime(tm_buffer, 40, "%F %T ", localtime(&log_time));
+    strftime(tm_buffer, sizeof(tm_buffer), "%F %T ", localtime(&log_time));
 
     fputs(tm_buffer, stderr);
     fputs(level, stderr);
