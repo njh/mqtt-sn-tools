@@ -22,6 +22,7 @@ require 'mqtt'
 class MQTT::SN::FakeServer
   attr_reader :address, :port
   attr_reader :thread
+  attr_reader :last_connect
   attr_reader :last_publish
   attr_reader :pings_received
   attr_accessor :logger
@@ -85,6 +86,15 @@ class MQTT::SN::FakeServer
     end
     @port
   end
+
+  def wait_for_connect(timeout=2)
+    @last_connect = nil
+    yield
+    Timeout.timeout(timeout) do
+      Thread.pass while @last_connect.nil?
+    end
+    @last_connect
+  end
   
   def wait_for_publish(timeout=2)
     @last_publish = nil
@@ -103,6 +113,7 @@ class MQTT::SN::FakeServer
 
     case packet
       when MQTT::SN::Packet::Connect
+        @last_connect = packet
         MQTT::SN::Packet::Connack.new(:return_code => 0)
       when MQTT::SN::Packet::Publish
         @last_publish = packet

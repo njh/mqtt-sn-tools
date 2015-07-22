@@ -9,6 +9,25 @@ class MqttSnPubTest < Minitest::Test
     assert_match /^Usage: mqtt-sn-pub/, @cmd_result[0]
   end
 
+  def test_custom_client_id
+    fake_server do |fs|
+      @packet = fs.wait_for_connect do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          '-i' => 'test_custom_client_id',
+          '-T' => 10,
+          '-m' => 'message',
+          '-p' => fs.port
+        )
+      end
+    end
+
+    assert_empty @cmd_result
+    assert_equal MQTT::SN::Packet::Connect, @packet.class
+    assert_equal 'test_custom_client_id', @packet.client_id
+    assert_equal 30, @packet.keep_alive
+  end
+
   def test_publish_qos_n1
     fake_server do |fs|
       @packet = fs.wait_for_publish do
