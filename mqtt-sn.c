@@ -59,6 +59,7 @@ topic_map_t *topic_map = NULL;
 void mqtt_sn_set_debug(uint8_t value)
 {
     debug = value;
+    log_debug( "Debug level is: %d." , debug ) ;
 }
 
 int mqtt_sn_create_socket(const char* host, const char* port)
