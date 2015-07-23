@@ -22,9 +22,7 @@ require 'mqtt'
 class MQTT::SN::FakeServer
   attr_reader :address, :port
   attr_reader :thread
-  attr_reader :last_connect
-  attr_reader :last_publish
-  attr_reader :pings_received
+  attr_reader :packets_received
   attr_accessor :logger
 
   # Create a new fake MQTT server
@@ -34,7 +32,7 @@ class MQTT::SN::FakeServer
   def initialize(port=0, bind_address='127.0.0.1')
     @port = port
     @address = bind_address
-    @pings_received = 0
+    @packets_received = []
   end
 
   # Get the logger used by the server
@@ -87,36 +85,36 @@ class MQTT::SN::FakeServer
     @port
   end
 
-  def wait_for_connect(timeout=2)
-    @last_connect = nil
-    yield
+  def wait_for_packet(klass=nil, timeout=2)
+    @packets_received = []
     Timeout.timeout(timeout) do
-      Thread.pass while @last_connect.nil?
+      yield
+      loop do
+        if klass.nil?
+          unless @packets_received.empty?
+            return @packets_received.last_packet
+          end
+        else
+          @packets_received.each do |packet|
+            return packet if packet.class == klass
+          end
+        end
+        sleep(0.01)
+      end
     end
-    @last_connect
-  end
-  
-  def wait_for_publish(timeout=2)
-    @last_publish = nil
-    yield
-    Timeout.timeout(timeout) do
-      Thread.pass while @last_publish.nil?
-    end
-    @last_publish
   end
 
   protected
 
   def process_packet(data)
     packet = MQTT::SN::Packet.parse(data)
+    @packets_received << packet
     logger.debug "Received: #{packet.inspect}"
 
     case packet
       when MQTT::SN::Packet::Connect
-        @last_connect = packet
         MQTT::SN::Packet::Connack.new(:return_code => 0)
       when MQTT::SN::Packet::Publish
-        @last_publish = packet
         nil
       when MQTT::SN::Packet::Pingreq
         @pings_received += 1

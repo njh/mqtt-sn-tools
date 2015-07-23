@@ -11,7 +11,7 @@ class MqttSnPubTest < Minitest::Test
 
   def test_custom_client_id
     fake_server do |fs|
-      @packet = fs.wait_for_connect do
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
           '-i' => 'test_custom_client_id',
@@ -23,14 +23,13 @@ class MqttSnPubTest < Minitest::Test
     end
 
     assert_empty @cmd_result
-    assert_equal MQTT::SN::Packet::Connect, @packet.class
     assert_equal 'test_custom_client_id', @packet.client_id
     assert_equal 30, @packet.keep_alive
   end
 
   def test_publish_qos_n1
     fake_server do |fs|
-      @packet = fs.wait_for_publish do
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
           '-q' => -1,
@@ -51,7 +50,7 @@ class MqttSnPubTest < Minitest::Test
 
   def test_publish_qos_0
     fake_server do |fs|
-      @packet = fs.wait_for_publish do
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
           '-q' => 0,
@@ -72,7 +71,7 @@ class MqttSnPubTest < Minitest::Test
 
   def test_publish_qos_0_short
     fake_server do |fs|
-      @packet = fs.wait_for_publish do
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
           '-q' => 0,
@@ -93,7 +92,7 @@ class MqttSnPubTest < Minitest::Test
 
   def test_publish_qos_0_predefined
     fake_server do |fs|
-      @packet = fs.wait_for_publish do
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
           '-q' => 0,
@@ -114,7 +113,7 @@ class MqttSnPubTest < Minitest::Test
 
   def test_publish_qos_0_retained
     fake_server do |fs|
-      @packet = fs.wait_for_publish do
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
           ['-r',
@@ -135,7 +134,7 @@ class MqttSnPubTest < Minitest::Test
 
   def test_publish_qos_0_empty
     fake_server do |fs|
-      @packet = fs.wait_for_publish do
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
           ['-r', '-n',
