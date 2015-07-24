@@ -9,6 +9,24 @@ class MqttSnSubTest < Minitest::Test
     assert_match /^Usage: mqtt-sn-sub/, @cmd_result[0]
   end
 
+  def test_custom_client_id
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
+          ['-1',
+          '-i', 'test_custom_client_id',
+          '-t', 'test',
+          '-p', fs.port]
+        )
+      end
+    end
+
+    assert_equal ["Hello World\n"], @cmd_result
+    assert_equal 'test_custom_client_id', @packet.client_id
+    assert_equal 10, @packet.keep_alive
+  end
+
   def test_subscribe_one
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe) do
