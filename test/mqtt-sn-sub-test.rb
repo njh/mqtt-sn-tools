@@ -14,6 +14,24 @@ class MqttSnSubTest < Minitest::Test
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe) do
         @cmd_result = run_cmd(
           'mqtt-sn-sub',
+          ['-1',
+          '-t', 'test',
+          '-p', fs.port]
+        )
+      end
+    end
+
+    assert_equal ["Hello World\n"], @cmd_result
+    assert_equal 'test', @packet.topic_name
+    assert_equal :normal, @packet.topic_id_type
+    assert_equal 0, @packet.qos
+  end
+
+  def test_subscribe_one_verbose
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
           ['-1', '-v',
           '-t', 'test',
           '-p', fs.port]
