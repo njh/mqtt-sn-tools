@@ -57,4 +57,4 @@ coverage: clean test
 	genhtml \
     --title 'MQTT-SN Tools' \
     --output-directory coverage \
-    coverage/lcov.info 
+    coverage/lcov.info
