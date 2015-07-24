@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
 
         // Wait for the subscription acknowledgement
         topic_id = mqtt_sn_receive_suback(sock);
-        if (topic_id) {
+        if (topic_id && topic_name && strlen(topic_name) > 2) {
             mqtt_sn_register_topic(topic_id, topic_name);
         }
 
