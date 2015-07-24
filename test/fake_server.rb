@@ -120,9 +120,28 @@ class MQTT::SN::FakeServer
         @pings_received += 1
         MQTT::SN::Packet::Pingresp.new
       when MQTT::SN::Packet::Subscribe
-        [ 
-          MQTT::SN::Packet::Suback.new(:id => packet.id, :topic_id => 1, :return_code => 0),
-          MQTT::SN::Packet::Publish.new(:topic_id => 1, :data => 'Hello World')
+        case packet.topic_id_type
+          when :short
+            topic_id = packet.topic_name
+          when :predefined
+            topic_id = packet.topic_id
+          when :normal
+            topic_id = 1
+          else
+            logger.warn "Unknown Topic Id Type: #{packet.topic_id_type}"
+        end
+        [
+          MQTT::SN::Packet::Suback.new(
+            :id => packet.id,
+            :topic_id_type => packet.topic_id_type,
+            :topic_id => topic_id,
+            :return_code => 0
+          ),
+          MQTT::SN::Packet::Publish.new(
+            :topic_id_type => packet.topic_id_type,
+            :topic_id => topic_id,
+            :data => 'Hello World'
+          )
         ]
       when MQTT::SN::Packet::Disconnect
         MQTT::SN::Packet::Disconnect.new
