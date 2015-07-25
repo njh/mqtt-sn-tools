@@ -45,6 +45,25 @@ class MqttSnSubTest < Minitest::Test
     assert_equal 0, @packet.qos
   end
 
+  def test_subscribe_one_debug
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
+          ['-d', '-1',
+          '-t', 'test',
+          '-p', fs.port]
+        )
+      end
+    end
+
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending SUBSCRIBE packet/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG SUBACK return code: 0x00/, @cmd_result
+  end
+
   def test_subscribe_one_verbose
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe) do

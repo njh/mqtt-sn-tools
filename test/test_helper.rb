@@ -24,3 +24,16 @@ def fake_server
   yield(fs)
   fs.stop
 end
+
+module Minitest::Assertions
+  def assert_includes_match(regexp, array, msg=nil)
+    msg = message(msg) { "Expected #{mu_pp(array)} to match #{mu_pp(regexp)}" }
+    array.each do |item|
+      if item =~ regexp
+        assert true, msg
+        return
+      end
+    end
+    assert false, msg
+  end
+end
