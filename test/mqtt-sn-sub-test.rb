@@ -22,7 +22,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["Hello World\n"], @cmd_result
+    assert_equal ["Hello World"], @cmd_result
     assert_equal 'test_custom_client_id', @packet.client_id
     assert_equal 10, @packet.keep_alive
     assert_equal true, @packet.clean_session
@@ -40,7 +40,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["Hello World\n"], @cmd_result
+    assert_equal ["Hello World"], @cmd_result
     assert_match /^mqtt-sn-tools/, @packet.client_id
     assert_equal 10, @packet.keep_alive
     assert_equal false, @packet.clean_session
@@ -58,7 +58,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["Hello World\n"], @cmd_result
+    assert_equal ["Hello World"], @cmd_result
     assert_equal 'test', @packet.topic_name
     assert_equal :normal, @packet.topic_id_type
     assert_equal 0, @packet.qos
@@ -95,7 +95,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
     
-    assert_equal ["test: Hello World\n"], @cmd_result
+    assert_equal ["test: Hello World"], @cmd_result
     assert_equal 'test', @packet.topic_name
     assert_equal :normal, @packet.topic_id_type
     assert_equal 0, @packet.qos
@@ -132,7 +132,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
     
-    assert_equal ["tt: Hello World\n"], @cmd_result
+    assert_equal ["tt: Hello World"], @cmd_result
     assert_equal 'tt', @packet.topic_name
     assert_equal :short, @packet.topic_id_type
     assert_equal 0, @packet.qos
@@ -150,7 +150,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["0011: Hello World\n"], @cmd_result
+    assert_equal ["0011: Hello World"], @cmd_result
     assert_nil @packet.topic_name
     assert_equal 17, @packet.topic_id
     assert_equal :predefined, @packet.topic_id_type
