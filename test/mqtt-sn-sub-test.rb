@@ -17,7 +17,8 @@ class MqttSnSubTest < Minitest::Test
           ['-1',
           '-i', 'test_custom_client_id',
           '-t', 'test',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -35,7 +36,8 @@ class MqttSnSubTest < Minitest::Test
           'mqtt-sn-sub',
           ['-1', '-c',
           '-t', 'test',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -53,7 +55,8 @@ class MqttSnSubTest < Minitest::Test
           'mqtt-sn-sub',
           ['-1',
           '-t', 'test',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -71,7 +74,8 @@ class MqttSnSubTest < Minitest::Test
           'mqtt-sn-sub',
           ['-d', '-1',
           '-t', 'test',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -90,7 +94,8 @@ class MqttSnSubTest < Minitest::Test
           'mqtt-sn-sub',
           ['-1', '-v',
           '-t', 'test',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -108,7 +113,8 @@ class MqttSnSubTest < Minitest::Test
           'mqtt-sn-sub',
           ['-1', '-V',
           '-t', 'test',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -127,7 +133,8 @@ class MqttSnSubTest < Minitest::Test
           'mqtt-sn-sub',
           ['-1', '-v',
           '-t', 'tt',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -145,7 +152,8 @@ class MqttSnSubTest < Minitest::Test
           'mqtt-sn-sub',
           ['-1', '-v',
           '-T', 17,
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end

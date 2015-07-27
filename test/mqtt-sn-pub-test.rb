@@ -17,7 +17,8 @@ class MqttSnPubTest < Minitest::Test
           '-i' => 'test_custom_client_id',
           '-T' => 10,
           '-m' => 'message',
-          '-p' => fs.port
+          '-p' => fs.port,
+          '-h' => fs.address
         )
       end
     end
@@ -36,7 +37,8 @@ class MqttSnPubTest < Minitest::Test
           '-q' => -1,
           '-T' => 10,
           '-m' => 'test_publish_qos_n1',
-          '-p' => fs.port
+          '-p' => fs.port,
+          '-h' => fs.address
         )
       end
     end
@@ -57,7 +59,8 @@ class MqttSnPubTest < Minitest::Test
           ['-d',
           '-t', 'topic',
           '-m', 'test_publish_qos_0_debug',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -77,7 +80,8 @@ class MqttSnPubTest < Minitest::Test
           '-q' => 0,
           '-t' => 'topic',
           '-m' => 'test_publish_qos_0',
-          '-p' => fs.port
+          '-p' => fs.port,
+          '-h' => fs.address
         )
       end
     end
@@ -98,7 +102,8 @@ class MqttSnPubTest < Minitest::Test
           '-q' => 0,
           '-t' => 'TT',
           '-m' => 'test_publish_qos_0_short',
-          '-p' => fs.port
+          '-p' => fs.port,
+          '-h' => fs.address
         )
       end
     end
@@ -119,7 +124,8 @@ class MqttSnPubTest < Minitest::Test
           '-q' => 0,
           '-T' => 127,
           '-m' => 'test_publish_qos_0_predefined',
-          '-p' => fs.port
+          '-p' => fs.port,
+          '-h' => fs.address
         )
       end
     end
@@ -140,7 +146,8 @@ class MqttSnPubTest < Minitest::Test
           ['-r',
           '-t', 'topic',
           '-m', 'test_publish_retained',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
@@ -160,7 +167,8 @@ class MqttSnPubTest < Minitest::Test
           'mqtt-sn-pub',
           ['-r', '-n',
           '-t', 'topic',
-          '-p', fs.port]
+          '-p', fs.port,
+          '-h', fs.address]
         )
       end
     end
