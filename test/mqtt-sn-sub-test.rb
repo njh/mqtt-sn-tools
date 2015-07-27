@@ -29,7 +29,7 @@ class MqttSnSubTest < Minitest::Test
     assert_equal true, @packet.clean_session
   end
 
-  def test_clean_session
+  def test_no_clean_session
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
         @cmd_result = run_cmd(
