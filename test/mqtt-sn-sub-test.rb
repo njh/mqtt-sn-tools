@@ -25,6 +25,25 @@ class MqttSnSubTest < Minitest::Test
     assert_equal ["Hello World\n"], @cmd_result
     assert_equal 'test_custom_client_id', @packet.client_id
     assert_equal 10, @packet.keep_alive
+    assert_equal true, @packet.clean_session
+  end
+
+  def test_clean_session
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
+          ['-1', '-c',
+          '-t', 'test',
+          '-p', fs.port]
+        )
+      end
+    end
+
+    assert_equal ["Hello World\n"], @cmd_result
+    assert_match /^mqtt-sn-tools/, @packet.client_id
+    assert_equal 10, @packet.keep_alive
+    assert_equal false, @packet.clean_session
   end
 
   def test_subscribe_one

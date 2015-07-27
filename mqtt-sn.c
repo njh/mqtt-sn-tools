@@ -271,7 +271,7 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
     return packet;
 }
 
-void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
+void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive, uint8_t clean_session)
 {
     connect_packet_t packet;
 
@@ -283,7 +283,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive)
 
     // Create the CONNECT packet
     packet.type = MQTT_SN_TYPE_CONNECT;
-    packet.flags = MQTT_SN_FLAG_CLEAN;
+    packet.flags = clean_session ? MQTT_SN_FLAG_CLEAN : 0;
     packet.protocol_id = MQTT_SN_PROTOCOL_ID;
     packet.duration = htons(keepalive);
 

@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
     if (sock) {
         // Connect to gateway
         if (qos >= 0) {
-            mqtt_sn_send_connect(sock, client_id, keep_alive);
+            mqtt_sn_send_connect(sock, client_id, keep_alive, TRUE);
             mqtt_sn_receive_connack(sock);
         }
 
