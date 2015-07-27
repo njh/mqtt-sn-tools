@@ -86,9 +86,11 @@ class MQTT::SN::FakeServer
   end
 
   def wait_for_packet(klass=nil, timeout=2)
-    @packets_received = []
     Timeout.timeout(timeout) do
-      yield
+      if block_given?
+        @packets_received = []
+        yield
+      end
       loop do
         if klass.nil?
           unless @packets_received.empty?

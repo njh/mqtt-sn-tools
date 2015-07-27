@@ -12,6 +12,9 @@ def run_cmd(name, args=[])
   args = [args] unless args.respond_to?(:flatten)
   cmd = [CMD_DIR + '/' + name] + args.flatten.map {|i| i.to_s}
   IO.popen([*cmd, :err => [:child, :out]], 'rb') do |io|
+    if block_given?
+      yield(io)
+    end
     io.readlines.map {|line| line.strip}
   end
 end
