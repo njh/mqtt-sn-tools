@@ -119,7 +119,7 @@ class MqttSnSubTest < Minitest::Test
         )
       end
     end
-    
+
     assert_equal ["test: Hello World"], @cmd_result
     assert_equal 'test', @packet.topic_name
     assert_equal :normal, @packet.topic_id_type
@@ -158,7 +158,7 @@ class MqttSnSubTest < Minitest::Test
         )
       end
     end
-    
+
     assert_equal ["tt: Hello World"], @cmd_result
     assert_equal 'tt', @packet.topic_name
     assert_equal :short, @packet.topic_id_type
