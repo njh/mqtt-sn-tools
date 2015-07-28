@@ -119,25 +119,18 @@ int mqtt_sn_create_socket(const char* host, const char* port)
     return fd;
 }
 
-
-void mqtt_sn_send_packet(int sock, void* data)
+void mqtt_sn_send_packet(int sock, const void* data)
 {
     size_t sent, len = ((uint8_t*)data)[0];
-    uint8_t origPacketType = ((uint8_t*)data)[1];
 
     // If forwarder encapsulation enabled, wrap packet
     if (forwarder_encapsulation) {
-        data = mqtt_sn_create_frwdencap_packet(data, &len, wireless_node_id, wireless_node_id_len);
+        return mqtt_sn_send_frwdencap_packet(sock, data, wireless_node_id, wireless_node_id_len);
     }
-
+    
     if (debug > 1) {
-        if (forwarder_encapsulation) {
-            log_debug("Sending  %2lu bytes. Type=%s with %s inside on Socket: %d.", (long unsigned int)len,
-                      mqtt_sn_type_string(((uint8_t*)data)[1]), mqtt_sn_type_string(origPacketType), sock);
-        } else {
-            log_debug("Sending  %2lu bytes. Type=%s on Socket: %d.", (long unsigned int)len,
-                      mqtt_sn_type_string(((uint8_t*)data)[1]), sock);
-        }
+        log_debug("Sending  %2lu bytes. Type=%s on Socket: %d.", (long unsigned int)len,
+                  mqtt_sn_type_string(((uint8_t*)data)[1]), sock);
     }
 
     sent = send(sock, data, len, 0);
@@ -147,28 +140,22 @@ void mqtt_sn_send_packet(int sock, void* data)
 
     // Store the last time that we sent a packet
     last_transmit = time(NULL);
-
-    // If forwarder encapsulation enabled free encapsulation packet memory
-    if (forwarder_encapsulation) {
-        free(data);
-    }
-
 }
 
-
-void mqtt_sn_send_frwdencap_packet(int sock, void* data, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len)
+void mqtt_sn_send_frwdencap_packet(int sock, const void* data, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len)
 {
     size_t sent, len = ((uint8_t*)data)[0];
-    uint8_t origPacketType = ((uint8_t*)data)[1];
+    uint8_t orig_packet_type = ((uint8_t*)data)[1];
+    frwdencap_packet_t *packet;
 
-    data = mqtt_sn_create_frwdencap_packet(data, &len, wireless_node_id, wireless_node_id_len);
+    packet = mqtt_sn_create_frwdencap_packet(data, &len, wireless_node_id, wireless_node_id_len);
 
     if (debug > 1) {
         log_debug("Sending  %2lu bytes. Type=%s with %s inside on Socket: %d.", (long unsigned int)len,
-                  mqtt_sn_type_string(((uint8_t*)data)[1]), mqtt_sn_type_string(origPacketType), sock);
+                  mqtt_sn_type_string(packet->type), mqtt_sn_type_string(orig_packet_type), sock);
     }
 
-    sent = send(sock, data, len, 0);
+    sent = send(sock, packet, len, 0);
     if (sent != len) {
         log_debug("Warning: only sent %d of %d bytes.", (int)sent, (int)len);
     }
@@ -176,9 +163,8 @@ void mqtt_sn_send_frwdencap_packet(int sock, void* data, const uint8_t *wireless
     // Store the last time that we sent a packet
     last_transmit = time(NULL);
 
-    free(data);
+    free(packet);
 }
-
 
 uint8_t mqtt_sn_validate_packet(const void *packet, size_t length)
 {
@@ -219,6 +205,7 @@ void* mqtt_sn_receive_packet(int sock)
 
     return mqtt_sn_receive_frwdencap_packet(sock, &wireless_node_id, &wireless_node_id_len);
 }
+
 void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uint8_t *wireless_node_id_len)
 {
     *wireless_node_id = NULL;
@@ -786,7 +773,7 @@ void mqtt_sn_set_frwdencap_parameters(const uint8_t *wlnid, uint8_t wlnid_len) {
 }
 
 
-frwdencap_packet_t* mqtt_sn_create_frwdencap_packet(const uint8_t *data, size_t *len, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len)
+frwdencap_packet_t* mqtt_sn_create_frwdencap_packet(const void *data, size_t *len, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len)
 {
     frwdencap_packet_t* packet = NULL;
 
