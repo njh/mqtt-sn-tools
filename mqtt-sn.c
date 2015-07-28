@@ -127,7 +127,7 @@ void mqtt_sn_send_packet(int sock, const void* data)
     if (forwarder_encapsulation) {
         return mqtt_sn_send_frwdencap_packet(sock, data, wireless_node_id, wireless_node_id_len);
     }
-    
+
     if (debug > 1) {
         log_debug("Sending  %2lu bytes. Type=%s on Socket: %d.", (long unsigned int)len,
                   mqtt_sn_type_string(((uint8_t*)data)[1]), sock);
