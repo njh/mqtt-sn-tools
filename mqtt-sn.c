@@ -563,7 +563,7 @@ uint16_t mqtt_sn_receive_regack(int sock)
 
     if (packet->type != MQTT_SN_TYPE_REGACK) {
         log_err("Was expecting REGACK packet but received: %s", mqtt_sn_type_string(packet->type));
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     // Check Regack return code
@@ -599,7 +599,7 @@ uint16_t mqtt_sn_receive_suback(int sock)
 
     if (packet->type != MQTT_SN_TYPE_SUBACK) {
         log_err("Was expecting SUBACK packet but received: %s", mqtt_sn_type_string(packet->type));
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     // Check Suback return code

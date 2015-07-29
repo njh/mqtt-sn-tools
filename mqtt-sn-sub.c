@@ -68,7 +68,7 @@ static void usage()
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
     fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
     fprintf(stderr, "  -V             Print messages verbosely, showing current time and the topic name.\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
 }
 
 static void parse_opts(int argc, char** argv)
@@ -155,7 +155,7 @@ static void parse_opts(int argc, char** argv)
     // Both topic name and topic id?
     if (topic_name && topic_id) {
         log_err("Please provide either a topic id or a topic name, not both.");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 }
 

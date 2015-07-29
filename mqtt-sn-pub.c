@@ -65,7 +65,7 @@ static void usage()
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
 }
 
 static void parse_opts(int argc, char** argv)
@@ -148,19 +148,19 @@ static void parse_opts(int argc, char** argv)
 
     if (qos != -1 && qos != 0) {
         log_err("Only QoS level 0 or -1 is supported.");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     // Both topic name and topic id?
     if (topic_name && topic_id) {
         log_err("Please provide either a topic id or a topic name, not both.");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     // Check topic is valid for QoS level -1
     if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2) {
         log_err("Either a pre-defined topic id or a short topic name must be given for QoS -1.");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 }
 
