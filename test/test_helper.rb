@@ -24,6 +24,10 @@ def wait_for_output_then_kill(io, timeout=0.1)
   Process.kill('INT', io.pid)
 end
 
+def random_port
+  10000 + ((rand(10000) + Time.now.to_i) % 10000)
+end
+
 def fake_server
   fs = MQTT::SN::FakeServer.new
   fs.logger.level = Logger::WARN

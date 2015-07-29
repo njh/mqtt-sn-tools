@@ -598,6 +598,65 @@ uint16_t mqtt_sn_receive_regack(int sock)
     return received_topic_id;
 }
 
+void mqtt_sn_dump_packet(char* packet)
+{
+    printf("%s: len=%d", mqtt_sn_type_string(packet[1]), packet[0]);
+
+    switch(packet[1]) {
+    case MQTT_SN_TYPE_CONNECT: {
+        connect_packet_t* cpkt = (connect_packet_t*)packet;
+        printf(" protocol_id=%d", cpkt->protocol_id);
+        printf(" duration=%d", ntohs(cpkt->duration));
+        printf(" client_id=%s", cpkt->client_id);
+        break;
+    }
+    case MQTT_SN_TYPE_CONNACK: {
+        connack_packet_t* capkt = (connack_packet_t*)packet;
+        printf(" return_code=%d", capkt->return_code);
+        break;
+    }
+    case MQTT_SN_TYPE_REGISTER: {
+        register_packet_t* rpkt = (register_packet_t*)packet;
+        printf(" topic_id=0x%4.4x", ntohs(rpkt->topic_id));
+        printf(" message_id=0x%4.4x", ntohs(rpkt->message_id));
+        printf(" topic_name=%s", rpkt->topic_name);
+        break;
+    }
+    case MQTT_SN_TYPE_REGACK: {
+        regack_packet_t* rapkt = (regack_packet_t*)packet;
+        printf(" topic_id=0x%4.4x", ntohs(rapkt->topic_id));
+        printf(" message_id=0x%4.4x", ntohs(rapkt->message_id));
+        printf(" return_code=%d", rapkt->return_code);
+        break;
+    }
+    case MQTT_SN_TYPE_PUBLISH: {
+        publish_packet_t* ppkt = (publish_packet_t*)packet;
+        printf(" topic_id=0x%4.4x", ntohs(ppkt->topic_id));
+        printf(" message_id=0x%4.4x", ntohs(ppkt->message_id));
+        printf(" data=%s", ppkt->data);
+        break;
+    }
+    case MQTT_SN_TYPE_SUBSCRIBE: {
+        subscribe_packet_t* spkt = (subscribe_packet_t*)packet;
+        printf(" message_id=0x%4.4x", ntohs(spkt->message_id));
+        break;
+    }
+    case MQTT_SN_TYPE_SUBACK: {
+        suback_packet_t* sapkt = (suback_packet_t*)packet;
+        printf(" topic_id=0x%4.4x", ntohs(sapkt->topic_id));
+        printf(" message_id=0x%4.4x", ntohs(sapkt->message_id));
+        printf(" return_code=%d", sapkt->return_code);
+        break;
+    }
+    case MQTT_SN_TYPE_DISCONNECT: {
+        disconnect_packet_t* dpkt = (disconnect_packet_t*)packet;
+        printf(" duration=%d", ntohs(dpkt->duration));
+        break;
+    }
+    }
+
+    printf("\n");
+}
 
 void mqtt_sn_print_publish_packet(publish_packet_t* packet, uint8_t verbose)
 {

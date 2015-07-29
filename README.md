@@ -68,6 +68,20 @@ Subscribing
       -v             Print messages verbosely, showing the topic name.
 
 
+Dumping
+-------
+
+Displays MQTT-SN packets sent to specified port.
+Most useful for listening out for QoS -1 messages being published by a client.
+
+    Usage: mqtt-sn-dump [opts] -p <port>
+
+      -a             Dump all packet types.
+      -d             Increase debug level by one. -d can occur multiple times.
+      -p <port>      Network port to listen on. Defaults to 1883.
+      -v             Print messages verbosely, showing the topic name.
+
+
 Serial Port Bridge
 ------------------
 

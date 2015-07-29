@@ -6,7 +6,7 @@ LDFLAGS=
 INSTALL?=install
 prefix=/usr/local
 
-TARGETS=mqtt-sn-pub mqtt-sn-sub mqtt-sn-serial-bridge
+TARGETS=mqtt-sn-dump mqtt-sn-pub mqtt-sn-sub mqtt-sn-serial-bridge
 
 .PHONY : all install uninstall clean dist test coverage
 
