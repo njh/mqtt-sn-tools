@@ -587,6 +587,40 @@ uint16_t mqtt_sn_receive_regack(int sock)
     return received_topic_id;
 }
 
+
+void mqtt_sn_print_publish_packet(publish_packet_t* packet, uint8_t verbose)
+{
+    if (verbose) {
+        int topic_type = packet->flags & 0x3;
+        int topic_id = ntohs(packet->topic_id);
+        if (verbose == 2) {
+            time_t rcv_time;
+            char tm_buffer [40];
+            time(&rcv_time) ;
+            strftime(tm_buffer, 40, "%F %T ", localtime(&rcv_time));
+            fputs(tm_buffer, stdout);
+        }
+        switch (topic_type) {
+        case MQTT_SN_TOPIC_TYPE_NORMAL: {
+            const char *topic_name = mqtt_sn_lookup_topic(topic_id);
+            printf("%s: %s\n", topic_name, packet->data);
+            break;
+        };
+        case MQTT_SN_TOPIC_TYPE_PREDEFINED: {
+            printf("%4.4x: %s\n", topic_id, packet->data);
+            break;
+        };
+        case MQTT_SN_TOPIC_TYPE_SHORT: {
+            const char *str = (const char*)&packet->topic_id;
+            printf("%c%c: %s\n", str[0], str[1], packet->data);
+            break;
+        };
+        }
+    } else {
+        printf("%s\n", packet->data);
+    }
+}
+
 uint16_t mqtt_sn_receive_suback(int sock)
 {
     suback_packet_t *packet = mqtt_sn_receive_packet(sock);
