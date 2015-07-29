@@ -45,7 +45,7 @@
 
 
 const char *mqtt_sn_host = "127.0.0.1";
-const char *mqtt_sn_port = "1883";
+const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 const char *serial_device = NULL;
 speed_t serial_baud = B9600;
 uint8_t debug = 0;

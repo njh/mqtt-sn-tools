@@ -40,7 +40,7 @@
 const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *mqtt_sn_host = "127.0.0.1";
-const char *mqtt_sn_port = "1883";
+const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 uint16_t topic_id = 0;
 uint16_t keep_alive = 10;
 uint8_t retain = FALSE;
