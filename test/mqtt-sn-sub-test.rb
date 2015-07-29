@@ -195,7 +195,7 @@ class MqttSnSubTest < Minitest::Test
         '-h', fs.address]
       ) do |cmd|
         @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
-        Process.kill('INT', cmd.pid)
+        wait_for_output_then_kill(cmd)
       end
     end
 

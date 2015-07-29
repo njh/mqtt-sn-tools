@@ -19,6 +19,11 @@ def run_cmd(name, args=[])
   end
 end
 
+def wait_for_output_then_kill(io, timeout=0.1)
+  IO.select([io], nil, nil, timeout)
+  Process.kill('INT', io.pid)
+end
+
 def fake_server
   fs = MQTT::SN::FakeServer.new
   fs.logger.level = Logger::WARN
