@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <string.h>
 #include <stdint.h>
@@ -208,16 +209,19 @@ void* mqtt_sn_receive_packet(int sock)
 
 void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uint8_t *wireless_node_id_len)
 {
-    *wireless_node_id = NULL;
-    *wireless_node_id_len = 0;
     static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH + MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH + 3  + 1];
+    struct sockaddr_in si;
+    socklen_t slen = sizeof(si);
     uint8_t *packet = buffer;
     int bytes_read;
+
+    *wireless_node_id = NULL;
+    *wireless_node_id_len = 0;
 
     log_debug("waiting for packet...");
 
     // Read in the packet
-    bytes_read = recv(sock, buffer, sizeof(buffer), 0);
+    bytes_read = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)&si, &slen);
     if (bytes_read < 0) {
         if (errno == EAGAIN) {
             log_debug("Timed out waiting for packet.");
@@ -228,13 +232,20 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
         }
     }
 
+    // Convert the source address into a string
+    if (debug) {
+        char src_addr[INET6_ADDRSTRLEN] = "";
+        inet_ntop(si.sin_family, &si.sin_addr, src_addr, sizeof(src_addr));
 
-    if (packet[1] == MQTT_SN_TYPE_FRWDENCAP) {
-        log_debug("Received %2d bytes. Type=%s with %s inside on Socket: %d", (int)bytes_read,
-                  mqtt_sn_type_string(buffer[1]), mqtt_sn_type_string(packet[packet[0] + 1]), sock);
-    } else {
-        log_debug("Received %2d bytes. Type=%s on Socket: %d", (int)bytes_read,
-                  mqtt_sn_type_string(buffer[1]), sock);
+        if (packet[1] == MQTT_SN_TYPE_FRWDENCAP) {
+            log_debug("Received %2d bytes from %s:%d. Type=%s with %s inside on Socket: %d",
+                      (int)bytes_read, src_addr, ntohs(si.sin_port),
+                      mqtt_sn_type_string(buffer[1]), mqtt_sn_type_string(packet[packet[0] + 1]), sock);
+        } else {
+            log_debug("Received %2d bytes from %s:%d. Type=%s on Socket: %d",
+                      (int)bytes_read, src_addr, ntohs(si.sin_port),
+                      mqtt_sn_type_string(buffer[1]), sock);
+        }
     }
 
     if (mqtt_sn_validate_packet(buffer, bytes_read) == FALSE) {
