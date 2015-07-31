@@ -44,6 +44,7 @@
 #endif
 
 static uint8_t debug = 0;
+static uint8_t verbose = 0;
 static uint16_t next_message_id = 1;
 static time_t last_transmit = 0;
 static time_t last_receive = 0;
@@ -59,6 +60,12 @@ void mqtt_sn_set_debug(uint8_t value)
 {
     debug = value;
     log_debug("Debug level is: %d.", debug);
+}
+
+void mqtt_sn_set_verbose(uint8_t value)
+{
+    verbose = value;
+    log_debug("Verbose level is: %d.", verbose);
 }
 
 int mqtt_sn_create_socket(const char* host, const char* port)
@@ -658,7 +665,7 @@ void mqtt_sn_dump_packet(char* packet)
     printf("\n");
 }
 
-void mqtt_sn_print_publish_packet(publish_packet_t* packet, uint8_t verbose)
+void mqtt_sn_print_publish_packet(publish_packet_t* packet)
 {
     if (verbose) {
         int topic_type = packet->flags & 0x3;

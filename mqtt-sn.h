@@ -184,13 +184,14 @@ void mqtt_sn_receive_connack(int sock);
 uint16_t mqtt_sn_receive_regack(int sock);
 uint16_t mqtt_sn_receive_suback(int sock);
 void mqtt_sn_dump_packet(char* packet);
-void mqtt_sn_print_publish_packet(publish_packet_t* packet, uint8_t verbose);
-publish_packet_t* mqtt_sn_loop(int sock, int timeout);
+void mqtt_sn_print_publish_packet(publish_packet_t* packet);
+void* mqtt_sn_wait_for(uint8_t type, int sock);
 void mqtt_sn_register_topic(int topic_id, const char* topic_name);
 const char* mqtt_sn_lookup_topic(int topic_id);
 void mqtt_sn_cleanup();
 
 void mqtt_sn_set_debug(uint8_t value);
+void mqtt_sn_set_verbose(uint8_t value);
 const char* mqtt_sn_type_string(uint8_t type);
 const char* mqtt_sn_return_code_string(uint8_t return_code);
 

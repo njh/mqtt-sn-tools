@@ -119,6 +119,7 @@ int main(int argc, char* argv[])
 
     // Enable debugging?
     mqtt_sn_set_debug(debug);
+    mqtt_sn_set_verbose(verbose);
 
     // Create a listening UDP socket
     sock = bind_udp_socket(mqtt_sn_port);
@@ -128,7 +129,7 @@ int main(int argc, char* argv[])
         if (dump_all) {
             mqtt_sn_dump_packet(packet);
         } else if (packet[1] == MQTT_SN_TYPE_PUBLISH) {
-            mqtt_sn_print_publish_packet((publish_packet_t *)packet, verbose);
+            mqtt_sn_print_publish_packet((publish_packet_t *)packet);
         }
     }
 

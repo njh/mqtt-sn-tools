@@ -195,6 +195,7 @@ int main(int argc, char* argv[])
     } else {
         timeout = 10;
     }
+    mqtt_sn_set_verbose(verbose);
 
     // Setup signal handlers
     signal(SIGTERM, termination_handler);
@@ -225,7 +226,7 @@ int main(int argc, char* argv[])
         while(keep_running) {
             publish_packet_t *packet = mqtt_sn_loop(sock, timeout);
             if (packet) {
-                mqtt_sn_print_publish_packet(packet, verbose);
+                mqtt_sn_print_publish_packet(packet);
 
                 // Stop if in single message mode
                 if (single_message)
