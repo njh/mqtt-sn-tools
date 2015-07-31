@@ -29,25 +29,6 @@ class MqttSnSubTest < Minitest::Test
     assert_equal true, @packet.clean_session
   end
 
-  def test_no_clean_session
-    fake_server do |fs|
-      @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
-        @cmd_result = run_cmd(
-          'mqtt-sn-sub',
-          ['-1', '-c',
-          '-t', 'test',
-          '-p', fs.port,
-          '-h', fs.address]
-        )
-      end
-    end
-
-    assert_equal ["Hello World"], @cmd_result
-    assert_match /^mqtt-sn-tools/, @packet.client_id
-    assert_equal 10, @packet.keep_alive
-    assert_equal false, @packet.clean_session
-  end
-
   def test_custom_keep_alive
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
@@ -203,6 +184,26 @@ class MqttSnSubTest < Minitest::Test
     assert_equal 'test', @packet.topic_name
     assert_equal :normal, @packet.topic_id_type
     assert_equal 0, @packet.qos
+  end
+
+  def test_subscribe_no_clean_session
+    @fs = fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-c', '-v',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_equal ["old_topic: old_msg", "test: Hello World"], @cmd_result
+    assert_match /^mqtt-sn-tools/, @packet.client_id
+    assert_equal 10, @packet.keep_alive
+    assert_equal false, @packet.clean_session
   end
 
 end

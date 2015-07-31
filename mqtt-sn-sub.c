@@ -179,7 +179,7 @@ static void termination_handler (int signum)
 
 int main(int argc, char* argv[])
 {
-    int sock, timeout;
+    int sock;
 
     mqtt_sn_disable_frwdencap();
 
@@ -188,13 +188,6 @@ int main(int argc, char* argv[])
 
     // Enable debugging?
     mqtt_sn_set_debug(debug);
-
-    // Work out timeout value for main loop
-    if (keep_alive) {
-        timeout = keep_alive / 2;
-    } else {
-        timeout = 10;
-    }
     mqtt_sn_set_verbose(verbose);
 
     // Setup signal handlers
@@ -224,13 +217,9 @@ int main(int argc, char* argv[])
 
         // Keep processing packets until process is terminated
         while(keep_running) {
-            publish_packet_t *packet = mqtt_sn_loop(sock, timeout);
-            if (packet) {
-                mqtt_sn_print_publish_packet(packet);
-
-                // Stop if in single message mode
-                if (single_message)
-                    break;
+            publish_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_PUBLISH, sock);
+            if (packet && single_message) {
+                break;
             }
         }
 

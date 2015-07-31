@@ -455,15 +455,10 @@ void mqtt_sn_send_disconnect(int sock)
 
 void mqtt_sn_receive_disconnect(int sock)
 {
-    disconnect_packet_t *packet = mqtt_sn_receive_packet(sock);
+    disconnect_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_DISCONNECT, sock);
 
     if (packet == NULL) {
         log_err("Failed to disconnect from MQTT-SN gateway.");
-        exit(EXIT_FAILURE);
-    }
-
-    if (packet->type != MQTT_SN_TYPE_DISCONNECT) {
-        log_err("Was expecting DISCONNECT packet but received: %s", mqtt_sn_type_string(packet->type));
         exit(EXIT_FAILURE);
     }
 
@@ -571,16 +566,11 @@ const char* mqtt_sn_lookup_topic(int topic_id)
 
 uint16_t mqtt_sn_receive_regack(int sock)
 {
-    regack_packet_t *packet = mqtt_sn_receive_packet(sock);
+    regack_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_REGACK, sock);
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
         log_err("Failed to connect to register topic.");
-        exit(EXIT_FAILURE);
-    }
-
-    if (packet->type != MQTT_SN_TYPE_REGACK) {
-        log_err("Was expecting REGACK packet but received: %s", mqtt_sn_type_string(packet->type));
         exit(EXIT_FAILURE);
     }
 
@@ -700,16 +690,11 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
 
 uint16_t mqtt_sn_receive_suback(int sock)
 {
-    suback_packet_t *packet = mqtt_sn_receive_packet(sock);
+    suback_packet_t *packet = (suback_packet_t *)mqtt_sn_wait_for(MQTT_SN_TYPE_SUBACK, sock);
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
         log_err("Failed to subscribe to topic.");
-        exit(EXIT_FAILURE);
-    }
-
-    if (packet->type != MQTT_SN_TYPE_SUBACK) {
-        log_err("Was expecting SUBACK packet but received: %s", mqtt_sn_type_string(packet->type));
         exit(EXIT_FAILURE);
     }
 
@@ -736,72 +721,86 @@ uint16_t mqtt_sn_receive_suback(int sock)
     return received_topic_id;
 }
 
-publish_packet_t* mqtt_sn_loop(int sock, int timeout)
+void* mqtt_sn_wait_for(uint8_t type, int sock)
 {
-    time_t now = time(NULL);
-    struct timeval tv;
-    fd_set rfd;
-    int ret;
+    int timeout = 10;
 
-    // Time to send a ping?
-    if (keep_alive > 0 && (now - last_transmit) >= keep_alive) {
-        mqtt_sn_send_pingreq(sock);
+    if (keep_alive) {
+        timeout = keep_alive / 2;
     }
 
-    FD_ZERO(&rfd);
-    FD_SET(sock, &rfd);
+    while(TRUE) {
+        time_t now = time(NULL);
+        struct timeval tv;
+        fd_set rfd;
+        int ret;
 
-    tv.tv_sec = timeout;
-    tv.tv_usec = 0;
+        // Time to send a ping?
+        if (keep_alive > 0 && (now - last_transmit) >= keep_alive) {
+            mqtt_sn_send_pingreq(sock);
+        }
 
-    ret = select(FD_SETSIZE, &rfd, NULL, NULL, &tv);
-    if (ret < 0) {
-        if (errno != EINTR) {
-            // Something is wrong.
-            perror("select");
+        FD_ZERO(&rfd);
+        FD_SET(sock, &rfd);
+
+        tv.tv_sec = timeout;
+        tv.tv_usec = 0;
+
+        ret = select(FD_SETSIZE, &rfd, NULL, NULL, &tv);
+        if (ret < 0) {
+            if (errno == EINTR) {
+                break;
+            } else {
+                // Something is wrong.
+                perror("select");
+                exit(EXIT_FAILURE);
+            }
+        } else if (ret > 0) {
+            char* packet = mqtt_sn_receive_packet(sock);
+            if (packet) {
+                switch(packet[1]) {
+                    case MQTT_SN_TYPE_PUBLISH:
+                        mqtt_sn_print_publish_packet((publish_packet_t *)packet);
+                        break;
+
+                    case MQTT_SN_TYPE_REGISTER:
+                        mqtt_sn_process_register(sock, (register_packet_t*)packet);
+                        break;
+
+                    case MQTT_SN_TYPE_PINGRESP:
+                        // do nothing
+                        break;
+
+                    case MQTT_SN_TYPE_DISCONNECT:
+                        if (type != MQTT_SN_TYPE_DISCONNECT) {
+                            log_warn("Received DISCONNECT from gateway.");
+                            exit(EXIT_FAILURE);
+                        }
+                        break;
+
+                    default:
+                        if (packet[1] != type) {
+                            log_warn(
+                                "Was expecting %s packet but received: %s",
+                                mqtt_sn_type_string(type),
+                                mqtt_sn_type_string(packet[1])
+                            );
+                        }
+                    break;
+                }
+
+                // Did we find what we were looking for?
+                if (packet[1] == type) {
+                    return packet;
+                }
+            }
+        }
+
+        // Check for receive timeout
+        if (keep_alive > 0 && (now - last_receive) >= (keep_alive * 1.5)) {
+            log_err("Keep alive error: timed out while waiting for a %s from gateway.", mqtt_sn_type_string(type));
             exit(EXIT_FAILURE);
         }
-    } else if (ret > 0) {
-        char* packet;
-
-        // Receive a packet
-        packet = mqtt_sn_receive_packet(sock);
-        if (packet) {
-            switch(packet[1]) {
-            case MQTT_SN_TYPE_PUBLISH: {
-                return (publish_packet_t*)packet;
-                break;
-            }
-
-            case MQTT_SN_TYPE_REGISTER: {
-                mqtt_sn_process_register(sock, (register_packet_t*)packet);
-                break;
-            };
-
-            case MQTT_SN_TYPE_PINGRESP: {
-                // do nothing
-                break;
-            };
-
-            case MQTT_SN_TYPE_DISCONNECT: {
-                log_warn("Received DISCONNECT from gateway.");
-                exit(EXIT_FAILURE);
-                break;
-            };
-
-            default: {
-                const char* typestr = mqtt_sn_type_string(packet[1]);
-                log_warn("Unexpected packet type: %s.", typestr);
-                break;
-            }
-            }
-        }
-    }
-
-    // Check for receive timeout
-    if (keep_alive > 0 && (now - last_receive) >= (keep_alive * 1.5)) {
-        log_err("Keep alive error: timed out receiving packet from gateway.");
-        exit(EXIT_FAILURE);
     }
 
     return NULL;

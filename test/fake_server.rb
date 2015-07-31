@@ -115,7 +115,15 @@ class MQTT::SN::FakeServer
 
     case packet
       when MQTT::SN::Packet::Connect
-        MQTT::SN::Packet::Connack.new(:return_code => 0)
+        if packet.clean_session
+          MQTT::SN::Packet::Connack.new(:return_code => 0)
+        else
+          [
+            MQTT::SN::Packet::Connack.new(:return_code => 0),
+            MQTT::SN::Packet::Register.new(:topic_id => 5, :topic_name => 'old_topic'),
+            MQTT::SN::Packet::Publish.new(:topic_id => 5, :data => 'old_msg')
+          ]
+        end
       when MQTT::SN::Packet::Publish
         nil
       when MQTT::SN::Packet::Pingreq
@@ -149,6 +157,8 @@ class MQTT::SN::FakeServer
         MQTT::SN::Packet::Disconnect.new
       when MQTT::SN::Packet::Register
         MQTT::SN::Packet::Regack.new(:id => packet.id, :topic_id => 1, :return_code => 0)
+      when MQTT::SN::Packet::Regack
+        nil
       else
         logger.warn "Unhandled packet type: #{packet.class}"
         nil
