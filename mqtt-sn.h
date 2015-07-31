@@ -35,6 +35,7 @@
 #endif
 
 #define MQTT_SN_DEFAULT_PORT       "1883"
+#define MQTT_SN_DEFAULT_TIMEOUT    (10)
 
 #define MQTT_SN_MAX_PACKET_LENGTH  (255)
 #define MQTT_SN_MAX_TOPIC_LENGTH   (MQTT_SN_MAX_PACKET_LENGTH-6)
@@ -192,6 +193,7 @@ void mqtt_sn_cleanup();
 
 void mqtt_sn_set_debug(uint8_t value);
 void mqtt_sn_set_verbose(uint8_t value);
+void mqtt_sn_set_timeout(uint8_t value);
 const char* mqtt_sn_type_string(uint8_t type);
 const char* mqtt_sn_return_code_string(uint8_t return_code);
 

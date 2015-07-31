@@ -189,6 +189,7 @@ int main(int argc, char* argv[])
     // Enable debugging?
     mqtt_sn_set_debug(debug);
     mqtt_sn_set_verbose(verbose);
+    mqtt_sn_set_timeout(keep_alive / 2);
 
     // Setup signal handlers
     signal(SIGTERM, termination_handler);

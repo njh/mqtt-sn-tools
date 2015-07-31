@@ -45,6 +45,7 @@
 
 static uint8_t debug = 0;
 static uint8_t verbose = 0;
+static uint8_t timeout = MQTT_SN_DEFAULT_TIMEOUT;
 static uint16_t next_message_id = 1;
 static time_t last_transmit = 0;
 static time_t last_receive = 0;
@@ -66,6 +67,16 @@ void mqtt_sn_set_verbose(uint8_t value)
 {
     verbose = value;
     log_debug("Verbose level is: %d.", verbose);
+}
+
+void mqtt_sn_set_timeout(uint8_t value)
+{
+    if (value < 1) {
+        timeout = MQTT_SN_DEFAULT_TIMEOUT;
+    } else {
+        timeout = value;
+    }
+    log_debug("Network timeout is: %d seconds.", timeout);
 }
 
 int mqtt_sn_create_socket(const char* host, const char* port)
@@ -118,7 +129,7 @@ int mqtt_sn_create_socket(const char* host, const char* port)
     // FIXME: set the Don't Fragment flag
 
     // Setup timeout on the socket
-    tv.tv_sec = 10;
+    tv.tv_sec = timeout;
     tv.tv_usec = 0;
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         perror("Error setting timeout on socket");
@@ -733,12 +744,6 @@ uint16_t mqtt_sn_receive_suback(int sock)
 
 void* mqtt_sn_wait_for(uint8_t type, int sock)
 {
-    int timeout = 10;
-
-    if (keep_alive) {
-        timeout = keep_alive / 2;
-    }
-
     while(TRUE) {
         time_t now = time(NULL);
         struct timeval tv;
