@@ -9,6 +9,11 @@ class MqttSnPubTest < Minitest::Test
     assert_match /^Usage: mqtt-sn-pub/, @cmd_result[0]
   end
 
+  def test_no_arguments
+    @cmd_result = run_cmd('mqtt-sn-pub')
+    assert_match /^Usage: mqtt-sn-pub/, @cmd_result[0]
+  end
+
   def test_custom_client_id
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
@@ -179,6 +184,36 @@ class MqttSnPubTest < Minitest::Test
     assert_equal '', @packet.data
     assert_equal 0, @packet.qos
     assert_equal true, @packet.retain
+  end
+
+  def test_invalid_qos
+    @cmd_result = run_cmd(
+    	'mqtt-sn-pub',
+    	'-q' => '1',
+    	'-t' => 'topic',
+    	'-m' => 'message'
+    )
+    assert_match /Only QoS level 0 or -1 is supported/, @cmd_result[0]
+  end
+
+  def test_both_topic_name_and_id
+    @cmd_result = run_cmd(
+    	'mqtt-sn-pub',
+    	'-t' => 'topic_name',
+    	'-T' => 10,
+    	'-m' => 'message'
+    )
+    assert_match /Please provide either a topic id or a topic name, not both/, @cmd_result[0]
+  end
+
+  def test_both_qos_n1_topic_name
+    @cmd_result = run_cmd(
+    	'mqtt-sn-pub',
+    	'-q' => -1,
+    	'-t' => 'topic_name',
+    	'-m' => 'message'
+    )
+    assert_match /Either a pre-defined topic id or a short topic name must be given for QoS -1/, @cmd_result[0]
   end
 
 end
