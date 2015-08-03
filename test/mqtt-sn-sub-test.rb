@@ -9,6 +9,11 @@ class MqttSnSubTest < Minitest::Test
     assert_match /^Usage: mqtt-sn-sub/, @cmd_result[0]
   end
 
+  def test_no_arguments
+    @cmd_result = run_cmd('mqtt-sn-sub')
+    assert_match /^Usage: mqtt-sn-sub/, @cmd_result[0]
+  end
+
   def test_custom_client_id
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
@@ -81,11 +86,13 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Debug level is: 1/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending SUBSCRIBE packet/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG SUBACK return code: 0x00/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result
   end
 
   def test_subscribe_one_verbose
@@ -186,6 +193,28 @@ class MqttSnSubTest < Minitest::Test
     assert_equal 0, @packet.qos
   end
 
+  def test_subscribe_then_interupt_debug
+    fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v', '-d',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_includes_match /DEBUG Debug level is: 1/, @cmd_result
+    assert_includes_match /DEBUG Got interrupt signal/, @cmd_result
+    assert_includes_match /^test: Hello World$/, @cmd_result
+    assert_equal 'test', @packet.topic_name
+    assert_equal :normal, @packet.topic_id_type
+    assert_equal 0, @packet.qos
+  end
+
   def test_subscribe_no_clean_session
     @fs = fake_server do |fs|
       @cmd_result = run_cmd(
@@ -204,6 +233,15 @@ class MqttSnSubTest < Minitest::Test
     assert_match /^mqtt-sn-tools/, @packet.client_id
     assert_equal 10, @packet.keep_alive
     assert_equal false, @packet.clean_session
+  end
+
+  def test_both_topic_name_and_id
+    @cmd_result = run_cmd(
+    	'mqtt-sn-sub',
+    	'-t' => 'topic_name',
+    	'-T' => 10,
+    )
+    assert_match /Please provide either a topic id or a topic name, not both/, @cmd_result[0]
   end
 
 end
