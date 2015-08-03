@@ -45,6 +45,8 @@ test: all
 	@(which bundle > /dev/null) || (echo "Ruby Bundler is not installed"; exit -1)
 	cd test && bundle install && rake test
 
+# Use gcc for coverage report - it works better than clang/llvm
+coverage: CC=gcc
 coverage: CFLAGS += --coverage
 coverage: LDFLAGS += --coverage
 coverage: clean test
