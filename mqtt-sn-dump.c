@@ -39,6 +39,7 @@ const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 uint8_t dump_all = FALSE;
 uint8_t debug = 0;
 uint8_t verbose = 0;
+uint8_t keep_running = TRUE;
 
 
 static void usage()
@@ -107,6 +108,24 @@ static int bind_udp_socket(const char* port_str)
     return sock;
 }
 
+static void termination_handler (int signum)
+{
+    switch(signum) {
+    case SIGHUP:
+        log_debug("Got hangup signal.");
+        break;
+    case SIGTERM:
+        log_debug("Got termination signal.");
+        break;
+    case SIGINT:
+        log_debug("Got interrupt signal.");
+        break;
+    }
+
+    // Signal the main thread to stop
+    keep_running = FALSE;
+}
+
 int main(int argc, char* argv[])
 {
     int sock;
@@ -121,15 +140,25 @@ int main(int argc, char* argv[])
     mqtt_sn_set_debug(debug);
     mqtt_sn_set_verbose(verbose);
 
+    // Setup signal handlers
+    signal(SIGTERM, termination_handler);
+    signal(SIGINT, termination_handler);
+    signal(SIGHUP, termination_handler);
+
     // Create a listening UDP socket
     sock = bind_udp_socket(mqtt_sn_port);
 
-    while (TRUE) {
-        char* packet = mqtt_sn_receive_packet(sock);
-        if (dump_all) {
-            mqtt_sn_dump_packet(packet);
-        } else if (packet[1] == MQTT_SN_TYPE_PUBLISH) {
-            mqtt_sn_print_publish_packet((publish_packet_t *)packet);
+    while (keep_running) {
+        int ret = mqtt_sn_select(sock);
+        if (ret < 0) {
+            break;
+        } else if (ret > 0) {
+            char* packet = mqtt_sn_receive_packet(sock);
+            if (dump_all) {
+                mqtt_sn_dump_packet(packet);
+            } else if (packet[1] == MQTT_SN_TYPE_PUBLISH) {
+                mqtt_sn_print_publish_packet((publish_packet_t *)packet);
+            }
         }
     }
 
