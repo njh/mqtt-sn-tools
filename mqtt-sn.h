@@ -186,6 +186,7 @@ uint16_t mqtt_sn_receive_regack(int sock);
 uint16_t mqtt_sn_receive_suback(int sock);
 void mqtt_sn_dump_packet(char* packet);
 void mqtt_sn_print_publish_packet(publish_packet_t* packet);
+int mqtt_sn_select(int sock);
 void* mqtt_sn_wait_for(uint8_t type, int sock);
 void mqtt_sn_register_topic(int topic_id, const char* topic_name);
 const char* mqtt_sn_lookup_topic(int topic_id);

@@ -742,12 +742,32 @@ uint16_t mqtt_sn_receive_suback(int sock)
     return received_topic_id;
 }
 
+int mqtt_sn_select(int sock)
+{
+    struct timeval tv;
+    fd_set rfd;
+    int ret;
+
+    FD_ZERO(&rfd);
+    FD_SET(sock, &rfd);
+
+    tv.tv_sec = timeout;
+    tv.tv_usec = 0;
+
+    ret = select(sock + 1, &rfd, NULL, NULL, &tv);
+    if (ret < 0 && errno != EINTR) {
+        // Something is wrong.
+        perror("select");
+        exit(EXIT_FAILURE);
+    }
+    
+    return ret;
+}
+
 void* mqtt_sn_wait_for(uint8_t type, int sock)
 {
     while(TRUE) {
         time_t now = time(NULL);
-        struct timeval tv;
-        fd_set rfd;
         int ret;
 
         // Time to send a ping?
@@ -755,21 +775,9 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
             mqtt_sn_send_pingreq(sock);
         }
 
-        FD_ZERO(&rfd);
-        FD_SET(sock, &rfd);
-
-        tv.tv_sec = timeout;
-        tv.tv_usec = 0;
-
-        ret = select(FD_SETSIZE, &rfd, NULL, NULL, &tv);
+        ret = mqtt_sn_select(sock);
         if (ret < 0) {
-            if (errno == EINTR) {
-                break;
-            } else {
-                // Something is wrong.
-                perror("select");
-                exit(EXIT_FAILURE);
-            }
+            break;
         } else if (ret > 0) {
             char* packet = mqtt_sn_receive_packet(sock);
             if (packet) {
