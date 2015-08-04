@@ -19,9 +19,9 @@ def run_cmd(name, args=[])
   end
 end
 
-def wait_for_output_then_kill(io, timeout=0.1)
+def wait_for_output_then_kill(io, signal='INT', timeout=0.1)
   IO.select([io], nil, nil, timeout)
-  Process.kill('INT', io.pid)
+  Process.kill(signal, io.pid)
 end
 
 def random_port

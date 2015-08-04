@@ -173,7 +173,7 @@ class MqttSnSubTest < Minitest::Test
     assert_equal 0, @packet.qos
   end
 
-  def test_subscribe_then_interupt
+  def test_subscribe_then_int
     fake_server do |fs|
       @cmd_result = run_cmd(
         'mqtt-sn-sub',
@@ -183,7 +183,47 @@ class MqttSnSubTest < Minitest::Test
         '-h', fs.address]
       ) do |cmd|
         @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
-        wait_for_output_then_kill(cmd)
+        wait_for_output_then_kill(cmd, 'INT')
+      end
+    end
+
+    assert_equal ["test: Hello World"], @cmd_result
+    assert_equal 'test', @packet.topic_name
+    assert_equal :normal, @packet.topic_id_type
+    assert_equal 0, @packet.qos
+  end
+
+  def test_subscribe_then_term
+    fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
+        wait_for_output_then_kill(cmd, 'TERM')
+      end
+    end
+
+    assert_equal ["test: Hello World"], @cmd_result
+    assert_equal 'test', @packet.topic_name
+    assert_equal :normal, @packet.topic_id_type
+    assert_equal 0, @packet.qos
+  end
+
+  def test_subscribe_then_hup
+    fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
+        wait_for_output_then_kill(cmd, 'HUP')
       end
     end
 

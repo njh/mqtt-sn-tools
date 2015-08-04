@@ -83,4 +83,34 @@ class MqttSnDumpTest < Minitest::Test
     assert_equal ["PUBLISH: len=18 topic_id=0x5454 message_id=0x0000 data=Hello World"], @cmd_result
   end
 
+  def test_receive_qos_n1_term
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-p', @port]
+    ) do |cmd|
+      # FIXME: better way to wait until socket is open?
+      sleep 0.2
+      publish_qos_n1_packet(@port)
+      wait_for_output_then_kill(cmd, 'TERM')
+    end
+
+    assert_equal ["Hello World"], @cmd_result
+  end
+
+  def test_receive_qos_n1_hup
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-p', @port]
+    ) do |cmd|
+      # FIXME: better way to wait until socket is open?
+      sleep 0.2
+      publish_qos_n1_packet(@port)
+      wait_for_output_then_kill(cmd, 'HUP')
+    end
+
+    assert_equal ["Hello World"], @cmd_result
+  end
+
 end
