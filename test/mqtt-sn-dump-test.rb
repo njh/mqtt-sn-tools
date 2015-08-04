@@ -36,6 +36,23 @@ class MqttSnDumpTest < Minitest::Test
     assert_equal ["Hello World"], @cmd_result
   end
 
+  def test_receive_qos_n1_debug
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-d', '-p', @port]
+    ) do |cmd|
+      # FIXME: better way to wait until socket is open?
+      sleep 0.2
+      publish_qos_n1_packet(@port)
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG mqtt-sn-dump listening on port \d+/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Received 18 bytes from 127.0.0.1\:\d+. Type=PUBLISH/, @cmd_result
+  end
+
   def test_receive_qos_n1_verbose
     @port = random_port
     @cmd_result = run_cmd(
