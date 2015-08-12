@@ -129,7 +129,6 @@ class MQTT::SN::FakeServer
       when MQTT::SN::Packet::Publish
         nil
       when MQTT::SN::Packet::Pingreq
-        @pings_received += 1
         MQTT::SN::Packet::Pingresp.new
       when MQTT::SN::Packet::Subscribe
         case packet.topic_id_type
