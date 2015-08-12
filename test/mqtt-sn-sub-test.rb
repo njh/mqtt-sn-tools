@@ -275,6 +275,25 @@ class MqttSnSubTest < Minitest::Test
     assert_equal false, @packet.clean_session
   end
 
+  def test_packet_too_long
+    fake_server do |fs|
+      fs.response_data = 'x' * 256
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v', '-d',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Received 265 bytes from/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ ERROR Packet received is longer than this tool can handle/, @cmd_result
+  end
+
   def test_both_topic_name_and_id
     @cmd_result = run_cmd(
     	'mqtt-sn-sub',

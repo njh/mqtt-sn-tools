@@ -23,6 +23,7 @@ class MQTT::SN::FakeServer
   attr_reader :address, :port
   attr_reader :thread
   attr_reader :packets_received
+  attr_accessor :response_data
   attr_accessor :logger
 
   # Create a new fake MQTT server
@@ -32,6 +33,7 @@ class MQTT::SN::FakeServer
   def initialize(port=0, bind_address='127.0.0.1')
     @port = port
     @address = bind_address
+    @response_data = 'Hello World'
     @packets_received = []
   end
 
@@ -150,7 +152,7 @@ class MQTT::SN::FakeServer
           MQTT::SN::Packet::Publish.new(
             :topic_id_type => packet.topic_id_type,
             :topic_id => topic_id,
-            :data => 'Hello World'
+            :data => @response_data
           )
         ]
       when MQTT::SN::Packet::Disconnect
