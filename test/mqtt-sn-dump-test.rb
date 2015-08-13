@@ -9,16 +9,24 @@ class MqttSnDumpTest < Minitest::Test
     assert_match /^Usage: mqtt-sn-dump/, @cmd_result[0]
   end
 
-  def publish_qos_n1_packet(port)
+  def publish_packet(port, packet)
+    # FIXME: better way to wait until socket is open?
+    sleep 0.2
     socket = UDPSocket.new
     socket.connect('localhost', port)
-    socket << MQTT::SN::Packet::Publish.new(
-      :topic_id => 'TT',
-      :topic_id_type => :short,
-      :data => "Hello World",
-      :qos => -1
-    )
+    socket << packet.to_s
     socket.close
+  end
+
+  def publish_qos_n1_packet(port)
+    publish_packet(port,
+      MQTT::SN::Packet::Publish.new(
+        :topic_id => 'TT',
+        :topic_id_type => :short,
+        :data => "Hello World",
+        :qos => -1
+      )
+    )
   end
 
   def test_receive_qos_n1
@@ -27,8 +35,6 @@ class MqttSnDumpTest < Minitest::Test
       'mqtt-sn-dump',
       ['-p', @port]
     ) do |cmd|
-      # FIXME: better way to wait until socket is open?
-      sleep 0.2
       publish_qos_n1_packet(@port)
       wait_for_output_then_kill(cmd)
     end
@@ -42,8 +48,6 @@ class MqttSnDumpTest < Minitest::Test
       'mqtt-sn-dump',
       ['-d', '-p', @port]
     ) do |cmd|
-      # FIXME: better way to wait until socket is open?
-      sleep 0.2
       publish_qos_n1_packet(@port)
       wait_for_output_then_kill(cmd)
     end
@@ -59,8 +63,6 @@ class MqttSnDumpTest < Minitest::Test
       'mqtt-sn-dump',
       ['-v', '-p', @port]
     ) do |cmd|
-      # FIXME: better way to wait until socket is open?
-      sleep 0.2
       publish_qos_n1_packet(@port)
       wait_for_output_then_kill(cmd)
     end
@@ -74,8 +76,6 @@ class MqttSnDumpTest < Minitest::Test
       'mqtt-sn-dump',
       ['-a', '-p', @port]
     ) do |cmd|
-      # FIXME: better way to wait until socket is open?
-      sleep 0.2
       publish_qos_n1_packet(@port)
       wait_for_output_then_kill(cmd)
     end
@@ -89,8 +89,6 @@ class MqttSnDumpTest < Minitest::Test
       'mqtt-sn-dump',
       ['-p', @port]
     ) do |cmd|
-      # FIXME: better way to wait until socket is open?
-      sleep 0.2
       publish_qos_n1_packet(@port)
       wait_for_output_then_kill(cmd, 'TERM')
     end
@@ -104,8 +102,6 @@ class MqttSnDumpTest < Minitest::Test
       'mqtt-sn-dump',
       ['-p', @port]
     ) do |cmd|
-      # FIXME: better way to wait until socket is open?
-      sleep 0.2
       publish_qos_n1_packet(@port)
       wait_for_output_then_kill(cmd, 'HUP')
     end

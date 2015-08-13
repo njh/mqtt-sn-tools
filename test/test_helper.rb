@@ -21,6 +21,7 @@ end
 
 def wait_for_output_then_kill(io, signal='INT', timeout=0.1)
   IO.select([io], nil, nil, timeout)
+  sleep(0.1)
   Process.kill(signal, io.pid)
 end
 
