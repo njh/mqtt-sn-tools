@@ -34,6 +34,21 @@ class MqttSnPubTest < Minitest::Test
     assert_equal true, @packet.clean_session
   end
 
+  def test_too_long_client_id
+    fake_server do |fs|
+			@cmd_result = run_cmd(
+				'mqtt-sn-pub',
+				'-i' => 'C' * 255,
+				'-T' => 10,
+				'-m' => 'message',
+				'-p' => fs.port,
+				'-h' => fs.address
+			)
+    end
+
+    assert_match /ERROR Client id is too long/, @cmd_result[0]
+  end
+
   def test_publish_qos_n1
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
