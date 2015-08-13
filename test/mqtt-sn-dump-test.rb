@@ -109,4 +109,163 @@ class MqttSnDumpTest < Minitest::Test
     assert_equal ["Hello World"], @cmd_result
   end
 
+  def test_receive_connect
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Connect.new(
+          :client_id => 'my_client_id',
+          :keep_alive => 10
+        )
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["CONNECT: len=18 protocol_id=1 duration=10 client_id=my_client_id"], @cmd_result
+  end
+
+  def test_receive_connack
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Connack.new(
+          :return_code => 1
+        )
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["CONNACK: len=3 return_code=1"], @cmd_result
+  end
+
+  def test_receive_register
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Register.new(
+          :id => 10,
+          :topic_id => 20,
+          :topic_name => 'Topic Name'
+        )
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["REGISTER: len=16 topic_id=0x0014 message_id=0x000a topic_name=Topic Name"], @cmd_result
+  end
+
+  def test_receive_regack
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Regack.new(
+          :id => 30,
+          :topic_id => 40,
+          :return_code => 0
+        )
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["REGACK: len=7 topic_id=0x0028 message_id=0x001e return_code=0"], @cmd_result
+  end
+
+  def test_receive_subscribe
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Subscribe.new(:id => 50)
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["SUBSCRIBE: len=5 message_id=0x0032"], @cmd_result
+  end
+
+  def test_receive_suback
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Suback.new(
+          :id => 60,
+          :topic_id => 70,
+          :return_code => 0
+        )
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=0"], @cmd_result
+  end
+
+  def test_receive_pingreq
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port, MQTT::SN::Packet::Pingreq.new)
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["PINGREQ: len=2"], @cmd_result
+  end
+
+  def test_receive_pingresp
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port, MQTT::SN::Packet::Pingresp.new)
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["PINGRESP: len=2"], @cmd_result
+  end
+
+  def test_receive_disconnect
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port, MQTT::SN::Packet::Disconnect.new)
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["DISCONNECT: len=2 duration=0"], @cmd_result
+  end
+
+  def test_receive_unknown
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port, "\x03\xFF\x00")
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["UNKNOWN: len=3"], @cmd_result
+  end
+
 end
