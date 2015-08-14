@@ -246,4 +246,32 @@ class MqttSnPubTest < Minitest::Test
     assert_match /ERROR Topic name is too long/, @cmd_result[0]
   end
 
+  def test_connect_fail
+		@cmd_result = run_cmd(
+			'mqtt-sn-pub',
+			['-t', 'topic',
+			'-m', 'message',
+			'-p', '8888',
+			'-h', '0.0.0.1']
+		) do |cmd|
+			wait_for_output_then_kill(cmd)
+		end
+
+    assert_match /ERROR Could not connect to remote host/, @cmd_result[0]
+  end
+
+  def test_hostname_lookup_fail
+		@cmd_result = run_cmd(
+			'mqtt-sn-pub',
+			['-t', 'topic',
+			'-m', 'message',
+			'-p', '8888',
+			'-h', '!(invalid)']
+		) do |cmd|
+			wait_for_output_then_kill(cmd)
+		end
+
+    assert_match /nodename nor servname provided, or not known/, @cmd_result[0]
+  end
+
 end
