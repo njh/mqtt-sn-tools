@@ -291,7 +291,7 @@ class MqttSnSubTest < Minitest::Test
     end
 
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Received 265 bytes from/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ ERROR Packet received is longer than this tool can handle/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ WARN  Packet received is longer than this tool can handle/, @cmd_result
   end
 
   def test_both_topic_name_and_id

@@ -190,18 +190,18 @@ uint8_t mqtt_sn_validate_packet(const void *packet, size_t length)
     const uint8_t* buf = packet;
 
     if (buf[0] == 0x00) {
-        log_err("Packet length header is not valid");
+        log_warn("Packet length header is not valid");
         return FALSE;
     }
 
     if (buf[0] == 0x01) {
-        log_err("Packet received is longer than this tool can handle");
+        log_warn("Packet received is longer than this tool can handle");
         return FALSE;
     }
 
     // When forwarder encapsulation is enabled each packet must be FRWDENCAP type
     if (forwarder_encapsulation && buf[1] != MQTT_SN_TYPE_FRWDENCAP) {
-        log_err("Expecting FRWDENCAP packet and got Type=%s.", mqtt_sn_type_string(buf[1]));
+        log_warn("Expecting FRWDENCAP packet and got Type=%s.", mqtt_sn_type_string(buf[1]));
         return FALSE;
     }
 
@@ -209,7 +209,7 @@ uint8_t mqtt_sn_validate_packet(const void *packet, size_t length)
     // header and length of encapsulated packet.
     if ((buf[1] == MQTT_SN_TYPE_FRWDENCAP && buf[0] + buf[buf[0]] != length) ||
             (buf[1] != MQTT_SN_TYPE_FRWDENCAP && buf[0] != length)) {
-        log_err("Read %d bytes but packet length is %d bytes.", (int)length,
+        log_warn("Read %d bytes but packet length is %d bytes.", (int)length,
                 buf[1] != MQTT_SN_TYPE_FRWDENCAP ? (int)buf[0] : (int)(buf[0] + buf[buf[0]]));
         return FALSE;
     }
