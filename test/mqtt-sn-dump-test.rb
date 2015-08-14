@@ -268,4 +268,17 @@ class MqttSnDumpTest < Minitest::Test
     assert_equal ["UNKNOWN: len=3"], @cmd_result
   end
 
+  def test_receive_invalid_length
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port, "\x00\x00\x00\x00")
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_match /WARN  Packet length header is not valid/, @cmd_result[0]
+  end
+
 end
