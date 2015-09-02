@@ -211,6 +211,19 @@ class MqttSnPubTest < Minitest::Test
     assert_match /Only QoS level 0 or -1 is supported/, @cmd_result[0]
   end
 
+  def test_payload_too_big
+    fake_server do |fs|
+			@cmd_result = run_cmd(
+				'mqtt-sn-pub',
+				['-t', 'topic',
+				'-m', 'm' * 255,
+				'-p', fs.port,
+				'-h', fs.address]
+			)
+		end
+    assert_match /Payload is too big/, @cmd_result[0]
+  end
+
   def test_both_topic_name_and_id
     @cmd_result = run_cmd(
     	'mqtt-sn-pub',
