@@ -102,8 +102,33 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Debug level is: 1/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending PUBLISH packet/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result
+  end
+
+  def test_publish_debug_2
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          ['-d', '-d',
+          '-t', 'topic',
+          '-m', 'test_publish_qos_0_debug',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Debug level is: 2/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result
+    assert_includes_match /Sending  25 bytes\. Type=CONNECT on Socket: 3/, @cmd_result
+    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
+    assert_includes_match /Received  3 bytes from 127.0.0.1\:\d+. Type=CONNACK on Socket/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending PUBLISH packet/, @cmd_result
     assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result
