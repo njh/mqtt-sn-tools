@@ -24,6 +24,7 @@ class MQTT::SN::FakeServer
   attr_reader :thread
   attr_reader :packets_received
   attr_accessor :response_data
+  attr_accessor :connack_return_code
   attr_accessor :logger
 
   # Create a new fake MQTT server
@@ -34,6 +35,7 @@ class MQTT::SN::FakeServer
     @port = port
     @address = bind_address
     @response_data = 'Hello World'
+    @connack_return_code = 0
     @packets_received = []
   end
 
@@ -118,10 +120,10 @@ class MQTT::SN::FakeServer
     case packet
       when MQTT::SN::Packet::Connect
         if packet.clean_session
-          MQTT::SN::Packet::Connack.new(:return_code => 0)
+          MQTT::SN::Packet::Connack.new(:return_code => connack_return_code)
         else
           [
-            MQTT::SN::Packet::Connack.new(:return_code => 0),
+            MQTT::SN::Packet::Connack.new(:return_code => connack_return_code),
             MQTT::SN::Packet::Register.new(:topic_id => 5, :topic_name => 'old_topic'),
             MQTT::SN::Packet::Publish.new(:topic_id => 5, :data => 'old_msg')
           ]

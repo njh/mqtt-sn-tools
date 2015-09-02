@@ -34,6 +34,23 @@ class MqttSnPubTest < Minitest::Test
     assert_equal true, @packet.clean_session
   end
 
+  def test_connack_congestion
+    fake_server do |fs|
+    	fs.connack_return_code = 1
+			fs.wait_for_packet(MQTT::SN::Packet::Connect) do
+				@cmd_result = run_cmd(
+					'mqtt-sn-pub',
+					'-T' => 10,
+					'-m' => 'message',
+					'-p' => fs.port,
+					'-h' => fs.address
+				)
+      end
+    end
+
+    assert_match /CONNECT error: Rejected: congestion/, @cmd_result[0]
+  end
+
   def test_too_long_client_id
     fake_server do |fs|
 			@cmd_result = run_cmd(
