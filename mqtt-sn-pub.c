@@ -181,6 +181,7 @@ int main(int argc, char* argv[])
     if (sock) {
         // Connect to gateway
         if (qos >= 0) {
+            log_debug("Connecting...");
             mqtt_sn_send_connect(sock, client_id, keep_alive, TRUE);
             mqtt_sn_receive_connack(sock);
         }
@@ -204,6 +205,7 @@ int main(int argc, char* argv[])
 
         // Finally, disconnect
         if (qos >= 0) {
+            log_debug("Disconnecting...");
             mqtt_sn_send_disconnect(sock);
             mqtt_sn_receive_disconnect(sock);
         }
