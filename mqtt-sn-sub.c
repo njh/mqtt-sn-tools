@@ -63,7 +63,7 @@ static void usage()
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
-    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscrube to.\n");
+    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
     fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
             mqtt_sn_send_subscribe_topic_id(sock, topic_id, 0);
         }
 
-        // Wait for the subscription acknowledgement
+        // Wait for the subscription acknowledgment
         topic_id = mqtt_sn_receive_suback(sock);
         if (topic_id && topic_name && strlen(topic_name) > 2) {
             mqtt_sn_register_topic(topic_id, topic_name);
