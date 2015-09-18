@@ -200,6 +200,7 @@ int main(int argc, char* argv[])
     sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
     if (sock) {
         // Connect to server
+        log_debug("Connecting...");
         mqtt_sn_send_connect(sock, client_id, keep_alive, clean_session);
         mqtt_sn_receive_connack(sock);
 
@@ -225,6 +226,7 @@ int main(int argc, char* argv[])
         }
 
         // Finally, disconnect
+        log_debug("Disconnecting...");
         mqtt_sn_send_disconnect(sock);
         mqtt_sn_receive_disconnect(sock);
 
