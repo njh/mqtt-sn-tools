@@ -117,60 +117,77 @@ class MQTT::SN::FakeServer
     @packets_received << packet
     logger.debug "Received: #{packet.inspect}"
 
-    case packet
-      when MQTT::SN::Packet::Connect
-        if packet.clean_session
-          MQTT::SN::Packet::Connack.new(:return_code => connack_return_code)
-        else
-          [
-            MQTT::SN::Packet::Connack.new(:return_code => connack_return_code),
-            MQTT::SN::Packet::Register.new(:topic_id => 5, :topic_name => 'old_topic'),
-            MQTT::SN::Packet::Publish.new(:topic_id => 5, :data => 'old_msg')
-          ]
-        end
-      when MQTT::SN::Packet::Publish
-        nil
-      when MQTT::SN::Packet::Pingreq
-        MQTT::SN::Packet::Pingresp.new
-      when MQTT::SN::Packet::Subscribe
-        case packet.topic_id_type
-          when :short
-            topic_id = packet.topic_name
-          when :predefined
-            topic_id = packet.topic_id
-          when :normal
-            topic_id = 1
-          else
-            logger.warn "Unknown Topic Id Type: #{packet.topic_id_type}"
-        end
-        [
-          MQTT::SN::Packet::Suback.new(
-            :id => packet.id,
-            :topic_id_type => packet.topic_id_type,
-            :topic_id => topic_id,
-            :return_code => 0
-          ),
-          MQTT::SN::Packet::Publish.new(
-            :topic_id_type => packet.topic_id_type,
-            :topic_id => topic_id,
-            :data => @response_data
-          )
-        ]
-      when MQTT::SN::Packet::Disconnect
-        MQTT::SN::Packet::Disconnect.new
-      when MQTT::SN::Packet::Register
-        MQTT::SN::Packet::Regack.new(:id => packet.id, :topic_id => 1, :return_code => 0)
-      when MQTT::SN::Packet::Regack
-        nil
-      else
-        logger.warn "Unhandled packet type: #{packet.class}"
-        nil
+    method = 'handle_' + packet.class.name.split('::').last.downcase
+    if respond_to?(method, true)
+      send(method, packet)
+    else
+      logger.warn "Unhandled packet type: #{packet.class}"
+      nil
     end
 
     rescue MQTT::SN::ProtocolException => e
       logger.warn "Protocol error: #{e}"
       nil
   end
+
+  def handle_connect(packet)
+    if packet.clean_session
+      MQTT::SN::Packet::Connack.new(:return_code => connack_return_code)
+    else
+      [
+        MQTT::SN::Packet::Connack.new(:return_code => connack_return_code),
+        MQTT::SN::Packet::Register.new(:topic_id => 5, :topic_name => 'old_topic'),
+        MQTT::SN::Packet::Publish.new(:topic_id => 5, :data => 'old_msg')
+      ]
+    end
+  end
+
+  def handle_publish(packet)
+    nil
+  end
+
+  def handle_pingreq(packet)
+    MQTT::SN::Packet::Pingresp.new
+  end
+
+  def handle_subscribe(packet)
+    case packet.topic_id_type
+      when :short
+        topic_id = packet.topic_name
+      when :predefined
+        topic_id = packet.topic_id
+      when :normal
+        topic_id = 1
+      else
+        logger.warn "Unknown Topic Id Type: #{packet.topic_id_type}"
+    end
+    [
+      MQTT::SN::Packet::Suback.new(
+        :id => packet.id,
+        :topic_id_type => packet.topic_id_type,
+        :topic_id => topic_id,
+        :return_code => 0
+      ),
+      MQTT::SN::Packet::Publish.new(
+        :topic_id_type => packet.topic_id_type,
+        :topic_id => topic_id,
+        :data => @response_data
+      )
+    ]
+  end
+
+  def handle_disconnect(packet)
+    MQTT::SN::Packet::Disconnect.new
+  end
+
+  def handle_register(packet)
+    MQTT::SN::Packet::Regack.new(:id => packet.id, :topic_id => 1, :return_code => 0)
+  end
+
+  def handle_regack(packet)
+    nil
+  end
+
 end
 
 if __FILE__ == $0
