@@ -285,7 +285,10 @@ class MqttSnSubTest < Minitest::Test
 
   def test_packet_too_long
     fake_server do |fs|
-      fs.response_data = 'x' * 256
+      def fs.handle_subscribe(packet)
+        super(packet, 'x' * 256)
+      end
+
       @cmd_result = run_cmd(
         'mqtt-sn-sub',
         ['-v', '-d',
