@@ -171,7 +171,11 @@ class MQTT::SN::FakeServer
   end
 
   def handle_register(packet)
-    MQTT::SN::Packet::Regack.new(:id => packet.id, :topic_id => 1, :return_code => 0)
+    MQTT::SN::Packet::Regack.new(
+    	:id => packet.id,
+    	:topic_id => 1,
+    	:return_code => 0x00
+    )
   end
 
   def handle_regack(packet)

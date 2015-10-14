@@ -760,7 +760,7 @@ int mqtt_sn_select(int sock)
         perror("select");
         exit(EXIT_FAILURE);
     }
-    
+
     return ret;
 }
 

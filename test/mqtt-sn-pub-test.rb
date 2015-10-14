@@ -56,14 +56,14 @@ class MqttSnPubTest < Minitest::Test
 
   def test_too_long_client_id
     fake_server do |fs|
-			@cmd_result = run_cmd(
-				'mqtt-sn-pub',
-				'-i' => 'C' * 255,
-				'-T' => 10,
-				'-m' => 'message',
-				'-p' => fs.port,
-				'-h' => fs.address
-			)
+      @cmd_result = run_cmd(
+        'mqtt-sn-pub',
+        '-i' => 'C' * 255,
+        '-T' => 10,
+        '-m' => 'message',
+        '-p' => fs.port,
+        '-h' => fs.address
+      )
     end
 
     assert_match /ERROR Client id is too long/, @cmd_result[0]
@@ -249,86 +249,86 @@ class MqttSnPubTest < Minitest::Test
 
   def test_invalid_qos
     @cmd_result = run_cmd(
-    	'mqtt-sn-pub',
-    	'-q' => '1',
-    	'-t' => 'topic',
-    	'-m' => 'message'
+      'mqtt-sn-pub',
+      '-q' => '1',
+      '-t' => 'topic',
+      '-m' => 'message'
     )
     assert_match /Only QoS level 0 or -1 is supported/, @cmd_result[0]
   end
 
   def test_payload_too_big
     fake_server do |fs|
-			@cmd_result = run_cmd(
-				'mqtt-sn-pub',
-				['-t', 'topic',
-				'-m', 'm' * 255,
-				'-p', fs.port,
-				'-h', fs.address]
-			)
-		end
+      @cmd_result = run_cmd(
+        'mqtt-sn-pub',
+        ['-t', 'topic',
+        '-m', 'm' * 255,
+        '-p', fs.port,
+        '-h', fs.address]
+      )
+    end
     assert_match /Payload is too big/, @cmd_result[0]
   end
 
   def test_both_topic_name_and_id
     @cmd_result = run_cmd(
-    	'mqtt-sn-pub',
-    	'-t' => 'topic_name',
-    	'-T' => 10,
-    	'-m' => 'message'
+      'mqtt-sn-pub',
+      '-t' => 'topic_name',
+      '-T' => 10,
+      '-m' => 'message'
     )
     assert_match /Please provide either a topic id or a topic name, not both/, @cmd_result[0]
   end
 
   def test_both_qos_n1_topic_name
     @cmd_result = run_cmd(
-    	'mqtt-sn-pub',
-    	'-q' => -1,
-    	'-t' => 'topic_name',
-    	'-m' => 'message'
+      'mqtt-sn-pub',
+      '-q' => -1,
+      '-t' => 'topic_name',
+      '-m' => 'message'
     )
     assert_match /Either a pre-defined topic id or a short topic name must be given for QoS -1/, @cmd_result[0]
   end
 
   def test_topic_name_too_long
     fake_server do |fs|
-			@cmd_result = run_cmd(
-				'mqtt-sn-pub',
-				['-t', 'x' * 255,
-				'-m', 'message',
-				'-p', fs.port,
-				'-h', fs.address]
-			) do |cmd|
-				wait_for_output_then_kill(cmd)
-			end
-		end
+      @cmd_result = run_cmd(
+        'mqtt-sn-pub',
+        ['-t', 'x' * 255,
+        '-m', 'message',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        wait_for_output_then_kill(cmd)
+      end
+    end
     assert_match /ERROR Topic name is too long/, @cmd_result[0]
   end
 
   def test_connect_fail
-		@cmd_result = run_cmd(
-			'mqtt-sn-pub',
-			['-t', 'topic',
-			'-m', 'message',
-			'-p', '8888',
-			'-h', '0.0.0.1']
-		) do |cmd|
-			wait_for_output_then_kill(cmd)
-		end
+    @cmd_result = run_cmd(
+      'mqtt-sn-pub',
+      ['-t', 'topic',
+      '-m', 'message',
+      '-h', '0.0.0.1',
+      '-p', '29567']
+    ) do |cmd|
+      wait_for_output_then_kill(cmd)
+    end
 
     assert_match /ERROR Could not connect to remote host/, @cmd_result[0]
   end
 
   def test_hostname_lookup_fail
-		@cmd_result = run_cmd(
-			'mqtt-sn-pub',
-			['-t', 'topic',
-			'-m', 'message',
-			'-p', '8888',
-			'-h', '!(invalid)']
-		) do |cmd|
-			wait_for_output_then_kill(cmd)
-		end
+    @cmd_result = run_cmd(
+      'mqtt-sn-pub',
+      ['-t', 'topic',
+      '-m', 'message',
+      '-p', '29567',
+      '-h', '!(invalid)']
+    ) do |cmd|
+      wait_for_output_then_kill(cmd)
+    end
 
     assert_match /nodename nor servname provided, or not known/, @cmd_result[0]
   end
