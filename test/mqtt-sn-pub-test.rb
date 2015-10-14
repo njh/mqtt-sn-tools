@@ -36,15 +36,18 @@ class MqttSnPubTest < Minitest::Test
 
   def test_connack_congestion
     fake_server do |fs|
-    	fs.connack_return_code = 1
-			fs.wait_for_packet(MQTT::SN::Packet::Connect) do
-				@cmd_result = run_cmd(
-					'mqtt-sn-pub',
-					'-T' => 10,
-					'-m' => 'message',
-					'-p' => fs.port,
-					'-h' => fs.address
-				)
+      def fs.handle_connect(packet)
+        MQTT::SN::Packet::Connack.new(:return_code => 0x01)
+      end
+
+      fs.wait_for_packet(MQTT::SN::Packet::Connect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          '-T' => 10,
+          '-m' => 'message',
+          '-p' => fs.port,
+          '-h' => fs.address
+        )
       end
     end
 

@@ -257,6 +257,14 @@ class MqttSnSubTest < Minitest::Test
 
   def test_subscribe_no_clean_session
     @fs = fake_server do |fs|
+      def fs.handle_connect(packet)
+        [
+          MQTT::SN::Packet::Connack.new(:return_code => 0x00),
+          MQTT::SN::Packet::Register.new(:topic_id => 5, :topic_name => 'old_topic'),
+          MQTT::SN::Packet::Publish.new(:topic_id => 5, :data => 'old_msg')
+        ]
+      end
+
       @cmd_result = run_cmd(
         'mqtt-sn-sub',
         ['-c', '-v',
