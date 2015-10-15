@@ -43,6 +43,7 @@ class MQTT::SN::FakeServer
   # Start the thread and open the socket that will process client connections
   def start
     @thread ||= Thread.new do
+      Thread.current.abort_on_exception = true
       Socket.udp_server_sockets(@address, @port) do |sockets|
         @address = sockets.first.local_address.ip_address
         @port = sockets.first.local_address.ip_port
