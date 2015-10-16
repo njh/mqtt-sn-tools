@@ -233,6 +233,32 @@ class MqttSnSubTest < Minitest::Test
     assert_equal 0, @packet.qos
   end
 
+  def test_subscribe_invalid_topic_id
+    fake_server do |fs|
+      def fs.handle_subscribe(packet)
+        MQTT::SN::Packet::Suback.new(
+          :id => packet.id,
+          :topic_id => 0,
+          :topic_id_type => packet.topic_id_type,
+          :return_code => 0x02
+        )
+      end
+
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-T', 123,
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
+        wait_for_output_then_kill(cmd, 'HUP')
+      end
+    end
+
+    assert_includes_match /ERROR SUBSCRIBE error: Rejected: invalid topic ID/, @cmd_result
+  end
+
   def test_subscribe_then_interupt_debug
     fake_server do |fs|
       @cmd_result = run_cmd(
