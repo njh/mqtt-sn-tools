@@ -711,7 +711,7 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
 
 uint16_t mqtt_sn_receive_suback(int sock)
 {
-    suback_packet_t *packet = (suback_packet_t *)mqtt_sn_wait_for(MQTT_SN_TYPE_SUBACK, sock);
+    suback_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_SUBACK, sock);
     uint16_t received_message_id, received_topic_id;
 
     if (packet == NULL) {
