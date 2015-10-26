@@ -259,6 +259,48 @@ class MqttSnSubTest < Minitest::Test
     assert_includes_match /ERROR SUBSCRIBE error: Rejected: invalid topic ID/, @cmd_result
   end
 
+  def test_subscribe_invalid_connack_packet
+    fake_server do |fs|
+      def fs.handle_connect(packet)
+        "\x00\x05\x00"
+      end
+
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-T', 123,
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_includes_match /Packet length header is not valid/, @cmd_result
+  end
+
+  def test_subscribe_incorrect_connack_packet_length
+    fake_server do |fs|
+      def fs.handle_connect(packet)
+        "\x04\x05\x00"
+      end
+
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-T', 123,
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_includes_match /Read 3 bytes but packet length is 4 bytes/, @cmd_result
+  end
+
   def test_subscribe_then_interupt_debug
     fake_server do |fs|
       @cmd_result = run_cmd(
