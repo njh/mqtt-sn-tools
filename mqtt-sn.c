@@ -630,7 +630,7 @@ void mqtt_sn_dump_packet(char* packet)
     }
     case MQTT_SN_TYPE_CONNACK: {
         connack_packet_t* capkt = (connack_packet_t*)packet;
-        printf(" return_code=%d", capkt->return_code);
+        printf(" return_code=%d (%s)", capkt->return_code, mqtt_sn_return_code_string(capkt->return_code));
         break;
     }
     case MQTT_SN_TYPE_REGISTER: {
@@ -644,7 +644,7 @@ void mqtt_sn_dump_packet(char* packet)
         regack_packet_t* rapkt = (regack_packet_t*)packet;
         printf(" topic_id=0x%4.4x", ntohs(rapkt->topic_id));
         printf(" message_id=0x%4.4x", ntohs(rapkt->message_id));
-        printf(" return_code=%d", rapkt->return_code);
+        printf(" return_code=%d (%s)", rapkt->return_code, mqtt_sn_return_code_string(rapkt->return_code));
         break;
     }
     case MQTT_SN_TYPE_PUBLISH: {
@@ -663,7 +663,7 @@ void mqtt_sn_dump_packet(char* packet)
         suback_packet_t* sapkt = (suback_packet_t*)packet;
         printf(" topic_id=0x%4.4x", ntohs(sapkt->topic_id));
         printf(" message_id=0x%4.4x", ntohs(sapkt->message_id));
-        printf(" return_code=%d", sapkt->return_code);
+        printf(" return_code=%d (%s)", sapkt->return_code, mqtt_sn_return_code_string(sapkt->return_code));
         break;
     }
     case MQTT_SN_TYPE_DISCONNECT: {

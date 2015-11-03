@@ -141,7 +141,24 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["CONNACK: len=3 return_code=1"], @cmd_result
+    assert_equal ["CONNACK: len=3 return_code=1 (Rejected: congestion)"], @cmd_result
+  end
+
+  def test_receive_connack_not_supported
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Connack.new(
+          :return_code => 3
+        )
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["CONNACK: len=3 return_code=3 (Rejected: not supported)"], @cmd_result
   end
 
   def test_receive_register
@@ -179,7 +196,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["REGACK: len=7 topic_id=0x0028 message_id=0x001e return_code=0"], @cmd_result
+    assert_equal ["REGACK: len=7 topic_id=0x0028 message_id=0x001e return_code=0 (Accepted)"], @cmd_result
   end
 
   def test_receive_subscribe
@@ -213,7 +230,26 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=0"], @cmd_result
+    assert_equal ["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=0 (Accepted)"], @cmd_result
+  end
+
+  def test_receive_suback_unknown_error
+    @port = random_port
+    @cmd_result = run_cmd(
+      'mqtt-sn-dump',
+      ['-a', '-p', @port]
+    ) do |cmd|
+      publish_packet(@port,
+        MQTT::SN::Packet::Suback.new(
+          :id => 60,
+          :topic_id => 70,
+          :return_code => 5
+        )
+      )
+      wait_for_output_then_kill(cmd)
+    end
+
+    assert_equal ["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=5 (Rejected: unknown reason)"], @cmd_result
   end
 
   def test_receive_pingreq
