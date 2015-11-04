@@ -379,6 +379,31 @@ class MqttSnSubTest < Minitest::Test
     assert_equal false, @packet.clean_session
   end
 
+  def test_recieve_non_registered_topic_id
+    @fs = fake_server do |fs|
+      def fs.handle_connect(packet)
+        [
+          MQTT::SN::Packet::Connack.new(:return_code => 0x00),
+          MQTT::SN::Packet::Publish.new(:topic_id => 5, :data => 'not registered')
+        ]
+      end
+
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-c', '-v',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_match /Failed to lookup topic id: 0x0005/, @cmd_result[0]
+    assert_match /test: Hello World/, @cmd_result[1]
+  end
+
   def test_packet_too_long
     fake_server do |fs|
       def fs.handle_subscribe(packet)

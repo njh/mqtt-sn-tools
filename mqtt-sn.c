@@ -691,7 +691,9 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
         switch (topic_type) {
         case MQTT_SN_TOPIC_TYPE_NORMAL: {
             const char *topic_name = mqtt_sn_lookup_topic(topic_id);
-            printf("%s: %s\n", topic_name, packet->data);
+            if (topic_name) {
+                printf("%s: %s\n", topic_name, packet->data);
+            }
             break;
         };
         case MQTT_SN_TOPIC_TYPE_PREDEFINED: {
