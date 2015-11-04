@@ -54,6 +54,26 @@ class MqttSnPubTest < Minitest::Test
     assert_match /CONNECT error: Rejected: congestion/, @cmd_result[0]
   end
 
+  def test_no_connack
+    fake_server do |fs|
+      def fs.handle_connect(packet)
+        MQTT::SN::Packet::Disconnect.new
+      end
+
+      fs.wait_for_packet(MQTT::SN::Packet::Connect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          '-T' => 10,
+          '-m' => 'message',
+          '-p' => fs.port,
+          '-h' => fs.address
+        )
+      end
+    end
+
+    assert_match /ERROR Was expecting CONNACK packet but received: DISCONNECT/, @cmd_result[0]
+  end
+
   def test_too_long_client_id
     fake_server do |fs|
       @cmd_result = run_cmd(
