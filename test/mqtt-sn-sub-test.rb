@@ -301,6 +301,34 @@ class MqttSnSubTest < Minitest::Test
     assert_includes_match /Read 3 bytes but packet length is 4 bytes/, @cmd_result
   end
 
+  def test_subscribe_id_mismatch
+    fake_server do |fs|
+      def fs.handle_subscribe(packet)
+        MQTT::SN::Packet::Suback.new(
+          :id => 222,
+          :topic_id => 0,
+          :topic_id_type => packet.topic_id_type,
+          :return_code => 0x00
+        )
+      end
+
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v', '-d',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_includes_match /WARN  Message id in SUBACK does not equal message id sent/, @cmd_result
+    assert_includes_match /DEBUG   Expecting: 1/, @cmd_result
+    assert_includes_match /DEBUG   Actual: 222/, @cmd_result
+  end
+
   def test_subscribe_then_interupt_debug
     fake_server do |fs|
       @cmd_result = run_cmd(
