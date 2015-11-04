@@ -379,6 +379,58 @@ class MqttSnSubTest < Minitest::Test
     assert_equal false, @packet.clean_session
   end
 
+  def test_register_invalid_topic_id
+    @fs = fake_server do |fs|
+      def fs.handle_connect(packet)
+        [
+          MQTT::SN::Packet::Connack.new(:return_code => 0x00),
+          MQTT::SN::Packet::Register.new(:topic_id => 0, :topic_name => 'old_topic')
+        ]
+      end
+
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-c', '-v',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_match /ERROR Attempted to register invalid topic id: 0x0000/, @cmd_result[0]
+    assert_match /test: Hello World/, @cmd_result[1]
+  end
+
+  def test_register_invalid_topic_name
+    @fs = fake_server do |fs|
+      def fs.handle_connect(packet)
+        [
+          MQTT::SN::Packet::Connack.new(:return_code => 0x00),
+          MQTT::SN::Packet::Register.new(:topic_id => 5, :topic_name => ''),
+          MQTT::SN::Packet::Publish.new(:topic_id => 5, :data => 'old_msg')
+        ]
+      end
+
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-c', '-v',
+        '-t', 'test',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect)
+        wait_for_output_then_kill(cmd)
+      end
+    end
+
+    assert_match /ERROR Attempted to register invalid topic name/, @cmd_result[0]
+    assert_match /WARN  Failed to lookup topic id: 0x0005/, @cmd_result[1]
+    assert_match /test: Hello World/, @cmd_result[2]
+  end
+
   def test_recieve_non_registered_topic_id
     @fs = fake_server do |fs|
       def fs.handle_connect(packet)
