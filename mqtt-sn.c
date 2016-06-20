@@ -599,7 +599,7 @@ uint16_t mqtt_sn_receive_regack(int sock)
     log_debug("REGACK return code: 0x%2.2x", packet->return_code);
 
     if (packet->return_code) {
-        log_err("REGISTER error: %s", mqtt_sn_return_code_string(packet->return_code));
+        log_err("REGISTER failed: %s", mqtt_sn_return_code_string(packet->return_code));
         exit(packet->return_code);
     }
 
