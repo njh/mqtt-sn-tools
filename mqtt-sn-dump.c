@@ -103,7 +103,7 @@ static int bind_udp_socket(const char* port_str)
         exit(EXIT_FAILURE);
     }
 
-    log_debug("mqtt-sn-dump listening on port %s", port_str);
+    mqtt_sn_log_debug("mqtt-sn-dump listening on port %s", port_str);
 
     return sock;
 }
@@ -112,13 +112,13 @@ static void termination_handler (int signum)
 {
     switch(signum) {
     case SIGHUP:
-        log_debug("Got hangup signal.");
+        mqtt_sn_log_debug("Got hangup signal.");
         break;
     case SIGTERM:
-        log_debug("Got termination signal.");
+        mqtt_sn_log_debug("Got termination signal.");
         break;
     case SIGINT:
-        log_debug("Got interrupt signal.");
+        mqtt_sn_log_debug("Got interrupt signal.");
         break;
     }
 

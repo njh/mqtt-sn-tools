@@ -215,8 +215,8 @@ void mqtt_sn_set_frwdencap_parameters(const uint8_t *wlnid, uint8_t wlnid_len);
 // Wrap mqtt-sn packet into a forwarder encapsulation packet
 frwdencap_packet_t* mqtt_sn_create_frwdencap_packet(const void *data, size_t *len, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len);
 
-void log_debug(const char * format, ...);
-void log_warn(const char * format, ...);
-void log_err(const char * format, ...);
+void mqtt_sn_log_debug(const char * format, ...);
+void mqtt_sn_log_warn(const char * format, ...);
+void mqtt_sn_log_err(const char * format, ...);
 
 #endif

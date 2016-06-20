@@ -147,19 +147,19 @@ static void parse_opts(int argc, char** argv)
     }
 
     if (qos != -1 && qos != 0) {
-        log_err("Only QoS level 0 or -1 is supported.");
+        mqtt_sn_log_err("Only QoS level 0 or -1 is supported.");
         exit(EXIT_FAILURE);
     }
 
     // Both topic name and topic id?
     if (topic_name && topic_id) {
-        log_err("Please provide either a topic id or a topic name, not both.");
+        mqtt_sn_log_err("Please provide either a topic id or a topic name, not both.");
         exit(EXIT_FAILURE);
     }
 
     // Check topic is valid for QoS level -1
     if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2) {
-        log_err("Either a pre-defined topic id or a short topic name must be given for QoS -1.");
+        mqtt_sn_log_err("Either a pre-defined topic id or a short topic name must be given for QoS -1.");
         exit(EXIT_FAILURE);
     }
 }
@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
     if (sock) {
         // Connect to gateway
         if (qos >= 0) {
-            log_debug("Connecting...");
+            mqtt_sn_log_debug("Connecting...");
             mqtt_sn_send_connect(sock, client_id, keep_alive, TRUE);
             mqtt_sn_receive_connack(sock);
         }
@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
 
         // Finally, disconnect
         if (qos >= 0) {
-            log_debug("Disconnecting...");
+            mqtt_sn_log_debug("Disconnecting...");
             mqtt_sn_send_disconnect(sock);
             mqtt_sn_receive_disconnect(sock);
         }

@@ -154,7 +154,7 @@ static void parse_opts(int argc, char** argv)
 
     // Both topic name and topic id?
     if (topic_name && topic_id) {
-        log_err("Please provide either a topic id or a topic name, not both.");
+        mqtt_sn_log_err("Please provide either a topic id or a topic name, not both.");
         exit(EXIT_FAILURE);
     }
 }
@@ -163,13 +163,13 @@ static void termination_handler (int signum)
 {
     switch(signum) {
     case SIGHUP:
-        log_debug("Got hangup signal.");
+        mqtt_sn_log_debug("Got hangup signal.");
         break;
     case SIGTERM:
-        log_debug("Got termination signal.");
+        mqtt_sn_log_debug("Got termination signal.");
         break;
     case SIGINT:
-        log_debug("Got interrupt signal.");
+        mqtt_sn_log_debug("Got interrupt signal.");
         break;
     }
 
@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
     sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
     if (sock) {
         // Connect to server
-        log_debug("Connecting...");
+        mqtt_sn_log_debug("Connecting...");
         mqtt_sn_send_connect(sock, client_id, keep_alive, clean_session);
         mqtt_sn_receive_connack(sock);
 
@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
         }
 
         // Finally, disconnect
-        log_debug("Disconnecting...");
+        mqtt_sn_log_debug("Disconnecting...");
         mqtt_sn_send_disconnect(sock);
         mqtt_sn_receive_disconnect(sock);
 
