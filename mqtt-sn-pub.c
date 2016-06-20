@@ -1,6 +1,6 @@
 /*
   MQTT-SN command-line publishing client
-  Copyright (C) 2013 Nicholas Humfrey
+  Copyright (C) 2013-2016 Nicholas Humfrey
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
