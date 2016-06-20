@@ -959,12 +959,6 @@ frwdencap_packet_t* mqtt_sn_create_frwdencap_packet(const void *data, size_t *le
 }
 
 
-void fprint_wlnid(FILE * stream, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len) {
-    int i;
-    for (i = 0; i < wireless_node_id_len; i++)
-        fprintf(stream, "%02X", wireless_node_id[i]);
-}
-
 void log_msg(const char* level, const char* format, va_list arglist)
 {
     time_t log_time;
