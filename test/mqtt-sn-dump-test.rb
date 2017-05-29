@@ -6,7 +6,7 @@ class MqttSnDumpTest < Minitest::Test
 
   def test_usage
     @cmd_result = run_cmd('mqtt-sn-dump', '-?')
-    assert_match /^Usage: mqtt-sn-dump/, @cmd_result[0]
+    assert_match(/^Usage: mqtt-sn-dump/, @cmd_result[0])
   end
 
   def publish_packet(port, packet)
@@ -39,7 +39,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["Hello World"], @cmd_result
+    assert_equal(["Hello World"], @cmd_result)
   end
 
   def test_receive_qos_n1_debug
@@ -52,9 +52,9 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG mqtt-sn-dump listening on port \d+/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Received 18 bytes from 127.0.0.1\:\d+. Type=PUBLISH/, @cmd_result
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG mqtt-sn-dump listening on port \d+/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Received 18 bytes from 127.0.0.1\:\d+. Type=PUBLISH/, @cmd_result)
   end
 
   def test_receive_qos_n1_verbose
@@ -67,7 +67,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["TT: Hello World"], @cmd_result
+    assert_equal(["TT: Hello World"], @cmd_result)
   end
 
   def test_receive_qos_n1_dump_all
@@ -80,7 +80,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["PUBLISH: len=18 topic_id=0x5454 message_id=0x0000 data=Hello World"], @cmd_result
+    assert_equal(["PUBLISH: len=18 topic_id=0x5454 message_id=0x0000 data=Hello World"], @cmd_result)
   end
 
   def test_receive_qos_n1_term
@@ -93,7 +93,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd, 'TERM')
     end
 
-    assert_equal ["Hello World"], @cmd_result
+    assert_equal(["Hello World"], @cmd_result)
   end
 
   def test_receive_qos_n1_hup
@@ -106,7 +106,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd, 'HUP')
     end
 
-    assert_equal ["Hello World"], @cmd_result
+    assert_equal(["Hello World"], @cmd_result)
   end
 
   def test_receive_connect
@@ -124,7 +124,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["CONNECT: len=18 protocol_id=1 duration=10 client_id=my_client_id"], @cmd_result
+    assert_equal(["CONNECT: len=18 protocol_id=1 duration=10 client_id=my_client_id"], @cmd_result)
   end
 
   def test_receive_connack
@@ -141,7 +141,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["CONNACK: len=3 return_code=1 (Rejected: congestion)"], @cmd_result
+    assert_equal(["CONNACK: len=3 return_code=1 (Rejected: congestion)"], @cmd_result)
   end
 
   def test_receive_connack_not_supported
@@ -158,7 +158,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["CONNACK: len=3 return_code=3 (Rejected: not supported)"], @cmd_result
+    assert_equal(["CONNACK: len=3 return_code=3 (Rejected: not supported)"], @cmd_result)
   end
 
   def test_receive_register
@@ -177,7 +177,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["REGISTER: len=16 topic_id=0x0014 message_id=0x000a topic_name=Topic Name"], @cmd_result
+    assert_equal(["REGISTER: len=16 topic_id=0x0014 message_id=0x000a topic_name=Topic Name"], @cmd_result)
   end
 
   def test_receive_regack
@@ -196,7 +196,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["REGACK: len=7 topic_id=0x0028 message_id=0x001e return_code=0 (Accepted)"], @cmd_result
+    assert_equal(["REGACK: len=7 topic_id=0x0028 message_id=0x001e return_code=0 (Accepted)"], @cmd_result)
   end
 
   def test_receive_subscribe
@@ -211,7 +211,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["SUBSCRIBE: len=5 message_id=0x0032"], @cmd_result
+    assert_equal(["SUBSCRIBE: len=5 message_id=0x0032"], @cmd_result)
   end
 
   def test_receive_suback
@@ -230,7 +230,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=0 (Accepted)"], @cmd_result
+    assert_equal(["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=0 (Accepted)"], @cmd_result)
   end
 
   def test_receive_suback_unknown_error
@@ -249,7 +249,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=5 (Rejected: unknown reason)"], @cmd_result
+    assert_equal(["SUBACK: len=8 topic_id=0x0046 message_id=0x003c return_code=5 (Rejected: unknown reason)"], @cmd_result)
   end
 
   def test_receive_pingreq
@@ -262,7 +262,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["PINGREQ: len=2"], @cmd_result
+    assert_equal(["PINGREQ: len=2"], @cmd_result)
   end
 
   def test_receive_pingresp
@@ -275,7 +275,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["PINGRESP: len=2"], @cmd_result
+    assert_equal(["PINGRESP: len=2"], @cmd_result)
   end
 
   def test_receive_disconnect
@@ -288,7 +288,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["DISCONNECT: len=2 duration=0"], @cmd_result
+    assert_equal(["DISCONNECT: len=2 duration=0"], @cmd_result)
   end
 
   def test_receive_unknown
@@ -301,7 +301,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal ["UNKNOWN: len=3"], @cmd_result
+    assert_equal(["UNKNOWN: len=3"], @cmd_result)
   end
 
   def test_receive_invalid_length
@@ -314,7 +314,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_match /WARN  Packet length header is not valid/, @cmd_result[0]
+    assert_match(/WARN  Packet length header is not valid/, @cmd_result[0])
   end
 
 end

@@ -6,12 +6,12 @@ class MqttSnSubTest < Minitest::Test
 
   def test_usage
     @cmd_result = run_cmd('mqtt-sn-sub', '-?')
-    assert_match /^Usage: mqtt-sn-sub/, @cmd_result[0]
+    assert_match(/^Usage: mqtt-sn-sub/, @cmd_result[0])
   end
 
   def test_no_arguments
     @cmd_result = run_cmd('mqtt-sn-sub')
-    assert_match /^Usage: mqtt-sn-sub/, @cmd_result[0]
+    assert_match(/^Usage: mqtt-sn-sub/, @cmd_result[0])
   end
 
   def test_custom_client_id
@@ -28,10 +28,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["Hello World"], @cmd_result
-    assert_equal 'test_custom_client_id', @packet.client_id
-    assert_equal 10, @packet.keep_alive
-    assert_equal true, @packet.clean_session
+    assert_equal(["Hello World"], @cmd_result)
+    assert_equal('test_custom_client_id', @packet.client_id)
+    assert_equal(10, @packet.keep_alive)
+    assert_equal(true, @packet.clean_session)
   end
 
   def test_custom_keep_alive
@@ -48,10 +48,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["Hello World"], @cmd_result
-    assert_match /^mqtt-sn-tools/, @packet.client_id
-    assert_equal 5, @packet.keep_alive
-    assert_equal true, @packet.clean_session
+    assert_equal(["Hello World"], @cmd_result)
+    assert_match(/^mqtt-sn-tools/, @packet.client_id)
+    assert_equal(5, @packet.keep_alive)
+    assert_equal(true, @packet.clean_session)
   end
 
   def test_subscribe_one
@@ -67,10 +67,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["Hello World"], @cmd_result
-    assert_equal 'test', @packet.topic_name
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(["Hello World"], @cmd_result)
+    assert_equal('test', @packet.topic_name)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_one_debug
@@ -86,13 +86,13 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Debug level is: 1/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending SUBSCRIBE packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG SUBACK return code: 0x00/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Debug level is: 1/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending SUBSCRIBE packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG SUBACK return code: 0x00/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result)
   end
 
   def test_subscribe_one_verbose
@@ -108,10 +108,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["test: Hello World"], @cmd_result
-    assert_equal 'test', @packet.topic_name
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(["test: Hello World"], @cmd_result)
+    assert_equal('test', @packet.topic_name)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_one_verbose_time
@@ -127,11 +127,11 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal 1, @cmd_result.count
-    assert_match /\d{4}\-\d{2}\-\d{2} \d{2}\:\d{2}\:\d{2} test: Hello World/, @cmd_result[0]
-    assert_equal 'test', @packet.topic_name
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(1, @cmd_result.count)
+    assert_match(/\d{4}\-\d{2}\-\d{2} \d{2}\:\d{2}\:\d{2} test: Hello World/, @cmd_result[0])
+    assert_equal('test', @packet.topic_name)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_one_short
@@ -147,10 +147,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["tt: Hello World"], @cmd_result
-    assert_equal 'tt', @packet.topic_name
-    assert_equal :short, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(["tt: Hello World"], @cmd_result)
+    assert_equal('tt', @packet.topic_name)
+    assert_equal(:short, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_one_predefined
@@ -166,11 +166,11 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["0011: Hello World"], @cmd_result
-    assert_nil @packet.topic_name
-    assert_equal 17, @packet.topic_id
-    assert_equal :predefined, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(["0011: Hello World"], @cmd_result)
+    assert_nil(@packet.topic_name)
+    assert_equal(17, @packet.topic_id)
+    assert_equal(:predefined, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_then_int
@@ -187,10 +187,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["test: Hello World"], @cmd_result
-    assert_equal 'test', @packet.topic_name
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(["test: Hello World"], @cmd_result)
+    assert_equal('test', @packet.topic_name)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_then_term
@@ -207,10 +207,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["test: Hello World"], @cmd_result
-    assert_equal 'test', @packet.topic_name
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(["test: Hello World"], @cmd_result)
+    assert_equal('test', @packet.topic_name)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_then_hup
@@ -227,10 +227,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["test: Hello World"], @cmd_result
-    assert_equal 'test', @packet.topic_name
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_equal(["test: Hello World"], @cmd_result)
+    assert_equal('test', @packet.topic_name)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_invalid_topic_id
@@ -256,7 +256,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /ERROR SUBSCRIBE error: Rejected: invalid topic ID/, @cmd_result
+    assert_includes_match(/ERROR SUBSCRIBE error: Rejected: invalid topic ID/, @cmd_result)
   end
 
   def test_subscribe_invalid_connack_packet
@@ -277,7 +277,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /Packet length header is not valid/, @cmd_result
+    assert_includes_match(/Packet length header is not valid/, @cmd_result)
   end
 
   def test_subscribe_incorrect_connack_packet_length
@@ -298,7 +298,7 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /Read 3 bytes but packet length is 4 bytes/, @cmd_result
+    assert_includes_match(/Read 3 bytes but packet length is 4 bytes/, @cmd_result)
   end
 
   def test_subscribe_id_mismatch
@@ -324,9 +324,9 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /WARN  Message id in SUBACK does not equal message id sent/, @cmd_result
-    assert_includes_match /DEBUG   Expecting: 1/, @cmd_result
-    assert_includes_match /DEBUG   Actual: 222/, @cmd_result
+    assert_includes_match(/WARN  Message id in SUBACK does not equal message id sent/, @cmd_result)
+    assert_includes_match(/DEBUG   Expecting: 1/, @cmd_result)
+    assert_includes_match(/DEBUG   Actual: 222/, @cmd_result)
   end
 
   def test_subscribe_then_interupt_debug
@@ -343,12 +343,12 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /DEBUG Debug level is: 1/, @cmd_result
-    assert_includes_match /DEBUG Got interrupt signal/, @cmd_result
-    assert_includes_match /^test: Hello World$/, @cmd_result
-    assert_equal 'test', @packet.topic_name
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 0, @packet.qos
+    assert_includes_match(/DEBUG Debug level is: 1/, @cmd_result)
+    assert_includes_match(/DEBUG Got interrupt signal/, @cmd_result)
+    assert_includes_match(/^test: Hello World$/, @cmd_result)
+    assert_equal('test', @packet.topic_name)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(0, @packet.qos)
   end
 
   def test_subscribe_no_clean_session
@@ -373,10 +373,10 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_equal ["old_topic: old_msg", "test: Hello World"], @cmd_result
-    assert_match /^mqtt-sn-tools/, @packet.client_id
-    assert_equal 10, @packet.keep_alive
-    assert_equal false, @packet.clean_session
+    assert_equal(["old_topic: old_msg", "test: Hello World"], @cmd_result)
+    assert_match(/^mqtt-sn-tools/, @packet.client_id)
+    assert_equal(10, @packet.keep_alive)
+    assert_equal(false, @packet.clean_session)
   end
 
   def test_register_invalid_topic_id
@@ -400,8 +400,8 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_match /ERROR Attempted to register invalid topic id: 0x0000/, @cmd_result[0]
-    assert_match /test: Hello World/, @cmd_result[1]
+    assert_match(/ERROR Attempted to register invalid topic id: 0x0000/, @cmd_result[0])
+    assert_match(/test: Hello World/, @cmd_result[1])
   end
 
   def test_register_invalid_topic_name
@@ -426,9 +426,9 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_match /ERROR Attempted to register invalid topic name/, @cmd_result[0]
-    assert_match /WARN  Failed to lookup topic id: 0x0005/, @cmd_result[1]
-    assert_match /test: Hello World/, @cmd_result[2]
+    assert_match(/ERROR Attempted to register invalid topic name/, @cmd_result[0])
+    assert_match(/WARN  Failed to lookup topic id: 0x0005/, @cmd_result[1])
+    assert_match(/test: Hello World/, @cmd_result[2])
   end
 
   def test_recieve_non_registered_topic_id
@@ -452,8 +452,8 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_match /Failed to lookup topic id: 0x0005/, @cmd_result[0]
-    assert_match /test: Hello World/, @cmd_result[1]
+    assert_match(/Failed to lookup topic id: 0x0005/, @cmd_result[0])
+    assert_match(/test: Hello World/, @cmd_result[1])
   end
 
   def test_packet_too_long
@@ -474,8 +474,8 @@ class MqttSnSubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Received 265 bytes from/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ WARN  Packet received is longer than this tool can handle/, @cmd_result
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Received 265 bytes from/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ WARN  Packet received is longer than this tool can handle/, @cmd_result)
   end
 
   def test_both_topic_name_and_id
@@ -484,7 +484,7 @@ class MqttSnSubTest < Minitest::Test
       '-t' => 'topic_name',
       '-T' => 10,
     )
-    assert_match /Please provide either a topic id or a topic name, not both/, @cmd_result[0]
+    assert_match(/Please provide either a topic id or a topic name, not both/, @cmd_result[0])
   end
 
 end

@@ -6,12 +6,12 @@ class MqttSnPubTest < Minitest::Test
 
   def test_usage
     @cmd_result = run_cmd('mqtt-sn-pub', '-?')
-    assert_match /^Usage: mqtt-sn-pub/, @cmd_result[0]
+    assert_match(/^Usage: mqtt-sn-pub/, @cmd_result[0])
   end
 
   def test_no_arguments
     @cmd_result = run_cmd('mqtt-sn-pub')
-    assert_match /^Usage: mqtt-sn-pub/, @cmd_result[0]
+    assert_match(/^Usage: mqtt-sn-pub/, @cmd_result[0])
   end
 
   def test_custom_client_id
@@ -28,10 +28,10 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_empty @cmd_result
-    assert_equal 'test_custom_client_id', @packet.client_id
-    assert_equal 30, @packet.keep_alive
-    assert_equal true, @packet.clean_session
+    assert_empty(@cmd_result)
+    assert_equal('test_custom_client_id', @packet.client_id)
+    assert_equal(30, @packet.keep_alive)
+    assert_equal(true, @packet.clean_session)
   end
 
   def test_connack_congestion
@@ -51,7 +51,7 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_match /CONNECT error: Rejected: congestion/, @cmd_result[0]
+    assert_match(/CONNECT error: Rejected: congestion/, @cmd_result[0])
   end
 
   def test_no_connack
@@ -71,7 +71,7 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_match /ERROR Was expecting CONNACK packet but received: DISCONNECT/, @cmd_result[0]
+    assert_match(/ERROR Was expecting CONNACK packet but received: DISCONNECT/, @cmd_result[0])
   end
 
   def test_too_long_client_id
@@ -86,7 +86,7 @@ class MqttSnPubTest < Minitest::Test
       )
     end
 
-    assert_match /ERROR Client id is too long/, @cmd_result[0]
+    assert_match(/ERROR Client id is too long/, @cmd_result[0])
   end
 
   def test_publish_qos_n1
@@ -103,12 +103,12 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_empty @cmd_result
-    assert_equal 10, @packet.topic_id
-    assert_equal :predefined, @packet.topic_id_type
-    assert_equal 'test_publish_qos_n1', @packet.data
-    assert_equal -1, @packet.qos
-    assert_equal false, @packet.retain
+    assert_empty(@cmd_result)
+    assert_equal(10, @packet.topic_id)
+    assert_equal(:predefined, @packet.topic_id_type)
+    assert_equal('test_publish_qos_n1', @packet.data)
+    assert_equal(-1, @packet.qos)
+    assert_equal(false, @packet.retain)
   end
 
   def test_publish_debug
@@ -125,12 +125,12 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Debug level is: 1/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending PUBLISH packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Debug level is: 1/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending PUBLISH packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result)
   end
 
   def test_publish_debug_2
@@ -148,14 +148,14 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Debug level is: 2/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result
-    assert_includes_match /Sending  21 bytes\. Type=CONNECT on Socket: 3/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result
-    assert_includes_match /Received  3 bytes from 127.0.0.1\:\d+. Type=CONNACK on Socket/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending PUBLISH packet/, @cmd_result
-    assert_includes_match /[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Debug level is: 2/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending CONNECT packet/, @cmd_result)
+    assert_includes_match(/Sending  21 bytes\. Type=CONNECT on Socket: 3/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result)
+    assert_includes_match(/Received  3 bytes from 127.0.0.1\:\d+. Type=CONNACK on Socket/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG CONNACK return code: 0x00/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending PUBLISH packet/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result)
   end
 
   def test_publish_qos_0
@@ -172,12 +172,12 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_empty @cmd_result
-    assert_equal 1, @packet.topic_id
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 'test_publish_qos_0', @packet.data
-    assert_equal 0, @packet.qos
-    assert_equal false, @packet.retain
+    assert_empty(@cmd_result)
+    assert_equal(1, @packet.topic_id)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal('test_publish_qos_0', @packet.data)
+    assert_equal(0, @packet.qos)
+    assert_equal(false, @packet.retain)
   end
 
   def test_publish_qos_0_short
@@ -194,12 +194,12 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_empty @cmd_result
-    assert_equal 'TT', @packet.topic_id
-    assert_equal :short, @packet.topic_id_type
-    assert_equal 'test_publish_qos_0_short', @packet.data
-    assert_equal 0, @packet.qos
-    assert_equal false, @packet.retain
+    assert_empty(@cmd_result)
+    assert_equal('TT', @packet.topic_id)
+    assert_equal(:short, @packet.topic_id_type)
+    assert_equal('test_publish_qos_0_short', @packet.data)
+    assert_equal(0, @packet.qos)
+    assert_equal(false, @packet.retain)
   end
 
   def test_publish_qos_0_predefined
@@ -216,12 +216,12 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_empty @cmd_result
-    assert_equal 127, @packet.topic_id
-    assert_equal :predefined, @packet.topic_id_type
-    assert_equal 'test_publish_qos_0_predefined', @packet.data
-    assert_equal 0, @packet.qos
-    assert_equal false, @packet.retain
+    assert_empty(@cmd_result)
+    assert_equal(127, @packet.topic_id)
+    assert_equal(:predefined, @packet.topic_id_type)
+    assert_equal('test_publish_qos_0_predefined', @packet.data)
+    assert_equal(0, @packet.qos)
+    assert_equal(false, @packet.retain)
   end
 
   def test_publish_qos_0_retained
@@ -238,12 +238,12 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_empty @cmd_result
-    assert_equal 1, @packet.topic_id
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal 'test_publish_retained', @packet.data
-    assert_equal 0, @packet.qos
-    assert_equal true, @packet.retain
+    assert_empty(@cmd_result)
+    assert_equal(1, @packet.topic_id)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal('test_publish_retained', @packet.data)
+    assert_equal(0, @packet.qos)
+    assert_equal(true, @packet.retain)
   end
 
   def test_publish_qos_0_empty
@@ -259,12 +259,12 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_empty @cmd_result
-    assert_equal 1, @packet.topic_id
-    assert_equal :normal, @packet.topic_id_type
-    assert_equal '', @packet.data
-    assert_equal 0, @packet.qos
-    assert_equal true, @packet.retain
+    assert_empty(@cmd_result)
+    assert_equal(1, @packet.topic_id)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal('', @packet.data)
+    assert_equal(0, @packet.qos)
+    assert_equal(true, @packet.retain)
   end
 
   def test_invalid_qos
@@ -274,7 +274,7 @@ class MqttSnPubTest < Minitest::Test
       '-t' => 'topic',
       '-m' => 'message'
     )
-    assert_match /Only QoS level 0 or -1 is supported/, @cmd_result[0]
+    assert_match(/Only QoS level 0 or -1 is supported/, @cmd_result[0])
   end
 
   def test_payload_too_big
@@ -287,7 +287,7 @@ class MqttSnPubTest < Minitest::Test
         '-h', fs.address]
       )
     end
-    assert_match /Payload is too big/, @cmd_result[0]
+    assert_match(/Payload is too big/, @cmd_result[0])
   end
 
   def test_both_topic_name_and_id
@@ -297,7 +297,7 @@ class MqttSnPubTest < Minitest::Test
       '-T' => 10,
       '-m' => 'message'
     )
-    assert_match /Please provide either a topic id or a topic name, not both/, @cmd_result[0]
+    assert_match(/Please provide either a topic id or a topic name, not both/, @cmd_result[0])
   end
 
   def test_both_qos_n1_topic_name
@@ -307,7 +307,7 @@ class MqttSnPubTest < Minitest::Test
       '-t' => 'topic_name',
       '-m' => 'message'
     )
-    assert_match /Either a pre-defined topic id or a short topic name must be given for QoS -1/, @cmd_result[0]
+    assert_match(/Either a pre-defined topic id or a short topic name must be given for QoS -1/, @cmd_result[0])
   end
 
   def test_topic_name_too_long
@@ -322,7 +322,7 @@ class MqttSnPubTest < Minitest::Test
         wait_for_output_then_kill(cmd)
       end
     end
-    assert_match /ERROR Topic name is too long/, @cmd_result[0]
+    assert_match(/ERROR Topic name is too long/, @cmd_result[0])
   end
 
   def test_register_invalid_topic_name
@@ -345,7 +345,7 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_match /ERROR REGISTER failed: Rejected: invalid topic ID/, @cmd_result[0]
+    assert_match(/ERROR REGISTER failed: Rejected: invalid topic ID/, @cmd_result[0])
   end
 
   def test_connect_fail
@@ -359,7 +359,7 @@ class MqttSnPubTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_match /ERROR Could not connect to remote host/, @cmd_result[0]
+    assert_match(/ERROR Could not connect to remote host/, @cmd_result[0])
   end
 
   def test_hostname_lookup_fail
@@ -373,7 +373,7 @@ class MqttSnPubTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_match /nodename nor servname provided, or not known/, @cmd_result[0]
+    assert_match(/nodename nor servname provided, or not known/, @cmd_result[0])
   end
 
   def test_disconnect_duration_warning
@@ -393,7 +393,7 @@ class MqttSnPubTest < Minitest::Test
       )
     end
 
-    assert_match /DISCONNECT warning. Gateway returned duration in disconnect packet/, @cmd_result[0]
+    assert_match(/DISCONNECT warning. Gateway returned duration in disconnect packet/, @cmd_result[0])
   end
 
 end
