@@ -1,0 +1,10 @@
+# We use ruby for running the tests
+language: ruby
+before_install:
+  - gem update bundler
+rvm:
+  - "2.1.2"
+
+script:
+  - make
+  - make test
