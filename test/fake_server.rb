@@ -23,7 +23,6 @@ class MQTT::SN::FakeServer
   attr_reader :address, :port
   attr_reader :thread
   attr_reader :packets_received
-  attr_accessor :logger
 
   # Create a new fake MQTT server
   #
@@ -38,6 +37,10 @@ class MQTT::SN::FakeServer
   # Get the logger used by the server
   def logger
     @logger ||= Logger.new(STDOUT)
+  end
+
+  def logger=(logger)
+    @logger = logger
   end
 
   # Start the thread and open the socket that will process client connections
