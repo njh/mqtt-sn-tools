@@ -374,7 +374,7 @@ class MqttSnPubTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_match(/nodename nor servname provided, or not known/, @cmd_result[0])
+    assert_match(/nodename nor servname provided, or not known|Name or service not known/, @cmd_result[0])
   end
 
   def test_disconnect_duration_warning
