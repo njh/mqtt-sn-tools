@@ -869,10 +869,10 @@ const char* mqtt_sn_type_string(uint8_t type)
 const char* mqtt_sn_return_code_string(uint8_t return_code)
 {
     switch(return_code) {
-        case 0x00: return "Accepted";
-        case 0x01: return "Rejected: congestion";
-        case 0x02: return "Rejected: invalid topic ID";
-        case 0x03: return "Rejected: not supported";
+        case MQTT_SN_ACCEPTED: return "Accepted";
+        case MQTT_SN_REJECTED_CONGESTION: return "Rejected: congestion";
+        case MQTT_SN_REJECTED_INVALID: return "Rejected: invalid topic ID";
+        case MQTT_SN_REJECTED_NOT_SUPPORTED: return "Rejected: not supported";
         default:   return "Rejected: unknown reason";
     }
 }
