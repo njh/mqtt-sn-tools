@@ -169,6 +169,7 @@ class MQTT::SN::FakeServer
       MQTT::SN::Packet::Publish.new(
         :topic_id_type => packet.topic_id_type,
         :topic_id => topic_id,
+        :qos => packet.qos,
         :data => publish_data
       )
     ]
@@ -184,6 +185,10 @@ class MQTT::SN::FakeServer
       :topic_id => 1,
       :return_code => 0x00
     )
+  end
+
+  def handle_puback(packet)
+    nil
   end
 
   def handle_regack(packet)

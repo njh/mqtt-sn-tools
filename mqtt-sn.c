@@ -406,6 +406,22 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     return mqtt_sn_send_packet(sock, &packet);
 }
 
+void mqtt_sn_send_puback(int sock, publish_packet_t* publish, uint8_t return_code)
+{
+    puback_packet_t puback;
+    memset(&puback, 0, sizeof(puback));
+
+    puback.type = MQTT_SN_TYPE_PUBACK;
+    puback.topic_id = publish->topic_id;
+    puback.message_id = publish->message_id;
+    puback.return_code = return_code;
+    puback.length = 0x07;
+
+    mqtt_sn_log_debug("Sending PUBACK packet...");
+
+    return mqtt_sn_send_packet(sock, &puback);
+}
+
 void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos)
 {
     size_t topic_name_len = strlen(topic_name);

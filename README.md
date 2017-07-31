@@ -3,7 +3,7 @@ Command line tools written in C for the MQTT-SN (MQTT for Sensor Networks) proto
 Supported Features
 ------------------
 
-- QoS 0 and -1
+- QoS 0, 1 and -1
 - Keep alive pings
 - Publishing retained messages
 - Publishing empty messages
@@ -20,7 +20,8 @@ Limitations
 
 - Packets must be 255 or less bytes long
 - No Last Will and Testament
-- No QoS 1 or 2
+- No QoS 2
+- No automatic re-sending of lost packets
 - No Automatic gateway discovery
 
 
@@ -61,6 +62,7 @@ Subscribing
       -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
       -p <port>      Network port to connect to. Defaults to 1883.
+      -q <qos>       QoS level to subscribe with (0 or 1). Defaults to 0.
       -t <topic>     MQTT topic name to subscribe to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.

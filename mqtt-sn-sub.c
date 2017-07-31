@@ -1,6 +1,6 @@
 /*
   MQTT-SN command-line publishing client
-  Copyright (C) 2013-2016 Nicholas Humfrey
+  Copyright (C) 2013-2017 Nicholas Humfrey
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -43,6 +43,7 @@ const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 uint16_t topic_id = 0;
 uint16_t keep_alive = 10;
+int8_t qos = 0;
 uint8_t retain = FALSE;
 uint8_t debug = 0;
 uint8_t single_message = FALSE;
@@ -62,6 +63,7 @@ static void usage()
     fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.\n");
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
+    fprintf(stderr, "  -q <qos>       QoS level to subscribe with (0 or 1). Defaults to %d.\n", qos);
     fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
@@ -86,7 +88,7 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long(argc, argv, "1cdh:i:k:p:t:T:vV?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long(argc, argv, "1cdh:i:k:p:q:t:T:vV?", long_options, &option_index)) != -1)
         switch (ch) {
         case '1':
             single_message = TRUE;
@@ -114,6 +116,10 @@ static void parse_opts(int argc, char** argv)
 
         case 'p':
             mqtt_sn_port = optarg;
+            break;
+
+        case 'q':
+            qos = atoi(optarg);
             break;
 
         case 't':
@@ -206,9 +212,9 @@ int main(int argc, char* argv[])
 
         // Subscribe to the topic
         if (topic_name) {
-            mqtt_sn_send_subscribe_topic_name(sock, topic_name, 0);
+            mqtt_sn_send_subscribe_topic_name(sock, topic_name, qos);
         } else {
-            mqtt_sn_send_subscribe_topic_id(sock, topic_id, 0);
+            mqtt_sn_send_subscribe_topic_id(sock, topic_id, qos);
         }
 
         // Wait for the subscription acknowledgment
@@ -220,8 +226,15 @@ int main(int argc, char* argv[])
         // Keep processing packets until process is terminated
         while(keep_running) {
             publish_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_PUBLISH, sock);
-            if (packet && single_message) {
-                break;
+            if (packet) {
+                uint8_t packet_qos = packet->flags & MQTT_SN_FLAG_QOS_MASK;
+                if (packet_qos == MQTT_SN_FLAG_QOS_1) {
+                    mqtt_sn_send_puback(sock, packet, MQTT_SN_ACCEPTED);
+                }
+
+                if (single_message) {
+                    break;
+                }
             }
         }
 

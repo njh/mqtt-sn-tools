@@ -259,6 +259,25 @@ class MqttSnSubTest < Minitest::Test
     assert_includes_match(/ERROR SUBSCRIBE error: Rejected: invalid topic ID/, @cmd_result)
   end
 
+  def test_subscribe_one_qos1
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Puback) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
+          ['-1',
+          '-q', 1,
+          '-t', 'test',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_equal(["Hello World"], @cmd_result)
+    assert_equal(1, @packet.topic_id)
+    assert_equal(0, @packet.id)
+  end
+
   def test_subscribe_invalid_connack_packet
     fake_server do |fs|
       def fs.handle_connect(packet)
