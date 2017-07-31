@@ -267,14 +267,36 @@ class MqttSnPubTest < Minitest::Test
     assert_equal(true, @packet.retain)
   end
 
+  def test_publish_qos_1
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          '-q' => 1,
+          '-t' => 'topic',
+          '-m' => 'test_publish_qos_1',
+          '-p' => fs.port,
+          '-h' => fs.address
+        )
+      end
+    end
+
+    assert_empty(@cmd_result)
+    assert_equal(1, @packet.topic_id)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal('test_publish_qos_1', @packet.data)
+    assert_equal(1, @packet.qos)
+    assert_equal(false, @packet.retain)
+  end
+
   def test_invalid_qos
     @cmd_result = run_cmd(
       'mqtt-sn-pub',
-      '-q' => '1',
+      '-q' => '2',
       '-t' => 'topic',
       '-m' => 'message'
     )
-    assert_match(/Only QoS level 0 or -1 is supported/, @cmd_result[0])
+    assert_match(/Only QoS level 0, 1 or -1 is supported/, @cmd_result[0])
   end
 
   def test_payload_too_big

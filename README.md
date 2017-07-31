@@ -41,7 +41,7 @@ Publishing
       -m <message>   Message payload to send.
       -n             Send a null (zero length) message.
       -p <port>      Network port to connect to. Defaults to 1883.
-      -q <qos>       Quality of Service value (0 or -1). Defaults to 0.
+      -q <qos>       Quality of Service value (0, 1 or -1). Defaults to 0.
       -r             Message should be retained.
       -t <topic>     MQTT topic name to publish to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.

@@ -1,6 +1,6 @@
 /*
   MQTT-SN command-line publishing client
-  Copyright (C) 2013-2016 Nicholas Humfrey
+  Copyright (C) 2013-2017 Nicholas Humfrey
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -59,7 +59,7 @@ static void usage()
     fprintf(stderr, "  -m <message>   Message payload to send.\n");
     fprintf(stderr, "  -n             Send a null (zero length) message.\n");
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
-    fprintf(stderr, "  -q <qos>       Quality of Service value (0 or -1). Defaults to %d.\n", qos);
+    fprintf(stderr, "  -q <qos>       Quality of Service value (0, 1 or -1). Defaults to %d.\n", qos);
     fprintf(stderr, "  -r             Message should be retained.\n");
     fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
@@ -146,8 +146,8 @@ static void parse_opts(int argc, char** argv)
         usage();
     }
 
-    if (qos != -1 && qos != 0) {
-        mqtt_sn_log_err("Only QoS level 0 or -1 is supported.");
+    if (qos != -1 && qos != 0 && qos != 1) {
+        mqtt_sn_log_err("Only QoS level 0, 1 or -1 is supported.");
         exit(EXIT_FAILURE);
     }
 
@@ -202,6 +202,16 @@ int main(int argc, char* argv[])
 
         // Publish to the topic
         mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
+        
+        // Wait for a PUBACK
+        if (qos == 1) {
+            puback_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_PUBACK, sock);
+            if (packet) {
+                mqtt_sn_log_debug("Received PUBACK");
+            } else {
+                mqtt_sn_log_warn("Failed to receive PUBACK after PUBLISH");
+            }
+        }
 
         // Finally, disconnect
         if (qos >= 0) {

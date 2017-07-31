@@ -135,7 +135,13 @@ class MQTT::SN::FakeServer
   end
 
   def handle_publish(packet)
-    nil
+    if packet.qos > 0
+      MQTT::SN::Packet::Puback.new(
+        :id => packet.id,
+        :topic_id => packet.topic_id,
+        :return_code => 0x00
+      )
+    end
   end
 
   def handle_pingreq(packet)

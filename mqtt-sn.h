@@ -135,6 +135,15 @@ publish_packet_t;
 typedef struct __attribute__((packed)) {
     uint8_t length;
     uint8_t type;
+    uint16_t topic_id;
+    uint16_t message_id;
+    uint8_t return_code;
+}
+puback_packet_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t length;
+    uint8_t type;
     uint8_t flags;
     uint16_t message_id;
     union {
