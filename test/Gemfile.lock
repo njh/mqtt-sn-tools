@@ -15,7 +15,7 @@ DEPENDENCIES
   rake (>= 0.10.0)
 
 RUBY VERSION
-   ruby 2.1.2p95
+   ruby 2.3.3p222
 
 BUNDLED WITH
-   1.13.7
+   1.15.3
