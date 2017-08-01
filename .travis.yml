@@ -3,7 +3,7 @@ language: ruby
 before_install:
   - gem update bundler
 rvm:
-  - "2.1.2"
+  - "2.3.3"
 
 script:
   - make
