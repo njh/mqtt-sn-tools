@@ -1,6 +1,8 @@
 MQTT-SN Tools
 =============
 
+[![Build Status](https://travis-ci.org/njh/mqtt-sn-tools.svg?branch=master)](https://travis-ci.org/njh/mqtt-sn-tools)
+
 Command line tools written in C for the MQTT-SN (MQTT for Sensor Networks) protocol.
 
 
