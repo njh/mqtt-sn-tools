@@ -39,11 +39,11 @@
 const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *message_data = NULL;
-time_t keep_alive = 30;
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 uint16_t topic_id = 0;
 uint8_t topic_id_type = MQTT_SN_TOPIC_TYPE_NORMAL;
+uint16_t keep_alive = MQTT_SN_DEFAULT_KEEP_ALIVE;
 int8_t qos = 0;
 uint8_t retain = FALSE;
 uint8_t debug = 0;

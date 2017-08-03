@@ -30,7 +30,7 @@ class MqttSnPubTest < Minitest::Test
 
     assert_empty(@cmd_result)
     assert_equal('test_custom_client_id', @packet.client_id)
-    assert_equal(30, @packet.keep_alive)
+    assert_equal(10, @packet.keep_alive)
     assert_equal(true, @packet.clean_session)
   end
 
