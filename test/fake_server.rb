@@ -89,7 +89,7 @@ class MQTT::SN::FakeServer
     @port
   end
 
-  def wait_for_packet(klass=nil, timeout=2)
+  def wait_for_packet(klass=nil, timeout=3)
     Timeout.timeout(timeout) do
       if block_given?
         @packets_received = []

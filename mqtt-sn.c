@@ -784,6 +784,8 @@ int mqtt_sn_select(int sock)
 
 void* mqtt_sn_wait_for(uint8_t type, int sock)
 {
+    time_t started_waiting = time(NULL);
+
     while(TRUE) {
         time_t now = time(NULL);
         int ret;
@@ -841,6 +843,12 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
         if (keep_alive > 0 && (now - last_receive) >= (keep_alive * 1.5)) {
             mqtt_sn_log_err("Keep alive error: timed out while waiting for a %s from gateway.", mqtt_sn_type_string(type));
             exit(EXIT_FAILURE);
+        }
+        
+        // Check if we have timed out waiting for the packet we are looking for
+        if ((now - started_waiting) >= timeout) {
+            mqtt_sn_log_debug("Timed out while waiting for a %s from gateway.", mqtt_sn_type_string(type));
+            break;
         }
     }
 

@@ -54,6 +54,28 @@ class MqttSnSubTest < Minitest::Test
     assert_equal(true, @packet.clean_session)
   end
 
+  def test_connack_timeout
+    fake_server do |fs|
+      def fs.handle_connect(packet)
+        nil
+      end
+
+      fs.wait_for_packet(MQTT::SN::Packet::Connect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
+          ['-1',
+          '-d',
+          '-k', 2,
+          '-t', 'test',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_includes_match(/Timed out waiting for packet/, @cmd_result)
+  end
+
   def test_subscribe_one
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Subscribe) do
