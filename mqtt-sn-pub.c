@@ -56,6 +56,7 @@ static void usage()
     fprintf(stderr, "  -d             Increase debug level by one. -d can occur multiple times.\n");
     fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
     fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.\n");
+    fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -m <message>   Message payload to send.\n");
     fprintf(stderr, "  -n             Send a null (zero length) message.\n");
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
@@ -83,7 +84,7 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "dh:i:m:np:q:rt:T:?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long (argc, argv, "dh:i:k:m:np:q:rt:T:?", long_options, &option_index)) != -1)
     {
         switch (ch) {
         case 'd':
@@ -100,6 +101,10 @@ static void parse_opts(int argc, char** argv)
 
         case 'm':
             message_data = optarg;
+            break;
+
+        case 'k':
+            keep_alive = atoi(optarg);
             break;
 
         case 'n':
@@ -175,6 +180,7 @@ int main(int argc, char* argv[])
 
     // Enable debugging?
     mqtt_sn_set_debug(debug);
+    mqtt_sn_set_timeout(keep_alive / 2);
 
     // Create a UDP socket
     sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);

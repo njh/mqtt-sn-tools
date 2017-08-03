@@ -45,6 +45,7 @@ Publishing
       -d             Increase debug level by one. -d can occur multiple times.
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
       -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
+      -k <keepalive> keep alive in seconds for this client. Defaults to 10.
       -m <message>   Message payload to send.
       -n             Send a null (zero length) message.
       -p <port>      Network port to connect to. Defaults to 1883.
