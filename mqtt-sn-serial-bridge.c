@@ -72,7 +72,7 @@ static void parse_opts(int argc, char** argv)
 
     static struct option long_options[] =
     {
-        {"fe",    no_argument,       0, 'f' },
+        {"fe",    no_argument,       0, 1000 },
         {0, 0, 0, 0}
     };
 
@@ -100,7 +100,7 @@ static void parse_opts(int argc, char** argv)
             mqtt_sn_port = optarg;
             break;
 
-        case 'f':
+        case 1000:
             mqtt_sn_enable_frwdencap();
             frwdencap = TRUE;
             break;

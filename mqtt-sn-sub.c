@@ -78,8 +78,8 @@ static void parse_opts(int argc, char** argv)
 
     static struct option long_options[] =
     {
-        {"fe",    no_argument,       0, 'f' },
-        {"wlnid", required_argument, 0, 'w' },
+        {"fe",    no_argument,       0, 1000 },
+        {"wlnid", required_argument, 0, 1001 },
         {0, 0, 0, 0}
     };
 
@@ -130,11 +130,11 @@ static void parse_opts(int argc, char** argv)
             topic_id = atoi(optarg);
             break;
 
-        case 'f':
+        case 1000:
             mqtt_sn_enable_frwdencap();
             break;
 
-        case 'w' :
+        case 1001:
             mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
             break;
 
