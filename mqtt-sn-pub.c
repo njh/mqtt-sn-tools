@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
         }
 
         // Publish to the topic
-        mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, qos, retain);
+        mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, strlen(message_data), qos, retain);
         
         // Wait for a PUBACK
         if (qos == 1) {

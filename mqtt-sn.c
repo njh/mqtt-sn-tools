@@ -379,9 +379,8 @@ static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
     }
 }
 
-void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const void* data, int8_t qos, uint8_t retain)
+void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const void* data, uint16_t data_len, int8_t qos, uint8_t retain)
 {
-    size_t data_len = strlen(data);
     publish_packet_t packet;
     memset(&packet, 0, sizeof(packet));
 
