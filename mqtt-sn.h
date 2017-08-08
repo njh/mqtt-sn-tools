@@ -39,6 +39,7 @@
 #define MQTT_SN_DEFAULT_KEEP_ALIVE (10)
 
 #define MQTT_SN_MAX_PACKET_LENGTH  (255)
+#define MQTT_SN_MAX_PAYLOAD_LENGTH (MQTT_SN_MAX_PACKET_LENGTH-7)
 #define MQTT_SN_MAX_TOPIC_LENGTH   (MQTT_SN_MAX_PACKET_LENGTH-6)
 #define MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH  (252)
 
@@ -130,7 +131,7 @@ typedef struct __attribute__((packed)) {
     uint8_t flags;
     uint16_t topic_id;
     uint16_t message_id;
-    char data[MQTT_SN_MAX_PACKET_LENGTH-7];
+    char data[MQTT_SN_MAX_PAYLOAD_LENGTH];
 }
 publish_packet_t;
 
