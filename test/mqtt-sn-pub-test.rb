@@ -158,6 +158,47 @@ class MqttSnPubTest < Minitest::Test
     assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Sending DISCONNECT packet/, @cmd_result)
   end
 
+  def test_publish_from_file
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          ['-t', 'topic',
+          '-f', 'test.txt',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_empty(@cmd_result)
+    assert_equal(1, @packet.topic_id)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal('The is the contents of test.txt', @packet.data)
+    assert_equal(0, @packet.qos)
+  end
+
+  def test_publish_from_file_too_big
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          ['-t', 'topic',
+          '-f', 'test_big.txt',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_match(/WARN  Input file is longer than the maximum message size/, @cmd_result[0])
+
+    assert_equal(1, @packet.topic_id)
+    assert_equal(:normal, @packet.topic_id_type)
+    assert_equal(248, @packet.data.length)
+    assert_equal(0, @packet.qos)
+  end
+
   def test_publish_qos_0
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
@@ -343,6 +384,31 @@ class MqttSnPubTest < Minitest::Test
       '-m' => 'message'
     )
     assert_match(/Please provide either a topic id or a topic name, not both/, @cmd_result[0])
+  end
+
+  def test_both_message_and_file
+    @cmd_result = run_cmd(
+      'mqtt-sn-pub',
+      '-t' => 'topic_name',
+      '-m' => 'message',
+      '-f' => '/dev/zero'
+    )
+    assert_match(/Please provide either message data or a message file, not both/, @cmd_result[0])
+  end
+
+  def test_file_doesnt_exist
+    fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-pub',
+        '-t' => 'topic_name',
+        '-f' => '/doesnt/exist',
+        '-p' => fs.port,
+        '-h' => fs.address
+      ) do |cmd|
+        wait_for_output_then_kill(cmd)
+      end
+    end
+    assert_match(/Failed to open message file/, @cmd_result[0])
   end
 
   def test_both_qos_n1_topic_name

@@ -39,6 +39,7 @@
 const char *client_id = NULL;
 const char *topic_name = NULL;
 const char *message_data = NULL;
+const char *message_file = NULL;
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 uint16_t topic_id = 0;
@@ -54,6 +55,7 @@ static void usage()
     fprintf(stderr, "Usage: mqtt-sn-pub [opts] -t <topic> -m <message>\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  -d             Increase debug level by one. -d can occur multiple times.\n");
+    fprintf(stderr, "  -f <file>      A file to send as the message payload.\n");
     fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
     fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.\n");
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
@@ -84,7 +86,7 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "dh:i:k:m:np:q:rt:T:?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long (argc, argv, "df:h:i:k:m:np:q:rt:T:?", long_options, &option_index)) != -1)
     {
         switch (ch) {
         case 'd':
@@ -93,6 +95,10 @@ static void parse_opts(int argc, char** argv)
 
         case 'h':
             mqtt_sn_host = optarg;
+            break;
+
+        case 'f':
+            message_file = optarg;
             break;
 
         case 'i':
@@ -147,7 +153,7 @@ static void parse_opts(int argc, char** argv)
     } // while
 
     // Missing Parameter?
-    if (!(topic_name || topic_id) || !message_data) {
+    if (!(topic_name || topic_id) || !(message_data || message_file)) {
         usage();
     }
 
@@ -162,11 +168,41 @@ static void parse_opts(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    // Both message data and file?
+    if (message_data && message_file) {
+        mqtt_sn_log_err("Please provide either message data or a message file, not both.");
+        exit(EXIT_FAILURE);
+    }
+
     // Check topic is valid for QoS level -1
     if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2) {
         mqtt_sn_log_err("Either a pre-defined topic id or a short topic name must be given for QoS -1.");
         exit(EXIT_FAILURE);
     }
+}
+
+static void publish_file(int sock, const char* filename) {
+    char buffer[MQTT_SN_MAX_PAYLOAD_LENGTH];
+    uint16_t message_len = 0;
+    FILE* file = NULL;
+
+    file = fopen(filename, "rb");
+    if (!file) {
+        perror("Failed to open message file");
+        exit(EXIT_FAILURE);
+    }
+
+    message_len = fread(buffer, 1, MQTT_SN_MAX_PAYLOAD_LENGTH, file);
+    if (ferror(file)) {
+        perror("Failed to read message file");
+        exit(EXIT_FAILURE);
+    } else if (!feof(file)) {
+        mqtt_sn_log_warn("Input file is longer than the maximum message size");
+    }
+
+    mqtt_sn_send_publish(sock, topic_id, topic_id_type, buffer, message_len, qos, retain);
+
+    fclose(file);
 }
 
 int main(int argc, char* argv[])
@@ -207,8 +243,13 @@ int main(int argc, char* argv[])
         }
 
         // Publish to the topic
-        mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, strlen(message_data), qos, retain);
-        
+        if (message_file) {
+            publish_file(sock, message_file);
+        } else {
+            uint16_t message_len = strlen(message_data);
+            mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, message_len, qos, retain);
+        }
+
         // Wait for a PUBACK
         if (qos == 1) {
             puback_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_PUBACK, sock);
