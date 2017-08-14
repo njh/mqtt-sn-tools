@@ -43,6 +43,7 @@ Publishing
     Usage: mqtt-sn-pub [opts] -t <topic> -m <message>
 
       -d             Increase debug level by one. -d can occur multiple times.
+      -f <file>      A file to send as the message payload.
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
       -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
@@ -51,6 +52,7 @@ Publishing
       -p <port>      Network port to connect to. Defaults to 1883.
       -q <qos>       Quality of Service value (0, 1 or -1). Defaults to 0.
       -r             Message should be retained.
+      -s             Read one whole message from STDIN.
       -t <topic>     MQTT-SN topic name to publish to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.

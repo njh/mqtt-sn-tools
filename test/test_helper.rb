@@ -8,13 +8,17 @@ require 'fake_server'
 
 CMD_DIR = File.realpath('../..', __FILE__)
 
-def run_cmd(name, args=[])
+def run_cmd(name, args=[], data=nil)
   args = [args] unless args.respond_to?(:flatten)
   cmd = [CMD_DIR + '/' + name] + args.flatten.map {|i| i.to_s}
-  IO.popen([*cmd, :err => [:child, :out]], 'rb') do |io|
+  IO.popen([*cmd, :err => [:child, :out]], 'r+b') do |io|
     if block_given?
       yield(io)
     end
+    unless data.nil?
+      io.write data
+    end
+    io.close_write
     io.readlines.map {|line| line.strip}
   end
 end

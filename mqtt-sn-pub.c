@@ -64,6 +64,7 @@ static void usage()
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -q <qos>       Quality of Service value (0, 1 or -1). Defaults to %d.\n", qos);
     fprintf(stderr, "  -r             Message should be retained.\n");
+    fprintf(stderr, "  -s             Read one whole message from STDIN.\n");
     fprintf(stderr, "  -t <topic>     MQTT-SN topic name to publish to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
@@ -86,7 +87,7 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "df:h:i:k:m:np:q:rt:T:?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long (argc, argv, "df:h:i:k:m:np:q:rst:T:?", long_options, &option_index)) != -1)
     {
         switch (ch) {
         case 'd':
@@ -127,6 +128,10 @@ static void parse_opts(int argc, char** argv)
 
         case 'r':
             retain = TRUE;
+            break;
+
+        case 's':
+            message_file = "-";
             break;
 
         case 't':
@@ -186,7 +191,12 @@ static void publish_file(int sock, const char* filename) {
     uint16_t message_len = 0;
     FILE* file = NULL;
 
-    file = fopen(filename, "rb");
+    if (strcmp(filename, "-") == 0) {
+        file = stdin;
+    } else {
+        file = fopen(filename, "rb");
+    }
+
     if (!file) {
         perror("Failed to open message file");
         exit(EXIT_FAILURE);
