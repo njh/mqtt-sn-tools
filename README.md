@@ -51,7 +51,7 @@ Publishing
       -p <port>      Network port to connect to. Defaults to 1883.
       -q <qos>       Quality of Service value (0, 1 or -1). Defaults to 0.
       -r             Message should be retained.
-      -t <topic>     MQTT topic name to publish to.
+      -t <topic>     MQTT-SN topic name to publish to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
       --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.
@@ -70,7 +70,7 @@ Subscribing
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
       -p <port>      Network port to connect to. Defaults to 1883.
       -q <qos>       QoS level to subscribe with (0 or 1). Defaults to 0.
-      -t <topic>     MQTT topic name to subscribe to.
+      -t <topic>     MQTT-SN topic name to subscribe to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
       --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.

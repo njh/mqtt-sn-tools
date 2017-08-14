@@ -64,7 +64,7 @@ static void usage()
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -q <qos>       Quality of Service value (0, 1 or -1). Defaults to %d.\n", qos);
     fprintf(stderr, "  -r             Message should be retained.\n");
-    fprintf(stderr, "  -t <topic>     MQTT topic name to publish to.\n");
+    fprintf(stderr, "  -t <topic>     MQTT-SN topic name to publish to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");

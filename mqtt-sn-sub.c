@@ -64,7 +64,7 @@ static void usage()
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -q <qos>       QoS level to subscribe with (0 or 1). Defaults to %d.\n", qos);
-    fprintf(stderr, "  -t <topic>     MQTT topic name to subscribe to.\n");
+    fprintf(stderr, "  -t <topic>     MQTT-SN topic name to subscribe to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
