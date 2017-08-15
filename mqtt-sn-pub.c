@@ -260,16 +260,6 @@ int main(int argc, char* argv[])
             mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, message_len, qos, retain);
         }
 
-        // Wait for a PUBACK
-        if (qos == 1) {
-            puback_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_PUBACK, sock);
-            if (packet) {
-                mqtt_sn_log_debug("Received PUBACK");
-            } else {
-                mqtt_sn_log_warn("Failed to receive PUBACK after PUBLISH");
-            }
-        }
-
         // Finally, disconnect
         if (qos >= 0) {
             mqtt_sn_log_debug("Disconnecting...");

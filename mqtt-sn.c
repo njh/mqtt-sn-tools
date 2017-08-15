@@ -401,8 +401,17 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     packet.length = 0x07 + data_len;
 
     mqtt_sn_log_debug("Sending PUBLISH packet...");
+    mqtt_sn_send_packet(sock, &packet);
 
-    return mqtt_sn_send_packet(sock, &packet);
+    if (qos == 1) {
+        // Now wait for a PUBACK
+        puback_packet_t *packet = mqtt_sn_wait_for(MQTT_SN_TYPE_PUBACK, sock);
+        if (packet) {
+            mqtt_sn_log_debug("Received PUBACK");
+        } else {
+            mqtt_sn_log_warn("Failed to receive PUBACK after PUBLISH");
+        }
+    }
 }
 
 void mqtt_sn_send_puback(int sock, publish_packet_t* publish, uint8_t return_code)
