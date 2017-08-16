@@ -47,6 +47,7 @@ uint8_t topic_id_type = MQTT_SN_TOPIC_TYPE_NORMAL;
 uint16_t keep_alive = MQTT_SN_DEFAULT_KEEP_ALIVE;
 int8_t qos = 0;
 uint8_t retain = FALSE;
+uint8_t one_message_per_line = FALSE;
 uint8_t debug = 0;
 
 
@@ -60,6 +61,7 @@ static void usage()
     fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.\n");
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -m <message>   Message payload to send.\n");
+    fprintf(stderr, "  -l             Read from STDIN, one message per line.\n");
     fprintf(stderr, "  -n             Send a null (zero length) message.\n");
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -q <qos>       Quality of Service value (0, 1 or -1). Defaults to %d.\n", qos);
@@ -87,7 +89,7 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "df:h:i:k:m:np:q:rst:T:?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long (argc, argv, "df:h:i:k:lm:np:q:rst:T:?", long_options, &option_index)) != -1)
     {
         switch (ch) {
         case 'd':
@@ -104,6 +106,11 @@ static void parse_opts(int argc, char** argv)
 
         case 'i':
             client_id = optarg;
+            break;
+
+        case 'l':
+            message_file = "-";
+            one_message_per_line = TRUE;
             break;
 
         case 'm':
@@ -132,6 +139,7 @@ static void parse_opts(int argc, char** argv)
 
         case 's':
             message_file = "-";
+            one_message_per_line = FALSE;
             break;
 
         case 't':
@@ -202,15 +210,35 @@ static void publish_file(int sock, const char* filename) {
         exit(EXIT_FAILURE);
     }
 
-    message_len = fread(buffer, 1, MQTT_SN_MAX_PAYLOAD_LENGTH, file);
-    if (ferror(file)) {
-        perror("Failed to read message file");
-        exit(EXIT_FAILURE);
-    } else if (!feof(file)) {
-        mqtt_sn_log_warn("Input file is longer than the maximum message size");
-    }
+    if (one_message_per_line) {
+        // One message per line
+        while(!feof(file) && !ferror(file)) {
+            char* message = fgets(buffer, MQTT_SN_MAX_PAYLOAD_LENGTH, file);
+            if (message) {
+                char* end = strpbrk(message, "\n\r");
+                if (end) {
+                    uint16_t message_len = (end - message);
+                    mqtt_sn_send_publish(sock, topic_id, topic_id_type, message, message_len, qos, retain);
+                } else {
+                    mqtt_sn_log_err("Failed to find newline when reading message");
+                }
+            } else if (ferror(file)) {
+                perror("Failed to read message line");
+                exit(EXIT_FAILURE);
+            }
+        }
+    } else {
+        // One message until EOF
+        message_len = fread(buffer, 1, MQTT_SN_MAX_PAYLOAD_LENGTH, file);
+        if (ferror(file)) {
+            perror("Failed to read message file");
+            exit(EXIT_FAILURE);
+        } else if (!feof(file)) {
+            mqtt_sn_log_warn("Input file is longer than the maximum message size");
+        }
 
-    mqtt_sn_send_publish(sock, topic_id, topic_id_type, buffer, message_len, qos, retain);
+        mqtt_sn_send_publish(sock, topic_id, topic_id_type, buffer, message_len, qos, retain);
+    }
 
     fclose(file);
 }

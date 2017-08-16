@@ -48,6 +48,7 @@ Publishing
       -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
       -m <message>   Message payload to send.
+      -l             Read from STDIN, one message per line.
       -n             Send a null (zero length) message.
       -p <port>      Network port to connect to. Defaults to 1883.
       -q <qos>       Quality of Service value (0, 1 or -1). Defaults to 0.

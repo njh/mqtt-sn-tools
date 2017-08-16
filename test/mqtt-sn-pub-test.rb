@@ -255,6 +255,56 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('Message from STDIN', @packet.data)
   end
 
+  def test_publish_multiline_from_stdin
+    fs = fake_server do |fs|
+      fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          ['-t', 'topic',
+          '-l',
+          '-p', fs.port,
+          '-h', fs.address],
+          "Message 1\nMessage 2\nMessage 3\n"
+        )
+      end
+    end
+
+    publish_packets = fs.packets_received.select do |packet|
+      packet.is_a?(MQTT::SN::Packet::Publish)
+    end
+
+    assert_empty(@cmd_result)
+    assert_equal(['Message 1', 'Message 2', 'Message 3'], publish_packets.map {|p| p.data})
+    assert_equal([1, 1, 1], publish_packets.map {|p| p.topic_id})
+    assert_equal([:normal, :normal, :normal], publish_packets.map {|p| p.topic_id_type})
+    assert_equal([0, 0, 0], publish_packets.map {|p| p.qos})
+  end
+
+  def test_publish_multiline_from_stdin_no_newline
+    fs = fake_server do |fs|
+      fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          ['-t', 'topic',
+          '-l',
+          '-p', fs.port,
+          '-h', fs.address],
+          "Message 1\nMessage 2"
+        )
+      end
+    end
+
+    publish_packets = fs.packets_received.select do |packet|
+      packet.is_a?(MQTT::SN::Packet::Publish)
+    end
+
+    assert_includes_match(/Failed to find newline when reading message/, @cmd_result)
+    assert_equal(['Message 1'], publish_packets.map {|p| p.data})
+    assert_equal([1], publish_packets.map {|p| p.topic_id})
+    assert_equal([:normal], publish_packets.map {|p| p.topic_id_type})
+    assert_equal([0], publish_packets.map {|p| p.qos})
+  end
+
   def test_publish_qos_0
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
