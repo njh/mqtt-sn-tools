@@ -40,6 +40,7 @@ def fake_server
   fs.wait_for_port_number
   yield(fs)
   fs.stop
+  return fs
 end
 
 module Minitest::Assertions
