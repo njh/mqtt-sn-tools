@@ -519,13 +519,4 @@ class MqttSnSubTest < Minitest::Test
     assert_includes_match(/[\d\-]+ [\d\:]+ WARN  Packet received is longer than this tool can handle/, @cmd_result)
   end
 
-  def test_both_topic_name_and_id
-    @cmd_result = run_cmd(
-      'mqtt-sn-sub',
-      '-t' => 'topic_name',
-      '-T' => 10,
-    )
-    assert_match(/Please provide either a topic id or a topic name, not both/, @cmd_result[0])
-  end
-
 end

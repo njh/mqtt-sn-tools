@@ -73,8 +73,8 @@ Subscribing
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
       -p <port>      Network port to connect to. Defaults to 1883.
       -q <qos>       QoS level to subscribe with (0 or 1). Defaults to 0.
-      -t <topic>     MQTT-SN topic name to subscribe to.
-      -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to.
+      -t <topic>     MQTT-SN topic name to subscribe to. It may repeat multiple times.
+      -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to. It may repeat multiple times.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
       --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.
       -v             Print messages verbosely, showing the topic name.

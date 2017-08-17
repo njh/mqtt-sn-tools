@@ -38,10 +38,19 @@
 #include "mqtt-sn.h"
 
 const char *client_id = NULL;
-const char *topic_name = NULL;
+// Array of pointers to topic names
+char **topic_name_ar = NULL;
+// Topic names array size. When too small it is incremented by ARRAY_INCREMENT.
+uint16_t topic_name_ar_size = 0;
+uint16_t topic_name_index = 0;
+// Array of predefined topic IDs to subscribe to
+uint16_t *predef_topic_id_ar = NULL;
+// Predefined topic IDs array size. When too small it is incremented by ARRAY_INCREMENT.
+uint16_t predef_topic_id_ar_size = 0;
+uint16_t predef_topic_id_index = 0;
+#define ARRAY_INCREMENT 10
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
-uint16_t topic_id = 0;
 uint16_t keep_alive = MQTT_SN_DEFAULT_KEEP_ALIVE;
 int8_t qos = 0;
 uint8_t retain = FALSE;
@@ -64,8 +73,8 @@ static void usage()
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -q <qos>       QoS level to subscribe with (0 or 1). Defaults to %d.\n", qos);
-    fprintf(stderr, "  -t <topic>     MQTT-SN topic name to subscribe to.\n");
-    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to.\n");
+    fprintf(stderr, "  -t <topic>     MQTT-SN topic name to subscribe to. It may repeat multiple times.\n");
+    fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to. It may repeat multiple times.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
     fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
@@ -123,11 +132,21 @@ static void parse_opts(int argc, char** argv)
             break;
 
         case 't':
-            topic_name = optarg;
+            // Resize topic names array when too small
+            if (topic_name_index == topic_name_ar_size) {
+                topic_name_ar = realloc(topic_name_ar, (topic_name_ar_size + ARRAY_INCREMENT) * sizeof(char*)) ;
+                topic_name_ar_size += ARRAY_INCREMENT;
+            }
+            topic_name_ar[topic_name_index++] = optarg;
             break;
 
         case 'T':
-            topic_id = atoi(optarg);
+            // Resize predefined topic IDs array when too small
+            if (predef_topic_id_index == predef_topic_id_ar_size) {
+                predef_topic_id_ar = realloc(predef_topic_id_ar, (predef_topic_id_ar_size + ARRAY_INCREMENT) * sizeof(uint16_t));
+                predef_topic_id_ar_size += ARRAY_INCREMENT;
+            }
+            predef_topic_id_ar[predef_topic_id_index++] = atoi(optarg);
             break;
 
         case 1000:
@@ -154,14 +173,8 @@ static void parse_opts(int argc, char** argv)
         }
 
     // Missing Parameter?
-    if (!topic_name && !topic_id) {
+    if (!topic_name_index && !predef_topic_id_index) {
         usage();
-    }
-
-    // Both topic name and topic id?
-    if (topic_name && topic_id) {
-        mqtt_sn_log_err("Please provide either a topic id or a topic name, not both.");
-        exit(EXIT_FAILURE);
     }
 }
 
@@ -210,17 +223,26 @@ int main(int argc, char* argv[])
         mqtt_sn_send_connect(sock, client_id, keep_alive, clean_session);
         mqtt_sn_receive_connack(sock);
 
-        // Subscribe to the topic
-        if (topic_name) {
-            mqtt_sn_send_subscribe_topic_name(sock, topic_name, qos);
-        } else {
-            mqtt_sn_send_subscribe_topic_id(sock, topic_id, qos);
+        uint16_t i;
+        // Subscribe to the each topic name
+        for (i = 0; i < topic_name_index; i++) {
+            mqtt_sn_log_debug("Subscribing to topic name: %s ...", topic_name_ar[i]);
+            mqtt_sn_send_subscribe_topic_name(sock, topic_name_ar[i], 0);
+
+            // Wait for the subscription acknowledgment
+            uint16_t topic_id = mqtt_sn_receive_suback(sock);
+            if (topic_id && strlen(topic_name_ar[i]) > 2) {
+                mqtt_sn_register_topic(topic_id, topic_name_ar[i]);
+            }
         }
 
-        // Wait for the subscription acknowledgment
-        topic_id = mqtt_sn_receive_suback(sock);
-        if (topic_id && topic_name && strlen(topic_name) > 2) {
-            mqtt_sn_register_topic(topic_id, topic_name);
+        // Subscribe to the each predefined topic ID
+        for (i = 0; i < predef_topic_id_index; i++) {
+            mqtt_sn_log_debug("Subscribing to predefined topic ID: %u ...", predef_topic_id_ar[i]);
+            mqtt_sn_send_subscribe_topic_id(sock, predef_topic_id_ar[i], 0);
+
+            // Wait for the subscription acknowledgment
+            mqtt_sn_receive_suback(sock);
         }
 
         // Keep processing packets until process is terminated
@@ -247,6 +269,8 @@ int main(int argc, char* argv[])
     }
 
     mqtt_sn_cleanup();
+    free(topic_name_ar);
+    free(predef_topic_id_ar);
 
     return 0;
 }
