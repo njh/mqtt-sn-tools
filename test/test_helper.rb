@@ -33,8 +33,8 @@ def random_port
   10000 + ((rand(10000) + Time.now.to_i) % 10000)
 end
 
-def fake_server
-  fs = MQTT::SN::FakeServer.new
+def fake_server(*args)
+  fs = MQTT::SN::FakeServer.new(*args)
   fs.logger.level = Logger::WARN
   fs.start
   fs.wait_for_port_number
