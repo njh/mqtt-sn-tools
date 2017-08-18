@@ -228,8 +228,8 @@ void* mqtt_sn_receive_packet(int sock)
 void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uint8_t *wireless_node_id_len)
 {
     static uint8_t buffer[MQTT_SN_MAX_PACKET_LENGTH + MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH + 3  + 1];
-    struct sockaddr_in si;
-    socklen_t slen = sizeof(si);
+    struct sockaddr_storage addr;
+    socklen_t slen = sizeof(addr);
     uint8_t *packet = buffer;
     int bytes_read;
 
@@ -239,7 +239,7 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
     mqtt_sn_log_debug("waiting for packet...");
 
     // Read in the packet
-    bytes_read = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)&si, &slen);
+    bytes_read = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)&addr, &slen);
     if (bytes_read < 0) {
         if (errno == EAGAIN) {
             mqtt_sn_log_debug("Timed out waiting for packet.");
@@ -252,16 +252,26 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
 
     // Convert the source address into a string
     if (debug) {
-        char src_addr[INET6_ADDRSTRLEN] = "";
-        inet_ntop(si.sin_family, &si.sin_addr, src_addr, sizeof(src_addr));
+        char addrstr[INET6_ADDRSTRLEN] = "unknown";
+        uint16_t port = 0;
+
+        if (addr.ss_family == AF_INET) {
+            struct sockaddr_in *in = (struct sockaddr_in *)&addr;
+            inet_ntop(AF_INET, &in->sin_addr, addrstr, sizeof(struct sockaddr_in));
+            port = ntohs(in->sin_port);
+        } else if (addr.ss_family == AF_INET6) {
+            struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)&addr;
+            inet_ntop(AF_INET6, &in6->sin6_addr, addrstr, sizeof(struct sockaddr_in6));
+            port = ntohs(in6->sin6_port);
+        }
 
         if (packet[1] == MQTT_SN_TYPE_FRWDENCAP) {
             mqtt_sn_log_debug("Received %2d bytes from %s:%d. Type=%s with %s inside on Socket: %d",
-                      (int)bytes_read, src_addr, ntohs(si.sin_port),
+                      (int)bytes_read, addrstr, port,
                       mqtt_sn_type_string(buffer[1]), mqtt_sn_type_string(packet[packet[0] + 1]), sock);
         } else {
             mqtt_sn_log_debug("Received %2d bytes from %s:%d. Type=%s on Socket: %d",
-                      (int)bytes_read, src_addr, ntohs(si.sin_port),
+                      (int)bytes_read, addrstr, port,
                       mqtt_sn_type_string(buffer[1]), sock);
         }
     }
@@ -852,7 +862,7 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
             mqtt_sn_log_err("Keep alive error: timed out while waiting for a %s from gateway.", mqtt_sn_type_string(type));
             exit(EXIT_FAILURE);
         }
-        
+
         // Check if we have timed out waiting for the packet we are looking for
         if ((now - started_waiting) >= timeout) {
             mqtt_sn_log_debug("Timed out while waiting for a %s from gateway.", mqtt_sn_type_string(type));

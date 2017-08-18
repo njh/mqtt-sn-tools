@@ -459,6 +459,24 @@ class MqttSnPubTest < Minitest::Test
     assert_includes_match(/Timed out while waiting for a PUBACK from gateway/, @cmd_result)
   end
 
+  def test_publish_ipv6
+    fs = fake_server(nil, '::1') do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          ['-d', '-d',
+          '-t', 'topic',
+          '-m', 'test',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_includes_match(/Received  3 bytes from ::1:#{fs.port}/, @cmd_result)
+    assert_equal('test', @packet.data)
+  end
+
   def test_invalid_qos
     @cmd_result = run_cmd(
       'mqtt-sn-pub',
