@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
         // Subscribe to the each topic name
         for (i = 0; i < topic_name_index; i++) {
             mqtt_sn_log_debug("Subscribing to topic name: %s ...", topic_name_ar[i]);
-            mqtt_sn_send_subscribe_topic_name(sock, topic_name_ar[i], 0);
+            mqtt_sn_send_subscribe_topic_name(sock, topic_name_ar[i], qos);
 
             // Wait for the subscription acknowledgment
             uint16_t topic_id = mqtt_sn_receive_suback(sock);
@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
         // Subscribe to the each predefined topic ID
         for (i = 0; i < predef_topic_id_index; i++) {
             mqtt_sn_log_debug("Subscribing to predefined topic ID: %u ...", predef_topic_id_ar[i]);
-            mqtt_sn_send_subscribe_topic_id(sock, predef_topic_id_ar[i], 0);
+            mqtt_sn_send_subscribe_topic_id(sock, predef_topic_id_ar[i], qos);
 
             // Wait for the subscription acknowledgment
             mqtt_sn_receive_suback(sock);
