@@ -43,6 +43,10 @@ def fake_server(*args)
   return fs
 end
 
+def have_ipv6?
+  Socket.ip_address_list.any? { |addr| addr.ipv6? }
+end
+
 module Minitest::Assertions
   def assert_includes_match(regexp, array, msg=nil)
     msg = message(msg) { "Expected #{mu_pp(array)} to match #{mu_pp(regexp)}" }
