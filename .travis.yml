@@ -5,6 +5,9 @@ before_install:
 rvm:
   - "2.3.3"
 
+# We need OS X because it supports IPv6
+os: osx
+
 script:
   - make
   - make test
