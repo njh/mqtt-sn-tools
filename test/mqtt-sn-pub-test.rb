@@ -460,6 +460,10 @@ class MqttSnPubTest < Minitest::Test
   end
 
   def test_publish_ipv6
+    unless have_ipv6?
+      skip("IPv6 is not available on this system")
+    end
+
     fs = fake_server(nil, '::1') do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
