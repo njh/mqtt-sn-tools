@@ -153,14 +153,17 @@ class MQTT::SN::FakeServer
     MQTT::SN::Packet::Pingresp.new
   end
 
-  def handle_subscribe(packet, publish_data='Hello World')
+  def handle_subscribe(packet, publish_data=nil)
     case packet.topic_id_type
       when :short
         topic_id = packet.topic_name
+        publish_data ||= "Message for #{packet.topic_name}"
       when :predefined
         topic_id = packet.topic_id
+        publish_data ||= "Message for ##{packet.topic_id}"
       when :normal
         topic_id = 1
+        publish_data ||= "Message for #{packet.topic_name}"
       else
         logger.warn "Unknown Topic Id Type: #{packet.topic_id_type}"
     end
