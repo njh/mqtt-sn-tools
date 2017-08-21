@@ -255,6 +255,72 @@ class MqttSnSubTest < Minitest::Test
     assert_equal(0, @packet.qos)
   end
 
+  def test_subscribe_two_topic_names
+    fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-q', 1,
+        '-t', 'test1',
+        '-t', 'test2',
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Puback)
+        wait_for_output_then_kill(cmd, 'INT')
+      end
+    end
+
+    assert_equal(2, @cmd_result.length)
+    assert_equal("test1: Message for test1", @cmd_result[0])
+    assert_equal("test2: Message for test2", @cmd_result[1])
+  end
+
+  def test_subscribe_multiple_topics
+    fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-q', 1,
+        '-t', 'name',
+        '-t', 'TT',
+        '-T', 0x10,
+        '-p', fs.port,
+        '-h', fs.address]
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Puback)
+        wait_for_output_then_kill(cmd, 'INT')
+      end
+    end
+
+    assert_equal(3, @cmd_result.length)
+    assert_equal("name: Message for name", @cmd_result[0])
+    assert_equal("TT: Message for TT", @cmd_result[1])
+    assert_equal("0010: Message for #16", @cmd_result[2])
+  end
+
+  def test_subscribe_thirty_topics
+    topics = (1..30).map { |t| ['-t', "topic#{t}"] }
+
+    fake_server do |fs|
+      @cmd_result = run_cmd(
+        'mqtt-sn-sub',
+        ['-v',
+        '-q', 1,
+        topics,
+        '-p', fs.port,
+        '-h', fs.address].compact
+      ) do |cmd|
+        @packet = fs.wait_for_packet(MQTT::SN::Packet::Puback)
+        wait_for_output_then_kill(cmd, 'INT')
+      end
+    end
+
+    assert_equal(30, @cmd_result.length)
+    assert_equal("topic1: Message for topic1", @cmd_result[0])
+    assert_equal("topic30: Message for topic30", @cmd_result[29])
+  end
+
   def test_subscribe_invalid_topic_id
     fake_server do |fs|
       def fs.handle_subscribe(packet)
