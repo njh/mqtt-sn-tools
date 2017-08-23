@@ -108,13 +108,33 @@ int mqtt_sn_create_socket(const char* host, const char* port)
        If socket(2) (or connect(2)) fails, we (close the socket and)
        try the next address. */
     for (rp = result; rp != NULL; rp = rp->ai_next) {
+        char hoststr[NI_MAXHOST] = "";
+        int error = 0;
+
+        // Display the IP address in debug mode
+        error = getnameinfo(rp->ai_addr, rp->ai_addrlen,
+            hoststr, sizeof(hoststr), NULL, 0,
+            NI_NUMERICHOST | NI_NUMERICSERV);
+        if (error == 0) {
+            mqtt_sn_log_debug("Trying %s...", hoststr);
+        } else {
+            mqtt_sn_log_debug("getnameinfo: %s", gai_strerror(ret));
+        }
+
+        // Create a socket
         fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (fd == -1)
+        if (fd == -1) {
+            mqtt_sn_log_debug("Failed to create socket: %s", strerror(errno));
             continue;
+        }
 
         // Connect socket to the remote host
-        if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0)
-            break;      // Success
+        if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
+            // Success
+            break;
+        } else {
+            mqtt_sn_log_debug("Connect failed: %s", strerror(errno));
+        }
 
         close(fd);
     }
