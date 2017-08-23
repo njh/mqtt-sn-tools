@@ -160,7 +160,8 @@ int mqtt_sn_create_socket(const char* host, const char* port)
 
 void mqtt_sn_send_packet(int sock, const void* data)
 {
-    size_t sent, len = ((uint8_t*)data)[0];
+    ssize_t sent = 0;
+    size_t len = ((uint8_t*)data)[0];
 
     // If forwarder encapsulation enabled, wrap packet
     if (forwarder_encapsulation) {
@@ -183,7 +184,8 @@ void mqtt_sn_send_packet(int sock, const void* data)
 
 void mqtt_sn_send_frwdencap_packet(int sock, const void* data, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len)
 {
-    size_t sent, len = ((uint8_t*)data)[0];
+    ssize_t sent = 0;
+    size_t len = ((uint8_t*)data)[0];
     uint8_t orig_packet_type = ((uint8_t*)data)[1];
     frwdencap_packet_t *packet;
 
@@ -251,7 +253,7 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
     struct sockaddr_storage addr;
     socklen_t slen = sizeof(addr);
     uint8_t *packet = buffer;
-    int bytes_read;
+    ssize_t bytes_read;
 
     *wireless_node_id = NULL;
     *wireless_node_id_len = 0;
