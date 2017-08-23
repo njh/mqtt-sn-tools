@@ -1,14 +1,19 @@
 Release History
 ===============
 
-Version 0.0.6 (?)
+Version 0.0.6 (2017-08-23)
 --------------------------
 
+- Added support for publishing and subscribing with QoS 1
 - Added support for reading from a file using -f
+- Added support for reading from STDIN using -s
+- Added support for publishing one message per line using -l
+- Added support for subscribing to multiple topics
 - Added timeout when waiting for packets
 - Made Keep Alive configurable in mqtt-sn-pub
 - Changed default keep alive for mqtt-sn-pub to 10 seconds
-- Added support for publishing and subscribing with QoS 1
+- Fix for displaying IPv6 addresses
+- Improved debug error messages when connecting fails
 
 
 Version 0.0.5 (2015-11-04)
