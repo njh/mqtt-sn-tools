@@ -41,6 +41,7 @@
 #define MQTT_SN_MAX_PACKET_LENGTH  (255)
 #define MQTT_SN_MAX_PAYLOAD_LENGTH (MQTT_SN_MAX_PACKET_LENGTH-7)
 #define MQTT_SN_MAX_TOPIC_LENGTH   (MQTT_SN_MAX_PACKET_LENGTH-6)
+#define MQTT_SN_MAX_CLIENT_ID_LENGTH  (23)
 #define MQTT_SN_MAX_WIRELESS_NODE_ID_LENGTH  (252)
 
 #define MQTT_SN_TYPE_ADVERTISE     (0x00)
@@ -100,7 +101,7 @@ typedef struct {
     uint8_t flags;
     uint8_t protocol_id;
     uint16_t duration;
-    char client_id[23];
+    char client_id[MQTT_SN_MAX_CLIENT_ID_LENGTH];
 } connect_packet_t;
 
 typedef struct {

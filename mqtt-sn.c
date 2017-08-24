@@ -325,7 +325,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive, u
     memset(&packet, 0, sizeof(packet));
 
     // Check that it isn't too long
-    if (client_id && strlen(client_id) > 23) {
+    if (client_id && strlen(client_id) > MQTT_SN_MAX_CLIENT_ID_LENGTH) {
         mqtt_sn_log_err("Client id is too long");
         exit(EXIT_FAILURE);
     }
@@ -338,11 +338,9 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive, u
 
     // Generate a Client ID if none given
     if (client_id == NULL || client_id[0] == '\0') {
-        snprintf(packet.client_id, sizeof(packet.client_id)-1, "mqtt-sn-tools-%d", getpid());
-        packet.client_id[sizeof(packet.client_id) - 1] = '\0';
+        snprintf(packet.client_id, MQTT_SN_MAX_CLIENT_ID_LENGTH, "mqtt-sn-tools-%d", getpid());
     } else {
-        strncpy(packet.client_id, client_id, sizeof(packet.client_id)-1);
-        packet.client_id[sizeof(packet.client_id) - 1] = '\0';
+        memcpy(packet.client_id, client_id, strlen(client_id));
     }
 
     packet.length = 0x06 + strlen(packet.client_id);
