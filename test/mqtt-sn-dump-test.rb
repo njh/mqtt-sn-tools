@@ -23,7 +23,7 @@ class MqttSnDumpTest < Minitest::Test
       MQTT::SN::Packet::Publish.new(
         :topic_id => 'TT',
         :topic_id_type => :short,
-        :data => "Hello World",
+        :data => "Message for TT",
         :qos => -1
       )
     )
@@ -39,7 +39,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal(["Hello World"], @cmd_result)
+    assert_equal(["Message for TT"], @cmd_result)
   end
 
   def test_receive_qos_n1_debug
@@ -54,7 +54,7 @@ class MqttSnDumpTest < Minitest::Test
 
     assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG mqtt-sn-dump listening on port \d+/, @cmd_result)
     assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG waiting for packet/, @cmd_result)
-    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Received 18 bytes from 127.0.0.1\:\d+. Type=PUBLISH/, @cmd_result)
+    assert_includes_match(/[\d\-]+ [\d\:]+ DEBUG Received 21 bytes from 127.0.0.1\:\d+. Type=PUBLISH/, @cmd_result)
   end
 
   def test_receive_qos_n1_verbose
@@ -67,7 +67,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal(["TT: Hello World"], @cmd_result)
+    assert_equal(["TT: Message for TT"], @cmd_result)
   end
 
   def test_receive_qos_n1_dump_all
@@ -80,7 +80,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd)
     end
 
-    assert_equal(["PUBLISH: len=18 topic_id=0x5454 message_id=0x0000 data=Hello World"], @cmd_result)
+    assert_equal(["PUBLISH: len=21 topic_id=0x5454 message_id=0x0000 data=Message for TT"], @cmd_result)
   end
 
   def test_receive_qos_n1_term
@@ -93,7 +93,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd, 'TERM')
     end
 
-    assert_equal(["Hello World"], @cmd_result)
+    assert_equal(["Message for TT"], @cmd_result)
   end
 
   def test_receive_qos_n1_hup
@@ -106,7 +106,7 @@ class MqttSnDumpTest < Minitest::Test
       wait_for_output_then_kill(cmd, 'HUP')
     end
 
-    assert_equal(["Hello World"], @cmd_result)
+    assert_equal(["Message for TT"], @cmd_result)
   end
 
   def test_receive_connect

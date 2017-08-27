@@ -90,7 +90,7 @@ int mqtt_sn_create_socket(const char* host, const char* port)
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
-    hints.ai_flags = AI_DEFAULT;    /* Default flags */
+    hints.ai_flags = 0;
     hints.ai_protocol = 0;          /* Any protocol */
     hints.ai_canonname = NULL;
     hints.ai_addr = NULL;
@@ -108,13 +108,33 @@ int mqtt_sn_create_socket(const char* host, const char* port)
        If socket(2) (or connect(2)) fails, we (close the socket and)
        try the next address. */
     for (rp = result; rp != NULL; rp = rp->ai_next) {
+        char hoststr[NI_MAXHOST] = "";
+        int error = 0;
+
+        // Display the IP address in debug mode
+        error = getnameinfo(rp->ai_addr, rp->ai_addrlen,
+            hoststr, sizeof(hoststr), NULL, 0,
+            NI_NUMERICHOST | NI_NUMERICSERV);
+        if (error == 0) {
+            mqtt_sn_log_debug("Trying %s...", hoststr);
+        } else {
+            mqtt_sn_log_debug("getnameinfo: %s", gai_strerror(ret));
+        }
+
+        // Create a socket
         fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (fd == -1)
+        if (fd == -1) {
+            mqtt_sn_log_debug("Failed to create socket: %s", strerror(errno));
             continue;
+        }
 
         // Connect socket to the remote host
-        if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0)
-            break;      // Success
+        if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
+            // Success
+            break;
+        } else {
+            mqtt_sn_log_debug("Connect failed: %s", strerror(errno));
+        }
 
         close(fd);
     }
@@ -140,7 +160,8 @@ int mqtt_sn_create_socket(const char* host, const char* port)
 
 void mqtt_sn_send_packet(int sock, const void* data)
 {
-    size_t sent, len = ((uint8_t*)data)[0];
+    ssize_t sent = 0;
+    size_t len = ((uint8_t*)data)[0];
 
     // If forwarder encapsulation enabled, wrap packet
     if (forwarder_encapsulation) {
@@ -163,7 +184,8 @@ void mqtt_sn_send_packet(int sock, const void* data)
 
 void mqtt_sn_send_frwdencap_packet(int sock, const void* data, const uint8_t *wireless_node_id, uint8_t wireless_node_id_len)
 {
-    size_t sent, len = ((uint8_t*)data)[0];
+    ssize_t sent = 0;
+    size_t len = ((uint8_t*)data)[0];
     uint8_t orig_packet_type = ((uint8_t*)data)[1];
     frwdencap_packet_t *packet;
 
@@ -231,7 +253,7 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
     struct sockaddr_storage addr;
     socklen_t slen = sizeof(addr);
     uint8_t *packet = buffer;
-    int bytes_read;
+    ssize_t bytes_read;
 
     *wireless_node_id = NULL;
     *wireless_node_id_len = 0;
@@ -303,7 +325,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive, u
     memset(&packet, 0, sizeof(packet));
 
     // Check that it isn't too long
-    if (client_id && strlen(client_id) > 23) {
+    if (client_id && strlen(client_id) > MQTT_SN_MAX_CLIENT_ID_LENGTH) {
         mqtt_sn_log_err("Client id is too long");
         exit(EXIT_FAILURE);
     }
@@ -316,11 +338,9 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive, u
 
     // Generate a Client ID if none given
     if (client_id == NULL || client_id[0] == '\0') {
-        snprintf(packet.client_id, sizeof(packet.client_id)-1, "mqtt-sn-tools-%d", getpid());
-        packet.client_id[sizeof(packet.client_id) - 1] = '\0';
+        snprintf(packet.client_id, MQTT_SN_MAX_CLIENT_ID_LENGTH, "mqtt-sn-tools-%d", getpid());
     } else {
-        strncpy(packet.client_id, client_id, sizeof(packet.client_id)-1);
-        packet.client_id[sizeof(packet.client_id) - 1] = '\0';
+        memcpy(packet.client_id, client_id, strlen(client_id));
     }
 
     packet.length = 0x06 + strlen(packet.client_id);

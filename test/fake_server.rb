@@ -90,23 +90,28 @@ class MQTT::SN::FakeServer
   end
 
   def wait_for_packet(klass=nil, timeout=3)
-    Timeout.timeout(timeout) do
-      if block_given?
-        @packets_received = []
-        yield
-      end
-      loop do
-        if klass.nil?
-          unless @packets_received.empty?
-            return @packets_received.last_packet
-          end
-        else
-          @packets_received.each do |packet|
-            return packet if packet.class == klass
-          end
+    begin
+      Timeout.timeout(timeout) do
+        if block_given?
+          @packets_received = []
+          yield
         end
-        sleep(0.01)
+        loop do
+          if klass.nil?
+            unless @packets_received.empty?
+              return @packets_received.last_packet
+            end
+          else
+            @packets_received.each do |packet|
+              return packet if packet.class == klass
+            end
+          end
+          sleep(0.01)
+        end
       end
+    rescue Timeout::Error
+      logger.warn "FakeServer timed out waiting for a #{klass}"
+      return nil
     end
   end
 
@@ -148,14 +153,17 @@ class MQTT::SN::FakeServer
     MQTT::SN::Packet::Pingresp.new
   end
 
-  def handle_subscribe(packet, publish_data='Hello World')
+  def handle_subscribe(packet, publish_data=nil)
     case packet.topic_id_type
       when :short
         topic_id = packet.topic_name
+        publish_data ||= "Message for #{packet.topic_name}"
       when :predefined
         topic_id = packet.topic_id
+        publish_data ||= "Message for ##{packet.topic_id}"
       when :normal
         topic_id = 1
+        publish_data ||= "Message for #{packet.topic_name}"
       else
         logger.warn "Unknown Topic Id Type: #{packet.topic_id_type}"
     end
