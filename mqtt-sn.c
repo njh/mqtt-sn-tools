@@ -845,7 +845,7 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
             if (packet) {
                 switch(packet[1]) {
                     case MQTT_SN_TYPE_PUBLISH:
-                        mqtt_sn_print_publish_packet((publish_packet_t *)packet, int sock);
+                        mqtt_sn_print_publish_packet((publish_packet_t *)packet, sock);
                         break;
 
                     case MQTT_SN_TYPE_REGISTER:
