@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
             if (dump_all) {
                 mqtt_sn_dump_packet(packet);
             } else if (packet[1] == MQTT_SN_TYPE_PUBLISH) {
-                mqtt_sn_print_publish_packet((publish_packet_t *)packet);
+                mqtt_sn_print_publish_packet((publish_packet_t *)packet, sock);
             }
         }
     }
