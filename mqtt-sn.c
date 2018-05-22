@@ -730,7 +730,7 @@ void mqtt_sn_dump_packet(char* packet)
     printf("\n");
 }
 
-void mqtt_sn_print_publish_packet(publish_packet_t* packet)
+void mqtt_sn_print_publish_packet(publish_packet_t* packet, int sock)
 {
     if (verbose) {
         int topic_type = packet->flags & 0x3;
@@ -763,6 +763,10 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
     } else {
         printf("%s\n", packet->data);
     }
+  
+  if((packet->flags & MQTT_SN_FLAG_QOS_MASK) == MQTT_SN_FLAG_QOS_1){  //Replies with PUBACK if Qos of PUBLISH is 1
+    	mqtt_sn_send_puback(sock, packet, MQTT_SN_ACCEPTED);
+  }
 }
 
 uint16_t mqtt_sn_receive_suback(int sock)
@@ -841,7 +845,7 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
             if (packet) {
                 switch(packet[1]) {
                     case MQTT_SN_TYPE_PUBLISH:
-                        mqtt_sn_print_publish_packet((publish_packet_t *)packet);
+                        mqtt_sn_print_publish_packet((publish_packet_t *)packet, int sock);
                         break;
 
                     case MQTT_SN_TYPE_REGISTER:
