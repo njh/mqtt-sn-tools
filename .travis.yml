@@ -5,7 +5,7 @@ sudo: false
 before_install:
   - gem update bundler
 rvm:
-  - "2.3.3"
+  - '2.4.3'
 
 script:
   - make
