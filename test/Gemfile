@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-ruby "2.3.3"
+ruby File.read('.ruby-version').chomp
 
 gem 'bundler',  '>= 1.5.0'
 gem 'rake',     '>= 0.10.0'
