@@ -352,7 +352,7 @@ void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive, u
         keep_alive = keepalive;
     }
 
-    return mqtt_sn_send_packet(sock, &packet);
+    mqtt_sn_send_packet(sock, &packet);
 }
 
 void mqtt_sn_send_register(int sock, const char* topic_name)
@@ -374,7 +374,7 @@ void mqtt_sn_send_register(int sock, const char* topic_name)
 
     mqtt_sn_log_debug("Sending REGISTER packet...");
 
-    return mqtt_sn_send_packet(sock, &packet);
+    mqtt_sn_send_packet(sock, &packet);
 }
 
 void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
@@ -390,7 +390,7 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
 
     mqtt_sn_log_debug("Sending REGACK packet...");
 
-    return mqtt_sn_send_packet(sock, &packet);
+    mqtt_sn_send_packet(sock, &packet);
 }
 
 static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
@@ -457,7 +457,7 @@ void mqtt_sn_send_puback(int sock, publish_packet_t* publish, uint8_t return_cod
 
     mqtt_sn_log_debug("Sending PUBACK packet...");
 
-    return mqtt_sn_send_packet(sock, &puback);
+    mqtt_sn_send_packet(sock, &puback);
 }
 
 void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos)
@@ -481,7 +481,7 @@ void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t
 
     mqtt_sn_log_debug("Sending SUBSCRIBE packet...");
 
-    return mqtt_sn_send_packet(sock, &packet);
+    mqtt_sn_send_packet(sock, &packet);
 }
 
 void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
@@ -499,7 +499,7 @@ void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos)
 
     mqtt_sn_log_debug("Sending SUBSCRIBE packet...");
 
-    return mqtt_sn_send_packet(sock, &packet);
+    mqtt_sn_send_packet(sock, &packet);
 }
 
 void mqtt_sn_send_pingreq(int sock)
@@ -511,7 +511,7 @@ void mqtt_sn_send_pingreq(int sock)
 
     mqtt_sn_log_debug("Sending PINGREQ packet...");
 
-    return mqtt_sn_send_packet(sock, &packet);
+    mqtt_sn_send_packet(sock, &packet);
 }
 
 void mqtt_sn_send_disconnect(int sock)
@@ -524,7 +524,7 @@ void mqtt_sn_send_disconnect(int sock)
 
     mqtt_sn_log_debug("Sending DISCONNECT packet...");
 
-    return mqtt_sn_send_packet(sock, &packet);
+    mqtt_sn_send_packet(sock, &packet);
 }
 
 
