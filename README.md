@@ -47,6 +47,7 @@ Publishing
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
       -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
+      -e <sleep>     sleep duration in seconds when disconnecting. Defaults to 0.
       -m <message>   Message payload to send.
       -l             Read from STDIN, one message per line.
       -n             Send a null (zero length) message.
@@ -71,6 +72,7 @@ Subscribing
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
       -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.
       -k <keepalive> keep alive in seconds for this client. Defaults to 10.
+      -e <sleep>     sleep duration in seconds when disconnecting. Defaults to 0.
       -p <port>      Network port to connect to. Defaults to 1883.
       -q <qos>       QoS level to subscribe with (0 or 1). Defaults to 0.
       -t <topic>     MQTT-SN topic name to subscribe to. It may repeat multiple times.

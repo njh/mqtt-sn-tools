@@ -514,19 +514,23 @@ void mqtt_sn_send_pingreq(int sock)
     mqtt_sn_send_packet(sock, &packet);
 }
 
-void mqtt_sn_send_disconnect(int sock)
+void mqtt_sn_send_disconnect(int sock, uint16_t duration)
 {
     disconnect_packet_t packet;
     memset(&packet, 0, sizeof(packet));
 
     packet.type = MQTT_SN_TYPE_DISCONNECT;
-    packet.length = 0x02;
-
-    mqtt_sn_log_debug("Sending DISCONNECT packet...");
+    if (duration == 0) {
+        packet.length = 0x02;
+        mqtt_sn_log_debug("Sending DISCONNECT packet...");
+    } else {
+        packet.length = sizeof(packet);
+        packet.duration = htons(duration);
+        mqtt_sn_log_debug("Sending DISCONNECT packet with Duration %d...", duration);
+    }
 
     mqtt_sn_send_packet(sock, &packet);
 }
-
 
 void mqtt_sn_receive_disconnect(int sock)
 {

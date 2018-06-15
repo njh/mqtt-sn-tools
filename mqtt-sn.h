@@ -198,7 +198,7 @@ void mqtt_sn_send_puback(int sock, publish_packet_t* publish, uint8_t return_cod
 void mqtt_sn_send_subscribe_topic_name(int sock, const char* topic_name, uint8_t qos);
 void mqtt_sn_send_subscribe_topic_id(int sock, uint16_t topic_id, uint8_t qos);
 void mqtt_sn_send_pingreq(int sock);
-void mqtt_sn_send_disconnect(int sock);
+void mqtt_sn_send_disconnect(int sock, uint16_t duration);
 void mqtt_sn_receive_disconnect(int sock);
 void mqtt_sn_receive_connack(int sock);
 uint16_t mqtt_sn_receive_regack(int sock);

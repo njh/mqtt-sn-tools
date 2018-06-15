@@ -52,6 +52,7 @@ uint16_t predef_topic_id_index = 0;
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 uint16_t keep_alive = MQTT_SN_DEFAULT_KEEP_ALIVE;
+uint16_t sleep_duration = 0;
 int8_t qos = 0;
 uint8_t retain = FALSE;
 uint8_t debug = 0;
@@ -71,6 +72,7 @@ static void usage()
     fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
     fprintf(stderr, "  -i <clientid>  ID to use for this client. Defaults to 'mqtt-sn-tools-' with process id.\n");
     fprintf(stderr, "  -k <keepalive> keep alive in seconds for this client. Defaults to %d.\n", keep_alive);
+    fprintf(stderr, "  -e <sleep>     sleep duration in seconds when disconnecting. Defaults to %d.\n", sleep_duration);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  -q <qos>       QoS level to subscribe with (0 or 1). Defaults to %d.\n", qos);
     fprintf(stderr, "  -t <topic>     MQTT-SN topic name to subscribe to. It may repeat multiple times.\n");
@@ -97,7 +99,7 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long(argc, argv, "1cdh:i:k:p:q:t:T:vV?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long(argc, argv, "1cdh:i:k:e:p:q:t:T:vV?", long_options, &option_index)) != -1)
         switch (ch) {
         case '1':
             single_message = TRUE;
@@ -121,6 +123,10 @@ static void parse_opts(int argc, char** argv)
 
         case 'k':
             keep_alive = atoi(optarg);
+            break;
+
+        case 'e':
+            sleep_duration = atoi(optarg);
             break;
 
         case 'p':
@@ -262,7 +268,7 @@ int main(int argc, char* argv[])
 
         // Finally, disconnect
         mqtt_sn_log_debug("Disconnecting...");
-        mqtt_sn_send_disconnect(sock);
+        mqtt_sn_send_disconnect(sock, sleep_duration);
         mqtt_sn_receive_disconnect(sock);
 
         close(sock);
