@@ -47,6 +47,7 @@
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 const char *serial_device = NULL;
+uint16_t source_port = 0;
 speed_t serial_baud = B9600;
 uint8_t debug = 0;
 uint8_t frwdencap = FALSE;
@@ -64,6 +65,7 @@ static void usage()
     fprintf(stderr, "  -h <host>      MQTT-SN host to connect to. Defaults to '%s'.\n", mqtt_sn_host);
     fprintf(stderr, "  -p <port>      Network port to connect to. Defaults to %s.\n", mqtt_sn_port);
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
+    fprintf(stderr, "  --cport <port> Source port for outgoing packets. Uses port in ephemeral range if not specified or set to %d.\n", source_port);
     exit(EXIT_FAILURE);
 }
 
@@ -73,6 +75,7 @@ static void parse_opts(int argc, char** argv)
     static struct option long_options[] =
     {
         {"fe",    no_argument,       0, 1000 },
+        {"cport", required_argument, 0, 1001 },
         {0, 0, 0, 0}
     };
 
@@ -104,6 +107,10 @@ static void parse_opts(int argc, char** argv)
             mqtt_sn_enable_frwdencap();
             frwdencap = TRUE;
             break;
+        case 1001:
+            source_port = atoi(optarg);
+            break;
+
         case '?':
         default:
             usage();
@@ -272,7 +279,7 @@ int main(int argc, char* argv[])
     signal(SIGHUP, termination_handler);
 
     // Create a UDP socket
-    sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
+    sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port, source_port);
 
     // Open the serial port
     fd = serial_open(serial_device);

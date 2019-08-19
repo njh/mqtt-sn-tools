@@ -51,6 +51,7 @@ uint16_t predef_topic_id_index = 0;
 #define ARRAY_INCREMENT 10
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
+uint16_t source_port = 0;
 uint16_t keep_alive = MQTT_SN_DEFAULT_KEEP_ALIVE;
 uint16_t sleep_duration = 0;
 int8_t qos = 0;
@@ -79,6 +80,7 @@ static void usage()
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to subscribe to. It may repeat multiple times.\n");
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
+    fprintf(stderr, "  --cport <port> Source port for outgoing packets. Uses port in ephemeral range if not specified or set to %d.\n", source_port);
     fprintf(stderr, "  -v             Print messages verbosely, showing the topic name.\n");
     fprintf(stderr, "  -V             Print messages verbosely, showing current time and the topic name.\n");
     exit(EXIT_FAILURE);
@@ -91,6 +93,7 @@ static void parse_opts(int argc, char** argv)
     {
         {"fe",    no_argument,       0, 1000 },
         {"wlnid", required_argument, 0, 1001 },
+        {"cport", required_argument, 0, 1002 },
         {0, 0, 0, 0}
     };
 
@@ -163,6 +166,10 @@ static void parse_opts(int argc, char** argv)
             mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
             break;
 
+        case 1002:
+            source_port = atoi(optarg);
+            break;
+
         case 'v':
             // Prevent -v setting verbose level back down to 1 if already set to 2 by -V
             verbose = (verbose == 0) ? 1 : verbose;
@@ -222,7 +229,7 @@ int main(int argc, char* argv[])
     signal(SIGHUP, termination_handler);
 
     // Create a UDP socket
-    sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port);
+    sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port, source_port);
     if (sock) {
         // Connect to server
         mqtt_sn_log_debug("Connecting...");
