@@ -1,6 +1,6 @@
 CC=cc
 PACKAGE=mqtt-sn-tools
-VERSION=0.0.8
+VERSION=0.0.7
 CFLAGS=-g -Wall -DVERSION=$(VERSION)
 LDFLAGS=
 INSTALL?=install
