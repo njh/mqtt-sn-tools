@@ -53,11 +53,65 @@ uint8_t frwdencap = FALSE;
 
 uint8_t keep_running = TRUE;
 
+static speed_t baud_lookup(int baud) {
+    switch(baud) {
+        case      0: return B0;
+        case     50: return B50;
+        case     75: return B75;
+        case    110: return B110;
+        case    134: return B134;
+        case    150: return B150;
+        case    200: return B200;
+        case    300: return B300;
+        case    600: return B600;
+        case   1200: return B1200;
+        case   1800: return B1800;
+        case   2400: return B2400;
+        case   4800: return B4800;
+        case   9600: return B9600;
+        case  19200: return B19200;
+        case  38400: return B38400;
+        case  57600: return B57600;
+        case 115200: return B115200;
+        case 230400: return B230400;
+        default:
+            fprintf(stderr, "Unsupported baud rate: %d\n", baud);
+            exit(1);
+    }
+}
+
+static int baud_rlookup(speed_t baud) {
+    switch(baud) {
+        case B0:      return 0;
+        case B50:     return 50;
+        case B75:     return 75;
+        case B110:    return 110;
+        case B134:    return 134;
+        case B150:    return 150;
+        case B200:    return 200;
+        case B300:    return 300;
+        case B600:    return 600;
+        case B1200:   return 1200;
+        case B1800:   return 1800;
+        case B2400:   return 2400;
+        case B4800:   return 4800;
+        case B9600:   return 9600;
+        case B19200:  return 19200;
+        case B38400:  return 38400;
+        case B57600:  return 57600;
+        case B115200: return 115200;
+        case B230400: return 230400;
+        default:
+            fprintf(stderr, "Unsupported baud rate: %d\n", baud);
+            exit(1);
+    }
+}
 
 static void usage()
 {
     fprintf(stderr, "Usage: mqtt-sn-serial-bridge [opts] <device>\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  -B <baud>      Set the baud rate. Defaults to %d.\n", baud_rlookup((int)serial_baud));
     fprintf(stderr, "  -b <baud>      Set the baud rate. Defaults to %d.\n", (int)serial_baud);
     fprintf(stderr, "  -d             Increase debug level by one. -d can occur multiple times.\n");
     fprintf(stderr, "  -dd            Enable extended debugging - display packets in hex.\n");
@@ -81,11 +135,14 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "b:dh:p:?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long (argc, argv, "B:b:dh:p:?", long_options, &option_index)) != -1)
     {
         switch (ch) {
+        case 'B':
+            serial_baud = baud_lookup(atoi(optarg));
+            break;
         case 'b':
-            serial_baud = atoi(optarg);
+            serial_baud = baud_rlookup(atoi(optarg));
             break;
 
         case 'd':
@@ -111,7 +168,7 @@ static void parse_opts(int argc, char** argv)
         } // switch
     } // while
 
-    // Final argument is the serial port device path
+    // Final argument is the serial port device path0
     if (argc-optind < 1) {
         fprintf(stderr, "Missing serial port.\n");
         usage();
