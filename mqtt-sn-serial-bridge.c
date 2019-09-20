@@ -142,7 +142,8 @@ static void parse_opts(int argc, char** argv)
             serial_baud = baud_lookup(atoi(optarg));
             break;
         case 'b':
-            serial_baud = baud_rlookup(atoi(optarg));
+            serial_baud = atoi(optarg);
+            baud_rlookup(serial_baud);
             break;
 
         case 'd':
