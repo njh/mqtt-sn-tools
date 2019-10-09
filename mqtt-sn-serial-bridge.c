@@ -47,7 +47,7 @@
 const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 const char *serial_device = NULL;
-speed_t serial_baud = B9600;
+int serial_baud = 9600;
 uint8_t debug = 0;
 uint8_t frwdencap = FALSE;
 
@@ -170,8 +170,8 @@ static int serial_open(const char* device_path)
     tcgetattr(fd, &tios);
 
     // Set the input and output baud rates
-    cfsetispeed(&tios, serial_baud);
-    cfsetospeed(&tios, serial_baud);
+    cfsetispeed(&tios, baud_lookup(serial_baud));
+    cfsetospeed(&tios, baud_lookup(serial_baud));
 
     // Set to local mode
     tios.c_cflag |= CLOCAL | CREAD;
