@@ -3,7 +3,7 @@ GEM
   specs:
     minitest (5.7.0)
     mqtt (0.4.0)
-    rake (10.4.2)
+    rake (12.3.3)
 
 PLATFORMS
   ruby
