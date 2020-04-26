@@ -190,7 +190,7 @@ typedef struct topic_map {
 
 
 // Library functions
-int mqtt_sn_create_socket(const char* host, const char* port);
+int mqtt_sn_create_socket(const char* host, const char* port, uint16_t source_port);
 void mqtt_sn_send_connect(int sock, const char* client_id, uint16_t keepalive, uint8_t clean_session);
 void mqtt_sn_send_register(int sock, const char* topic_name);
 void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const void* data, uint16_t data_len, int8_t qos, uint8_t retain);
