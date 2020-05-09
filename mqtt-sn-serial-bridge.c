@@ -48,12 +48,38 @@ const char *mqtt_sn_host = "127.0.0.1";
 const char *mqtt_sn_port = MQTT_SN_DEFAULT_PORT;
 const char *serial_device = NULL;
 uint16_t source_port = 0;
-speed_t serial_baud = B9600;
+int serial_baud = 9600;
 uint8_t debug = 0;
 uint8_t frwdencap = FALSE;
 
 uint8_t keep_running = TRUE;
 
+static speed_t baud_lookup(int baud) {
+    switch(baud) {
+        case      0: return B0;
+        case     50: return B50;
+        case     75: return B75;
+        case    110: return B110;
+        case    134: return B134;
+        case    150: return B150;
+        case    200: return B200;
+        case    300: return B300;
+        case    600: return B600;
+        case   1200: return B1200;
+        case   1800: return B1800;
+        case   2400: return B2400;
+        case   4800: return B4800;
+        case   9600: return B9600;
+        case  19200: return B19200;
+        case  38400: return B38400;
+        case  57600: return B57600;
+        case 115200: return B115200;
+        case 230400: return B230400;
+        default:
+            fprintf(stderr, "Unsupported baud rate: %d\n", baud);
+            exit(1);
+    }
+}
 
 static void usage()
 {
@@ -89,6 +115,7 @@ static void parse_opts(int argc, char** argv)
         switch (ch) {
         case 'b':
             serial_baud = atoi(optarg);
+            baud_lookup(serial_baud);
             break;
 
         case 'd':
@@ -150,8 +177,8 @@ static int serial_open(const char* device_path)
     tcgetattr(fd, &tios);
 
     // Set the input and output baud rates
-    cfsetispeed(&tios, serial_baud);
-    cfsetospeed(&tios, serial_baud);
+    cfsetispeed(&tios, baud_lookup(serial_baud));
+    cfsetospeed(&tios, baud_lookup(serial_baud));
 
     // Set to local mode
     tios.c_cflag |= CLOCAL | CREAD;
@@ -230,7 +257,6 @@ static void* serial_read_packet(int fd)
             fprintf(stderr, "\n");
         }
     }
-
     return buf;
 }
 
