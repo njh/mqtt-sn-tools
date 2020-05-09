@@ -14,6 +14,25 @@ class MqttSnPubTest < Minitest::Test
     assert_match(/^Usage: mqtt-sn-pub/, @cmd_result[0])
   end
 
+  def test_default_client_id
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          '-T' => 10,
+          '-m' => 'message',
+          '-p' => fs.port,
+          '-h' => fs.address
+        )
+      end
+    end
+
+    assert_empty(@cmd_result)
+    assert_match(/^mqtt-sn-tools-(\d+)$/, @packet.client_id)
+    assert_equal(10, @packet.keep_alive)
+    assert_equal(true, @packet.clean_session)
+  end
+
   def test_custom_client_id
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Connect) do
@@ -198,26 +217,6 @@ class MqttSnPubTest < Minitest::Test
     assert_equal(0, @packet.qos)
   end
 
-  def test_publish_from_file
-    fake_server do |fs|
-      @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
-        @cmd_result = run_cmd(
-          'mqtt-sn-pub',
-          ['-t', 'topic',
-          '-f', 'test.txt',
-          '-p', fs.port,
-          '-h', fs.address]
-        )
-      end
-    end
-
-    assert_empty(@cmd_result)
-    assert_equal(1, @packet.topic_id)
-    assert_equal(:normal, @packet.topic_id_type)
-    assert_equal('The is the contents of test.txt', @packet.data)
-    assert_equal(0, @packet.qos)
-  end
-
   def test_publish_from_file_too_big
     fake_server do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
@@ -276,7 +275,7 @@ class MqttSnPubTest < Minitest::Test
   end
 
   def test_publish_multiline_from_stdin
-    fs = fake_server do |fs|
+    server = fake_server do |fs|
       fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
@@ -289,7 +288,7 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    publish_packets = fs.packets_received.select do |packet|
+    publish_packets = server.packets_received.select do |packet|
       packet.is_a?(MQTT::SN::Packet::Publish)
     end
 
@@ -301,7 +300,7 @@ class MqttSnPubTest < Minitest::Test
   end
 
   def test_publish_multiline_from_stdin_no_newline
-    fs = fake_server do |fs|
+    server = fake_server do |fs|
       fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
@@ -314,7 +313,7 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    publish_packets = fs.packets_received.select do |packet|
+    publish_packets = server.packets_received.select do |packet|
       packet.is_a?(MQTT::SN::Packet::Publish)
     end
 
@@ -484,7 +483,7 @@ class MqttSnPubTest < Minitest::Test
       skip("IPv6 is not available on this system")
     end
 
-    fs = fake_server(nil, '::1') do |fs|
+    server = fake_server(nil, '::1') do |fs|
       @packet = fs.wait_for_packet(MQTT::SN::Packet::Publish) do
         @cmd_result = run_cmd(
           'mqtt-sn-pub',
@@ -497,7 +496,7 @@ class MqttSnPubTest < Minitest::Test
       end
     end
 
-    assert_includes_match(/Received  3 bytes from ::1:#{fs.port}/, @cmd_result)
+    assert_includes_match(/Received  3 bytes from ::1:#{server.port}/, @cmd_result)
     assert_equal('test', @packet.data)
   end
 

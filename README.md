@@ -59,6 +59,7 @@ Publishing
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
       --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.
+      --cport <port> Source port for outgoing packets. Uses port in ephemeral range if not specified or set to 0.
 
 
 Subscribing
@@ -81,6 +82,7 @@ Subscribing
       --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.
       -v             Print messages verbosely, showing the topic name.
       -V             Print messages verbosely, showing current time and the topic name.
+      --cport <port> Source port for outgoing packets. Uses port in ephemeral range if not specified or set to 0.
 
 
 Dumping
@@ -112,6 +114,7 @@ or MQTT-SN gateway.
       -h <host>      MQTT-SN host to connect to. Defaults to '127.0.0.1'.
       -p <port>      Network port to connect to. Defaults to 1883.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
+      --cport <port> Source port for outgoing packets. Uses port in ephemeral range if not specified or set to 0.
 
 
 License

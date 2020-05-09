@@ -79,7 +79,7 @@ void mqtt_sn_set_timeout(uint8_t value)
     mqtt_sn_log_debug("Network timeout is: %d seconds.", timeout);
 }
 
-int mqtt_sn_create_socket(const char* host, const char* port)
+int mqtt_sn_create_socket(const char* host, const char* port, uint16_t source_port)
 {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
@@ -127,6 +127,19 @@ int mqtt_sn_create_socket(const char* host, const char* port)
             mqtt_sn_log_debug("Failed to create socket: %s", strerror(errno));
             continue;
         }
+
+        if (source_port != 0) {
+            // Bind socket to the correct port
+            struct sockaddr_in addr;
+            memset(&addr, 0, sizeof(addr));
+            addr.sin_family = rp->ai_family;
+            addr.sin_addr.s_addr = htonl(INADDR_ANY);
+            addr.sin_port = htons(source_port);
+            if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+                mqtt_sn_log_debug("Failed to bind socket: %s", strerror(errno));
+                continue;
+            }
+        } 
 
         // Connect socket to the remote host
         if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
