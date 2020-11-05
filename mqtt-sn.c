@@ -440,7 +440,7 @@ void mqtt_sn_send_publish(int sock, uint16_t topic_id, uint8_t topic_type, const
     packet.flags += (topic_type & 0x3);
     packet.topic_id = htons(topic_id);
     packet.message_id = htons(next_message_id++);
-    strncpy(packet.data, data, sizeof(packet.data));
+    memcpy(packet.data, data, sizeof(packet.data));
     packet.length = 0x07 + data_len;
 
     mqtt_sn_log_debug("Sending PUBLISH packet...");
