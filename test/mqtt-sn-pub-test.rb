@@ -148,6 +148,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('test_publish_qos_n1', @packet.data)
     assert_equal(-1, @packet.qos)
     assert_equal(false, @packet.retain)
+    assert_equal(0, @packet.id)
   end
 
   def test_publish_debug
@@ -366,6 +367,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('test_publish_qos_0', @packet.data)
     assert_equal(0, @packet.qos)
     assert_equal(false, @packet.retain)
+    assert_equal(0, @packet.id)
   end
 
   def test_publish_qos_0_short
@@ -388,6 +390,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('test_publish_qos_0_short', @packet.data)
     assert_equal(0, @packet.qos)
     assert_equal(false, @packet.retain)
+    assert_equal(0, @packet.id)
   end
 
   def test_publish_qos_0_predefined
@@ -410,6 +413,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('test_publish_qos_0_predefined', @packet.data)
     assert_equal(0, @packet.qos)
     assert_equal(false, @packet.retain)
+    assert_equal(0, @packet.id)
   end
 
   def test_publish_qos_0_retained
@@ -432,6 +436,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('test_publish_retained', @packet.data)
     assert_equal(0, @packet.qos)
     assert_equal(true, @packet.retain)
+    assert_equal(0, @packet.id)
   end
 
   def test_publish_qos_0_empty
@@ -453,6 +458,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('', @packet.data)
     assert_equal(0, @packet.qos)
     assert_equal(true, @packet.retain)
+    assert_equal(0, @packet.id)
   end
 
   def test_publish_qos_1
@@ -475,6 +481,7 @@ class MqttSnPubTest < Minitest::Test
     assert_equal('test_publish_qos_1', @packet.data)
     assert_equal(1, @packet.qos)
     assert_equal(false, @packet.retain)
+    assert_equal(2, @packet.id) # REGISTER for topic ID has id 1
   end
 
   def test_publish_qos_1_puback_timeout
