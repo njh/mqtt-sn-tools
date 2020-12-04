@@ -747,8 +747,9 @@ void mqtt_sn_dump_packet(char* packet)
     printf("\n");
 }
 
-void mqtt_sn_print_publish_packet(publish_packet_t* packet)
+int mqtt_sn_print_publish_packet(publish_packet_t* packet)
 {
+	int rc = MQTT_SN_ACCEPTED;
     if (verbose) {
         int topic_type = packet->flags & 0x3;
         int topic_id = ntohs(packet->topic_id);
@@ -765,6 +766,9 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
             if (topic_name) {
                 printf("%s: %s\n", topic_name, packet->data);
             }
+            else{
+            	rc = MQTT_SN_REJECTED_INVALID;
+            }
             break;
         };
         case MQTT_SN_TOPIC_TYPE_PREDEFINED: {
@@ -780,6 +784,7 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
     } else {
         printf("%s\n", packet->data);
     }
+    return rc;
 }
 
 uint16_t mqtt_sn_receive_suback(int sock)
@@ -840,6 +845,7 @@ int mqtt_sn_select(int sock)
 void* mqtt_sn_wait_for(uint8_t type, int sock)
 {
     time_t started_waiting = time(NULL);
+    int rc;
 
     while(TRUE) {
         time_t now = time(NULL);
@@ -858,7 +864,11 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
             if (packet) {
                 switch(packet[1]) {
                     case MQTT_SN_TYPE_PUBLISH:
-                        mqtt_sn_print_publish_packet((publish_packet_t *)packet);
+                        rc = mqtt_sn_print_publish_packet((publish_packet_t *)packet);
+                        if(type == packet[1]){
+                        	return packet;
+                        }
+                        mqtt_sn_send_puback(sock,(publish_packet_t *)packet,rc);
                         break;
 
                     case MQTT_SN_TYPE_REGISTER:
