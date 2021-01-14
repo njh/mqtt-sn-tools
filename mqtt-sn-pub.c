@@ -33,6 +33,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <signal.h>
+#include <errno.h>
+#include <time.h>
 
 #include "mqtt-sn.h"
 
@@ -51,7 +53,8 @@ int8_t qos = 0;
 uint8_t retain = FALSE;
 uint8_t one_message_per_line = FALSE;
 uint8_t debug = 0;
-
+uint16_t message_counter = 1;
+uint16_t delay = 0;
 
 static void usage()
 {
@@ -72,31 +75,35 @@ static void usage()
     fprintf(stderr, "  -s             Read one whole message from STDIN.\n");
     fprintf(stderr, "  -t <topic>     MQTT-SN topic name to publish to.\n");
     fprintf(stderr, "  -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.\n");
+    fprintf(stderr, "  --count        Number of times specified message is sent. Defaults to %d.\n", message_counter);
+    fprintf(stderr, "  --delay        Delay in milliseconds before publishing messages to a topic. Defaults to %d.\n", delay);
     fprintf(stderr, "  --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.\n");
     fprintf(stderr, "  --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.\n");
     fprintf(stderr, "  --cport <port> Source port for outgoing packets. Uses port in ephemeral range if not specified or set to %d.\n", source_port);
     exit(EXIT_FAILURE);
 }
 
-static void parse_opts(int argc, char** argv)
+static void parse_opts(int argc, char **argv)
 {
 
     static struct option long_options[] =
-    {
-        {"fe",    no_argument,       0, 1000 },
-        {"wlnid", required_argument, 0, 1001 },
-        {"cport", required_argument, 0, 1002 },
-        {0, 0, 0, 0}
-    };
+        {
+            {"fe", no_argument, 0, 1000},
+            {"wlnid", required_argument, 0, 1001},
+            {"cport", required_argument, 0, 1002},
+            {"count", required_argument, 0, 1003},
+            {"delay", required_argument, 0, 1004},
+            {0, 0, 0, 0}};
 
     int ch;
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "df:h:i:k:e:lm:np:q:rst:T:?", long_options, &option_index)) != -1)
+    while ((ch = getopt_long(argc, argv, "df:h:i:k:e:lm:np:q:rst:T:?", long_options, &option_index)) != -1)
     {
-        switch (ch) {
+        switch (ch)
+        {
         case 'd':
             debug++;
             break;
@@ -164,11 +171,19 @@ static void parse_opts(int argc, char** argv)
             break;
 
         case 1001:
-            mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
+            mqtt_sn_set_frwdencap_parameters((uint8_t *)optarg, strlen(optarg));
             break;
 
         case 1002:
             source_port = atoi(optarg);
+            break;
+
+        case 1003:
+            message_counter = atoi(optarg);
+            break;
+
+        case 1004:
+            delay = atoi(optarg);
             break;
 
         case '?':
@@ -176,77 +191,100 @@ static void parse_opts(int argc, char** argv)
             usage();
             break;
         } // switch
-    } // while
+    }     // while
 
     // Missing Parameter?
-    if (!(topic_name || topic_id) || !(message_data || message_file)) {
+    if (!(topic_name || topic_id) || !(message_data || message_file))
+    {
         usage();
     }
 
-    if (qos != -1 && qos != 0 && qos != 1) {
+    if (qos != -1 && qos != 0 && qos != 1)
+    {
         mqtt_sn_log_err("Only QoS level 0, 1 or -1 is supported.");
         exit(EXIT_FAILURE);
     }
 
     // Both topic name and topic id?
-    if (topic_name && topic_id) {
+    if (topic_name && topic_id)
+    {
         mqtt_sn_log_err("Please provide either a topic id or a topic name, not both.");
         exit(EXIT_FAILURE);
     }
 
     // Both message data and file?
-    if (message_data && message_file) {
+    if (message_data && message_file)
+    {
         mqtt_sn_log_err("Please provide either message data or a message file, not both.");
         exit(EXIT_FAILURE);
     }
 
     // Check topic is valid for QoS level -1
-    if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2) {
+    if (qos == -1 && topic_id == 0 && strlen(topic_name) != 2)
+    {
         mqtt_sn_log_err("Either a pre-defined topic id or a short topic name must be given for QoS -1.");
         exit(EXIT_FAILURE);
     }
 }
 
-static void publish_file(int sock, const char* filename) {
+static void publish_file(int sock, const char *filename)
+{
     char buffer[MQTT_SN_MAX_PAYLOAD_LENGTH];
     uint16_t message_len = 0;
-    FILE* file = NULL;
+    FILE *file = NULL;
 
-    if (strcmp(filename, "-") == 0) {
+    if (strcmp(filename, "-") == 0)
+    {
         file = stdin;
-    } else {
+    }
+    else
+    {
         file = fopen(filename, "rb");
     }
 
-    if (!file) {
+    if (!file)
+    {
         perror("Failed to open message file");
         exit(EXIT_FAILURE);
     }
 
-    if (one_message_per_line) {
+    if (one_message_per_line)
+    {
         // One message per line
-        while(!feof(file) && !ferror(file)) {
-            char* message = fgets(buffer, MQTT_SN_MAX_PAYLOAD_LENGTH, file);
-            if (message) {
-                char* end = strpbrk(message, "\n\r");
-                if (end) {
+        while (!feof(file) && !ferror(file))
+        {
+            char *message = fgets(buffer, MQTT_SN_MAX_PAYLOAD_LENGTH, file);
+            if (message)
+            {
+                char *end = strpbrk(message, "\n\r");
+                if (end)
+                {
                     uint16_t message_len = (end - message);
                     mqtt_sn_send_publish(sock, topic_id, topic_id_type, message, message_len, qos, retain);
-                } else {
+                }
+                else
+                {
                     mqtt_sn_log_err("Failed to find newline when reading message");
                 }
-            } else if (ferror(file)) {
+            }
+            else if (ferror(file))
+            {
                 perror("Failed to read message line");
                 exit(EXIT_FAILURE);
             }
         }
-    } else {
+    }
+    else
+    {
         // One message until EOF
         message_len = fread(buffer, 1, MQTT_SN_MAX_PAYLOAD_LENGTH, file);
-        if (ferror(file)) {
+        if (ferror(file))
+        {
             perror("Failed to read message file");
             exit(EXIT_FAILURE);
-        } else if (!feof(file)) {
+        }
+        else if (!feof(file))
+        {
             mqtt_sn_log_warn("Input file is longer than the maximum message size");
         }
 
@@ -256,7 +294,30 @@ static void publish_file(int sock, const char* filename) {
     fclose(file);
 }
 
-int main(int argc, char* argv[])
+/* msleep(): Sleep for the requested number of milliseconds. */
+static int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do
+    {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
+
+int main(int argc, char *argv[])
 {
     int sock;
 
@@ -271,22 +332,29 @@ int main(int argc, char* argv[])
 
     // Create a UDP socket
     sock = mqtt_sn_create_socket(mqtt_sn_host, mqtt_sn_port, source_port);
-    if (sock) {
+    if (sock)
+    {
         // Connect to gateway
-        if (qos >= 0) {
+        if (qos >= 0)
+        {
             mqtt_sn_log_debug("Connecting...");
             mqtt_sn_send_connect(sock, client_id, keep_alive, TRUE);
             mqtt_sn_receive_connack(sock);
         }
 
-        if (topic_id) {
+        if (topic_id)
+        {
             // Use pre-defined topic ID
             topic_id_type = MQTT_SN_TOPIC_TYPE_PREDEFINED;
-        } else if (strlen(topic_name) == 2) {
+        }
+        else if (strlen(topic_name) == 2)
+        {
             // Convert the 2 character topic name into a 2 byte topic id
             topic_id = (topic_name[0] << 8) + topic_name[1];
             topic_id_type = MQTT_SN_TOPIC_TYPE_SHORT;
-        } else if (qos >= 0) {
+        }
+        else if (qos >= 0)
+        {
             // Register the topic name
             mqtt_sn_send_register(sock, topic_name);
             topic_id = mqtt_sn_receive_regack(sock);
@@ -294,15 +362,23 @@ int main(int argc, char* argv[])
         }
 
         // Publish to the topic
-        if (message_file) {
-            publish_file(sock, message_file);
-        } else {
-            uint16_t message_len = strlen(message_data);
-            mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, message_len, qos, retain);
+        while (message_counter-- > 0)
+        {
+            msleep(delay);
+            if (message_file)
+            {
+                publish_file(sock, message_file);
+            }
+            else
+            {
+                uint16_t message_len = strlen(message_data);
+                mqtt_sn_send_publish(sock, topic_id, topic_id_type, message_data, message_len, qos, retain);
+            }
         }
 
         // Finally, disconnect
-        if (qos >= 0) {
+        if (qos >= 0)
+        {
             mqtt_sn_log_debug("Disconnecting...");
             mqtt_sn_send_disconnect(sock, sleep_duration);
             mqtt_sn_receive_disconnect(sock);
