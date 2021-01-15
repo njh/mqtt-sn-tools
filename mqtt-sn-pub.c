@@ -81,8 +81,7 @@ static void usage()
 static void parse_opts(int argc, char** argv)
 {
 
-    static struct option long_options[] =
-    {
+    static struct option long_options[] = {
         {"fe",    no_argument,       0, 1000 },
         {"wlnid", required_argument, 0, 1001 },
         {"cport", required_argument, 0, 1002 },
@@ -94,87 +93,86 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "df:h:i:k:e:lm:np:q:rst:T:?", long_options, &option_index)) != -1)
-    {
+    while ((ch = getopt_long (argc, argv, "df:h:i:k:e:lm:np:q:rst:T:?", long_options, &option_index)) != -1) {
         switch (ch) {
-        case 'd':
-            debug++;
-            break;
+            case 'd':
+                debug++;
+                break;
 
-        case 'h':
-            mqtt_sn_host = optarg;
-            break;
+            case 'h':
+                mqtt_sn_host = optarg;
+                break;
 
-        case 'f':
-            message_file = optarg;
-            break;
+            case 'f':
+                message_file = optarg;
+                break;
 
-        case 'i':
-            client_id = optarg;
-            break;
+            case 'i':
+                client_id = optarg;
+                break;
 
-        case 'l':
-            message_file = "-";
-            one_message_per_line = TRUE;
-            break;
+            case 'l':
+                message_file = "-";
+                one_message_per_line = TRUE;
+                break;
 
-        case 'm':
-            message_data = optarg;
-            break;
+            case 'm':
+                message_data = optarg;
+                break;
 
-        case 'k':
-            keep_alive = atoi(optarg);
-            break;
+            case 'k':
+                keep_alive = atoi(optarg);
+                break;
 
-        case 'e':
-            sleep_duration = atoi(optarg);
-            break;
+            case 'e':
+                sleep_duration = atoi(optarg);
+                break;
 
-        case 'n':
-            message_data = "";
-            break;
+            case 'n':
+                message_data = "";
+                break;
 
-        case 'p':
-            mqtt_sn_port = optarg;
-            break;
+            case 'p':
+                mqtt_sn_port = optarg;
+                break;
 
-        case 'q':
-            qos = atoi(optarg);
-            break;
+            case 'q':
+                qos = atoi(optarg);
+                break;
 
-        case 'r':
-            retain = TRUE;
-            break;
+            case 'r':
+                retain = TRUE;
+                break;
 
-        case 's':
-            message_file = "-";
-            one_message_per_line = FALSE;
-            break;
+            case 's':
+                message_file = "-";
+                one_message_per_line = FALSE;
+                break;
 
-        case 't':
-            topic_name = optarg;
-            break;
+            case 't':
+                topic_name = optarg;
+                break;
 
-        case 'T':
-            topic_id = atoi(optarg);
-            break;
+            case 'T':
+                topic_id = atoi(optarg);
+                break;
 
-        case 1000:
-            mqtt_sn_enable_frwdencap();
-            break;
+            case 1000:
+                mqtt_sn_enable_frwdencap();
+                break;
 
-        case 1001:
-            mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
-            break;
+            case 1001:
+                mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
+                break;
 
-        case 1002:
-            source_port = atoi(optarg);
-            break;
+            case 1002:
+                source_port = atoi(optarg);
+                break;
 
-        case '?':
-        default:
-            usage();
-            break;
+            case '?':
+            default:
+                usage();
+                break;
         } // switch
     } // while
 
@@ -207,7 +205,8 @@ static void parse_opts(int argc, char** argv)
     }
 }
 
-static void publish_file(int sock, const char* filename) {
+static void publish_file(int sock, const char* filename)
+{
     char buffer[MQTT_SN_MAX_PAYLOAD_LENGTH];
     uint16_t message_len = 0;
     FILE* file = NULL;

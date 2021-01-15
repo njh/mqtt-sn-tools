@@ -1,0 +1,11 @@
+# use the K&R code style
+--style=kr
+
+# Indent 4 spaces
+--indent=spaces=4
+
+# Indent switch and case statements
+--indent-switches
+
+# We don't need .orig files, because we are version controlled
+--suffix=none

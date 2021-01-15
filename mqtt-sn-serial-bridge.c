@@ -54,27 +54,47 @@ uint8_t frwdencap = FALSE;
 
 uint8_t keep_running = TRUE;
 
-static speed_t baud_lookup(int baud) {
+static speed_t baud_lookup(int baud)
+{
     switch(baud) {
-        case      0: return B0;
-        case     50: return B50;
-        case     75: return B75;
-        case    110: return B110;
-        case    134: return B134;
-        case    150: return B150;
-        case    200: return B200;
-        case    300: return B300;
-        case    600: return B600;
-        case   1200: return B1200;
-        case   1800: return B1800;
-        case   2400: return B2400;
-        case   4800: return B4800;
-        case   9600: return B9600;
-        case  19200: return B19200;
-        case  38400: return B38400;
-        case  57600: return B57600;
-        case 115200: return B115200;
-        case 230400: return B230400;
+        case      0:
+            return B0;
+        case     50:
+            return B50;
+        case     75:
+            return B75;
+        case    110:
+            return B110;
+        case    134:
+            return B134;
+        case    150:
+            return B150;
+        case    200:
+            return B200;
+        case    300:
+            return B300;
+        case    600:
+            return B600;
+        case   1200:
+            return B1200;
+        case   1800:
+            return B1800;
+        case   2400:
+            return B2400;
+        case   4800:
+            return B4800;
+        case   9600:
+            return B9600;
+        case  19200:
+            return B19200;
+        case  38400:
+            return B38400;
+        case  57600:
+            return B57600;
+        case 115200:
+            return B115200;
+        case 230400:
+            return B230400;
         default:
             fprintf(stderr, "Unsupported baud rate: %d\n", baud);
             exit(1);
@@ -98,8 +118,7 @@ static void usage()
 static void parse_opts(int argc, char** argv)
 {
 
-    static struct option long_options[] =
-    {
+    static struct option long_options[] = {
         {"fe",    no_argument,       0, 1000 },
         {"cport", required_argument, 0, 1001 },
         {0, 0, 0, 0}
@@ -110,38 +129,37 @@ static void parse_opts(int argc, char** argv)
     int option_index = 0;
 
     // Parse the options/switches
-    while ((ch = getopt_long (argc, argv, "b:dh:p:?", long_options, &option_index)) != -1)
-    {
+    while ((ch = getopt_long (argc, argv, "b:dh:p:?", long_options, &option_index)) != -1) {
         switch (ch) {
-        case 'b':
-            serial_baud = atoi(optarg);
-            baud_lookup(serial_baud);
-            break;
+            case 'b':
+                serial_baud = atoi(optarg);
+                baud_lookup(serial_baud);
+                break;
 
-        case 'd':
-            debug++;
-            break;
+            case 'd':
+                debug++;
+                break;
 
-        case 'h':
-            mqtt_sn_host = optarg;
-            break;
+            case 'h':
+                mqtt_sn_host = optarg;
+                break;
 
-        case 'p':
-            mqtt_sn_port = optarg;
-            break;
+            case 'p':
+                mqtt_sn_port = optarg;
+                break;
 
-        case 1000:
-            mqtt_sn_enable_frwdencap();
-            frwdencap = TRUE;
-            break;
-        case 1001:
-            source_port = atoi(optarg);
-            break;
+            case 1000:
+                mqtt_sn_enable_frwdencap();
+                frwdencap = TRUE;
+                break;
+            case 1001:
+                source_port = atoi(optarg);
+                break;
 
-        case '?':
-        default:
-            usage();
-            break;
+            case '?':
+            default:
+                usage();
+                break;
         } // switch
     } // while
 
@@ -273,15 +291,15 @@ void serial_write_packet(int fd, const void* packet)
 static void termination_handler (int signum)
 {
     switch(signum) {
-    case SIGHUP:
-        mqtt_sn_log_debug("Got hangup signal.");
-        break;
-    case SIGTERM:
-        mqtt_sn_log_debug("Got termination signal.");
-        break;
-    case SIGINT:
-        mqtt_sn_log_debug("Got interrupt signal.");
-        break;
+        case SIGHUP:
+            mqtt_sn_log_debug("Got hangup signal.");
+            break;
+        case SIGTERM:
+            mqtt_sn_log_debug("Got termination signal.");
+            break;
+        case SIGINT:
+            mqtt_sn_log_debug("Got interrupt signal.");
+            break;
     }
 
     // Signal the main thead to stop

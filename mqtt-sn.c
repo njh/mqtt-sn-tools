@@ -113,8 +113,8 @@ int mqtt_sn_create_socket(const char* host, const char* port, uint16_t source_po
 
         // Display the IP address in debug mode
         error = getnameinfo(rp->ai_addr, rp->ai_addrlen,
-            hoststr, sizeof(hoststr), NULL, 0,
-            NI_NUMERICHOST | NI_NUMERICSERV);
+                            hoststr, sizeof(hoststr), NULL, 0,
+                            NI_NUMERICHOST | NI_NUMERICSERV);
         if (error == 0) {
             mqtt_sn_log_debug("Trying %s...", hoststr);
         } else {
@@ -139,7 +139,7 @@ int mqtt_sn_create_socket(const char* host, const char* port, uint16_t source_po
                 mqtt_sn_log_debug("Failed to bind socket: %s", strerror(errno));
                 continue;
             }
-        } 
+        }
 
         // Connect socket to the remote host
         if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
@@ -183,7 +183,7 @@ void mqtt_sn_send_packet(int sock, const void* data)
 
     if (debug > 1) {
         mqtt_sn_log_debug("Sending  %2lu bytes. Type=%s on Socket: %d.", (long unsigned int)len,
-                  mqtt_sn_type_string(((uint8_t*)data)[1]), sock);
+                          mqtt_sn_type_string(((uint8_t*)data)[1]), sock);
     }
 
     sent = send(sock, data, len, 0);
@@ -206,7 +206,7 @@ void mqtt_sn_send_frwdencap_packet(int sock, const void* data, const uint8_t *wi
 
     if (debug > 1) {
         mqtt_sn_log_debug("Sending  %2lu bytes. Type=%s with %s inside on Socket: %d.", (long unsigned int)len,
-                  mqtt_sn_type_string(packet->type), mqtt_sn_type_string(orig_packet_type), sock);
+                          mqtt_sn_type_string(packet->type), mqtt_sn_type_string(orig_packet_type), sock);
     }
 
     sent = send(sock, packet, len, 0);
@@ -245,7 +245,7 @@ uint8_t mqtt_sn_validate_packet(const void *packet, size_t length)
     if ((buf[1] == MQTT_SN_TYPE_FRWDENCAP && buf[0] + buf[buf[0]] != length) ||
             (buf[1] != MQTT_SN_TYPE_FRWDENCAP && buf[0] != length)) {
         mqtt_sn_log_warn("Read %d bytes but packet length is %d bytes.", (int)length,
-                buf[1] != MQTT_SN_TYPE_FRWDENCAP ? (int)buf[0] : (int)(buf[0] + buf[buf[0]]));
+                         buf[1] != MQTT_SN_TYPE_FRWDENCAP ? (int)buf[0] : (int)(buf[0] + buf[buf[0]]));
         return FALSE;
     }
 
@@ -302,12 +302,12 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
 
         if (packet[1] == MQTT_SN_TYPE_FRWDENCAP) {
             mqtt_sn_log_debug("Received %2d bytes from %s:%d. Type=%s with %s inside on Socket: %d",
-                      (int)bytes_read, addrstr, port,
-                      mqtt_sn_type_string(buffer[1]), mqtt_sn_type_string(packet[packet[0] + 1]), sock);
+                              (int)bytes_read, addrstr, port,
+                              mqtt_sn_type_string(buffer[1]), mqtt_sn_type_string(packet[packet[0] + 1]), sock);
         } else {
             mqtt_sn_log_debug("Received %2d bytes from %s:%d. Type=%s on Socket: %d",
-                      (int)bytes_read, addrstr, port,
-                      mqtt_sn_type_string(buffer[1]), sock);
+                              (int)bytes_read, addrstr, port,
+                              mqtt_sn_type_string(buffer[1]), sock);
         }
     }
 
@@ -318,8 +318,7 @@ void* mqtt_sn_receive_frwdencap_packet(int sock, uint8_t **wireless_node_id, uin
     // NULL-terminate the packet
     buffer[bytes_read] = '\0';
 
-    if (packet[1] == MQTT_SN_TYPE_FRWDENCAP)
-    {
+    if (packet[1] == MQTT_SN_TYPE_FRWDENCAP) {
         *wireless_node_id = &packet[3];
         *wireless_node_id_len = packet[0] - 3;
         // Shift packet by the actual length of FRWDENCAP header
@@ -409,16 +408,16 @@ void mqtt_sn_send_regack(int sock, int topic_id, int mesage_id)
 static uint8_t mqtt_sn_get_qos_flag(int8_t qos)
 {
     switch (qos) {
-    case -1:
-        return MQTT_SN_FLAG_QOS_N1;
-    case 0:
-        return MQTT_SN_FLAG_QOS_0;
-    case 1:
-        return MQTT_SN_FLAG_QOS_1;
-    case 2:
-        return MQTT_SN_FLAG_QOS_2;
-    default:
-        return 0;
+        case -1:
+            return MQTT_SN_FLAG_QOS_N1;
+        case 0:
+            return MQTT_SN_FLAG_QOS_0;
+        case 1:
+            return MQTT_SN_FLAG_QOS_1;
+        case 2:
+            return MQTT_SN_FLAG_QOS_2;
+        default:
+            return 0;
     }
 }
 
@@ -692,56 +691,56 @@ void mqtt_sn_dump_packet(char* packet)
     printf("%s: len=%d", mqtt_sn_type_string(packet[1]), packet[0]);
 
     switch(packet[1]) {
-    case MQTT_SN_TYPE_CONNECT: {
-        connect_packet_t* cpkt = (connect_packet_t*)packet;
-        printf(" protocol_id=%d", cpkt->protocol_id);
-        printf(" duration=%d", ntohs(cpkt->duration));
-        printf(" client_id=%s", cpkt->client_id);
-        break;
-    }
-    case MQTT_SN_TYPE_CONNACK: {
-        connack_packet_t* capkt = (connack_packet_t*)packet;
-        printf(" return_code=%d (%s)", capkt->return_code, mqtt_sn_return_code_string(capkt->return_code));
-        break;
-    }
-    case MQTT_SN_TYPE_REGISTER: {
-        register_packet_t* rpkt = (register_packet_t*)packet;
-        printf(" topic_id=0x%4.4x", ntohs(rpkt->topic_id));
-        printf(" message_id=0x%4.4x", ntohs(rpkt->message_id));
-        printf(" topic_name=%s", rpkt->topic_name);
-        break;
-    }
-    case MQTT_SN_TYPE_REGACK: {
-        regack_packet_t* rapkt = (regack_packet_t*)packet;
-        printf(" topic_id=0x%4.4x", ntohs(rapkt->topic_id));
-        printf(" message_id=0x%4.4x", ntohs(rapkt->message_id));
-        printf(" return_code=%d (%s)", rapkt->return_code, mqtt_sn_return_code_string(rapkt->return_code));
-        break;
-    }
-    case MQTT_SN_TYPE_PUBLISH: {
-        publish_packet_t* ppkt = (publish_packet_t*)packet;
-        printf(" topic_id=0x%4.4x", ntohs(ppkt->topic_id));
-        printf(" message_id=0x%4.4x", ntohs(ppkt->message_id));
-        printf(" data=%s", ppkt->data);
-        break;
-    }
-    case MQTT_SN_TYPE_SUBSCRIBE: {
-        subscribe_packet_t* spkt = (subscribe_packet_t*)packet;
-        printf(" message_id=0x%4.4x", ntohs(spkt->message_id));
-        break;
-    }
-    case MQTT_SN_TYPE_SUBACK: {
-        suback_packet_t* sapkt = (suback_packet_t*)packet;
-        printf(" topic_id=0x%4.4x", ntohs(sapkt->topic_id));
-        printf(" message_id=0x%4.4x", ntohs(sapkt->message_id));
-        printf(" return_code=%d (%s)", sapkt->return_code, mqtt_sn_return_code_string(sapkt->return_code));
-        break;
-    }
-    case MQTT_SN_TYPE_DISCONNECT: {
-        disconnect_packet_t* dpkt = (disconnect_packet_t*)packet;
-        printf(" duration=%d", ntohs(dpkt->duration));
-        break;
-    }
+        case MQTT_SN_TYPE_CONNECT: {
+            connect_packet_t* cpkt = (connect_packet_t*)packet;
+            printf(" protocol_id=%d", cpkt->protocol_id);
+            printf(" duration=%d", ntohs(cpkt->duration));
+            printf(" client_id=%s", cpkt->client_id);
+            break;
+        }
+        case MQTT_SN_TYPE_CONNACK: {
+            connack_packet_t* capkt = (connack_packet_t*)packet;
+            printf(" return_code=%d (%s)", capkt->return_code, mqtt_sn_return_code_string(capkt->return_code));
+            break;
+        }
+        case MQTT_SN_TYPE_REGISTER: {
+            register_packet_t* rpkt = (register_packet_t*)packet;
+            printf(" topic_id=0x%4.4x", ntohs(rpkt->topic_id));
+            printf(" message_id=0x%4.4x", ntohs(rpkt->message_id));
+            printf(" topic_name=%s", rpkt->topic_name);
+            break;
+        }
+        case MQTT_SN_TYPE_REGACK: {
+            regack_packet_t* rapkt = (regack_packet_t*)packet;
+            printf(" topic_id=0x%4.4x", ntohs(rapkt->topic_id));
+            printf(" message_id=0x%4.4x", ntohs(rapkt->message_id));
+            printf(" return_code=%d (%s)", rapkt->return_code, mqtt_sn_return_code_string(rapkt->return_code));
+            break;
+        }
+        case MQTT_SN_TYPE_PUBLISH: {
+            publish_packet_t* ppkt = (publish_packet_t*)packet;
+            printf(" topic_id=0x%4.4x", ntohs(ppkt->topic_id));
+            printf(" message_id=0x%4.4x", ntohs(ppkt->message_id));
+            printf(" data=%s", ppkt->data);
+            break;
+        }
+        case MQTT_SN_TYPE_SUBSCRIBE: {
+            subscribe_packet_t* spkt = (subscribe_packet_t*)packet;
+            printf(" message_id=0x%4.4x", ntohs(spkt->message_id));
+            break;
+        }
+        case MQTT_SN_TYPE_SUBACK: {
+            suback_packet_t* sapkt = (suback_packet_t*)packet;
+            printf(" topic_id=0x%4.4x", ntohs(sapkt->topic_id));
+            printf(" message_id=0x%4.4x", ntohs(sapkt->message_id));
+            printf(" return_code=%d (%s)", sapkt->return_code, mqtt_sn_return_code_string(sapkt->return_code));
+            break;
+        }
+        case MQTT_SN_TYPE_DISCONNECT: {
+            disconnect_packet_t* dpkt = (disconnect_packet_t*)packet;
+            printf(" duration=%d", ntohs(dpkt->duration));
+            break;
+        }
     }
 
     printf("\n");
@@ -760,22 +759,22 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
             fputs(tm_buffer, stdout);
         }
         switch (topic_type) {
-        case MQTT_SN_TOPIC_TYPE_NORMAL: {
-            const char *topic_name = mqtt_sn_lookup_topic(topic_id);
-            if (topic_name) {
-                printf("%s: %s\n", topic_name, packet->data);
-            }
-            break;
-        };
-        case MQTT_SN_TOPIC_TYPE_PREDEFINED: {
-            printf("%4.4x: %s\n", topic_id, packet->data);
-            break;
-        };
-        case MQTT_SN_TOPIC_TYPE_SHORT: {
-            const char *str = (const char*)&packet->topic_id;
-            printf("%c%c: %s\n", str[0], str[1], packet->data);
-            break;
-        };
+            case MQTT_SN_TOPIC_TYPE_NORMAL: {
+                const char *topic_name = mqtt_sn_lookup_topic(topic_id);
+                if (topic_name) {
+                    printf("%s: %s\n", topic_name, packet->data);
+                }
+                break;
+            };
+            case MQTT_SN_TOPIC_TYPE_PREDEFINED: {
+                printf("%4.4x: %s\n", topic_id, packet->data);
+                break;
+            };
+            case MQTT_SN_TOPIC_TYPE_SHORT: {
+                const char *str = (const char*)&packet->topic_id;
+                printf("%c%c: %s\n", str[0], str[1], packet->data);
+                break;
+            };
         }
     } else {
         printf("%s\n", packet->data);
@@ -884,7 +883,7 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
                                 mqtt_sn_type_string(packet[1])
                             );
                         }
-                    break;
+                        break;
                 }
 
                 // Did we find what we were looking for?
@@ -913,46 +912,80 @@ void* mqtt_sn_wait_for(uint8_t type, int sock)
 const char* mqtt_sn_type_string(uint8_t type)
 {
     switch(type) {
-        case MQTT_SN_TYPE_ADVERTISE:     return "ADVERTISE";
-        case MQTT_SN_TYPE_SEARCHGW:      return "SEARCHGW";
-        case MQTT_SN_TYPE_GWINFO:        return "GWINFO";
-        case MQTT_SN_TYPE_CONNECT:       return "CONNECT";
-        case MQTT_SN_TYPE_CONNACK:       return "CONNACK";
-        case MQTT_SN_TYPE_WILLTOPICREQ:  return "WILLTOPICREQ";
-        case MQTT_SN_TYPE_WILLTOPIC:     return "WILLTOPIC";
-        case MQTT_SN_TYPE_WILLMSGREQ:    return "WILLMSGREQ";
-        case MQTT_SN_TYPE_WILLMSG:       return "WILLMSG";
-        case MQTT_SN_TYPE_REGISTER:      return "REGISTER";
-        case MQTT_SN_TYPE_REGACK:        return "REGACK";
-        case MQTT_SN_TYPE_PUBLISH:       return "PUBLISH";
-        case MQTT_SN_TYPE_PUBACK:        return "PUBACK";
-        case MQTT_SN_TYPE_PUBCOMP:       return "PUBCOMP";
-        case MQTT_SN_TYPE_PUBREC:        return "PUBREC";
-        case MQTT_SN_TYPE_PUBREL:        return "PUBREL";
-        case MQTT_SN_TYPE_SUBSCRIBE:     return "SUBSCRIBE";
-        case MQTT_SN_TYPE_SUBACK:        return "SUBACK";
-        case MQTT_SN_TYPE_UNSUBSCRIBE:   return "UNSUBSCRIBE";
-        case MQTT_SN_TYPE_UNSUBACK:      return "UNSUBACK";
-        case MQTT_SN_TYPE_PINGREQ:       return "PINGREQ";
-        case MQTT_SN_TYPE_PINGRESP:      return "PINGRESP";
-        case MQTT_SN_TYPE_DISCONNECT:    return "DISCONNECT";
-        case MQTT_SN_TYPE_WILLTOPICUPD:  return "WILLTOPICUPD";
-        case MQTT_SN_TYPE_WILLTOPICRESP: return "WILLTOPICRESP";
-        case MQTT_SN_TYPE_WILLMSGUPD:    return "WILLMSGUPD";
-        case MQTT_SN_TYPE_WILLMSGRESP:   return "WILLMSGRESP";
-        case MQTT_SN_TYPE_FRWDENCAP:     return "FRWDENCAP";
-        default:                         return "UNKNOWN";
+        case MQTT_SN_TYPE_ADVERTISE:
+            return "ADVERTISE";
+        case MQTT_SN_TYPE_SEARCHGW:
+            return "SEARCHGW";
+        case MQTT_SN_TYPE_GWINFO:
+            return "GWINFO";
+        case MQTT_SN_TYPE_CONNECT:
+            return "CONNECT";
+        case MQTT_SN_TYPE_CONNACK:
+            return "CONNACK";
+        case MQTT_SN_TYPE_WILLTOPICREQ:
+            return "WILLTOPICREQ";
+        case MQTT_SN_TYPE_WILLTOPIC:
+            return "WILLTOPIC";
+        case MQTT_SN_TYPE_WILLMSGREQ:
+            return "WILLMSGREQ";
+        case MQTT_SN_TYPE_WILLMSG:
+            return "WILLMSG";
+        case MQTT_SN_TYPE_REGISTER:
+            return "REGISTER";
+        case MQTT_SN_TYPE_REGACK:
+            return "REGACK";
+        case MQTT_SN_TYPE_PUBLISH:
+            return "PUBLISH";
+        case MQTT_SN_TYPE_PUBACK:
+            return "PUBACK";
+        case MQTT_SN_TYPE_PUBCOMP:
+            return "PUBCOMP";
+        case MQTT_SN_TYPE_PUBREC:
+            return "PUBREC";
+        case MQTT_SN_TYPE_PUBREL:
+            return "PUBREL";
+        case MQTT_SN_TYPE_SUBSCRIBE:
+            return "SUBSCRIBE";
+        case MQTT_SN_TYPE_SUBACK:
+            return "SUBACK";
+        case MQTT_SN_TYPE_UNSUBSCRIBE:
+            return "UNSUBSCRIBE";
+        case MQTT_SN_TYPE_UNSUBACK:
+            return "UNSUBACK";
+        case MQTT_SN_TYPE_PINGREQ:
+            return "PINGREQ";
+        case MQTT_SN_TYPE_PINGRESP:
+            return "PINGRESP";
+        case MQTT_SN_TYPE_DISCONNECT:
+            return "DISCONNECT";
+        case MQTT_SN_TYPE_WILLTOPICUPD:
+            return "WILLTOPICUPD";
+        case MQTT_SN_TYPE_WILLTOPICRESP:
+            return "WILLTOPICRESP";
+        case MQTT_SN_TYPE_WILLMSGUPD:
+            return "WILLMSGUPD";
+        case MQTT_SN_TYPE_WILLMSGRESP:
+            return "WILLMSGRESP";
+        case MQTT_SN_TYPE_FRWDENCAP:
+            return "FRWDENCAP";
+        default:
+            return "UNKNOWN";
     }
 }
 
 const char* mqtt_sn_return_code_string(uint8_t return_code)
 {
     switch(return_code) {
-        case MQTT_SN_ACCEPTED: return "Accepted";
-        case MQTT_SN_REJECTED_CONGESTION: return "Rejected: congestion";
-        case MQTT_SN_REJECTED_INVALID: return "Rejected: invalid topic ID";
-        case MQTT_SN_REJECTED_NOT_SUPPORTED: return "Rejected: not supported";
-        default:   return "Rejected: unknown reason";
+        case MQTT_SN_ACCEPTED:
+            return "Accepted";
+        case MQTT_SN_REJECTED_CONGESTION:
+            return "Rejected: congestion";
+        case MQTT_SN_REJECTED_INVALID:
+            return "Rejected: invalid topic ID";
+        case MQTT_SN_REJECTED_NOT_SUPPORTED:
+            return "Rejected: not supported";
+        default:
+            return "Rejected: unknown reason";
     }
 }
 
@@ -971,17 +1004,20 @@ void mqtt_sn_cleanup()
 }
 
 
-uint8_t mqtt_sn_enable_frwdencap() {
+uint8_t mqtt_sn_enable_frwdencap()
+{
     return forwarder_encapsulation = TRUE;
 }
 
 
-uint8_t mqtt_sn_disable_frwdencap() {
+uint8_t mqtt_sn_disable_frwdencap()
+{
     return forwarder_encapsulation = FALSE;
 }
 
 
-void mqtt_sn_set_frwdencap_parameters(const uint8_t *wlnid, uint8_t wlnid_len) {
+void mqtt_sn_set_frwdencap_parameters(const uint8_t *wlnid, uint8_t wlnid_len)
+{
     wireless_node_id = wlnid;
     wireless_node_id_len = wlnid_len;
 }
@@ -1024,14 +1060,13 @@ frwdencap_packet_t* mqtt_sn_create_frwdencap_packet(const void *data, size_t *le
         char wlnd[65];
         char* buf_ptr = wlnd;
         int i;
-        for (i = 0; i < wireless_node_id_len; i++)
-        {
+        for (i = 0; i < wireless_node_id_len; i++) {
             buf_ptr += sprintf(buf_ptr, "%02X", packet->wireless_node_id[i]);
         }
         *(++buf_ptr) = '\0';
 
         mqtt_sn_log_debug("Node id: 0x%s, N. id len: %d, Wrapped packet len: %d, Total len: %lu",
-                  wlnd, wireless_node_id_len, ((uint8_t*)data)[0], (long unsigned int)*len);
+                          wlnd, wireless_node_id_len, ((uint8_t*)data)[0], (long unsigned int)*len);
     }
 
     return packet;

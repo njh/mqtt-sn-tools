@@ -89,8 +89,7 @@ static void usage()
 static void parse_opts(int argc, char** argv)
 {
 
-    static struct option long_options[] =
-    {
+    static struct option long_options[] = {
         {"fe",    no_argument,       0, 1000 },
         {"wlnid", required_argument, 0, 1001 },
         {"cport", required_argument, 0, 1002 },
@@ -104,85 +103,85 @@ static void parse_opts(int argc, char** argv)
     // Parse the options/switches
     while ((ch = getopt_long(argc, argv, "1cdh:i:k:e:p:q:t:T:vV?", long_options, &option_index)) != -1)
         switch (ch) {
-        case '1':
-            single_message = TRUE;
-            break;
+            case '1':
+                single_message = TRUE;
+                break;
 
-        case 'c':
-            clean_session = FALSE;
-            break;
+            case 'c':
+                clean_session = FALSE;
+                break;
 
-        case 'd':
-            debug++;
-            break;
+            case 'd':
+                debug++;
+                break;
 
-        case 'h':
-            mqtt_sn_host = optarg;
-            break;
+            case 'h':
+                mqtt_sn_host = optarg;
+                break;
 
-        case 'i':
-            client_id = optarg;
-            break;
+            case 'i':
+                client_id = optarg;
+                break;
 
-        case 'k':
-            keep_alive = atoi(optarg);
-            break;
+            case 'k':
+                keep_alive = atoi(optarg);
+                break;
 
-        case 'e':
-            sleep_duration = atoi(optarg);
-            break;
+            case 'e':
+                sleep_duration = atoi(optarg);
+                break;
 
-        case 'p':
-            mqtt_sn_port = optarg;
-            break;
+            case 'p':
+                mqtt_sn_port = optarg;
+                break;
 
-        case 'q':
-            qos = atoi(optarg);
-            break;
+            case 'q':
+                qos = atoi(optarg);
+                break;
 
-        case 't':
-            // Resize topic names array when too small
-            if (topic_name_index == topic_name_ar_size) {
-                topic_name_ar = realloc(topic_name_ar, (topic_name_ar_size + ARRAY_INCREMENT) * sizeof(char*)) ;
-                topic_name_ar_size += ARRAY_INCREMENT;
-            }
-            topic_name_ar[topic_name_index++] = optarg;
-            break;
+            case 't':
+                // Resize topic names array when too small
+                if (topic_name_index == topic_name_ar_size) {
+                    topic_name_ar = realloc(topic_name_ar, (topic_name_ar_size + ARRAY_INCREMENT) * sizeof(char*)) ;
+                    topic_name_ar_size += ARRAY_INCREMENT;
+                }
+                topic_name_ar[topic_name_index++] = optarg;
+                break;
 
-        case 'T':
-            // Resize predefined topic IDs array when too small
-            if (predef_topic_id_index == predef_topic_id_ar_size) {
-                predef_topic_id_ar = realloc(predef_topic_id_ar, (predef_topic_id_ar_size + ARRAY_INCREMENT) * sizeof(uint16_t));
-                predef_topic_id_ar_size += ARRAY_INCREMENT;
-            }
-            predef_topic_id_ar[predef_topic_id_index++] = atoi(optarg);
-            break;
+            case 'T':
+                // Resize predefined topic IDs array when too small
+                if (predef_topic_id_index == predef_topic_id_ar_size) {
+                    predef_topic_id_ar = realloc(predef_topic_id_ar, (predef_topic_id_ar_size + ARRAY_INCREMENT) * sizeof(uint16_t));
+                    predef_topic_id_ar_size += ARRAY_INCREMENT;
+                }
+                predef_topic_id_ar[predef_topic_id_index++] = atoi(optarg);
+                break;
 
-        case 1000:
-            mqtt_sn_enable_frwdencap();
-            break;
+            case 1000:
+                mqtt_sn_enable_frwdencap();
+                break;
 
-        case 1001:
-            mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
-            break;
+            case 1001:
+                mqtt_sn_set_frwdencap_parameters((uint8_t*)optarg, strlen(optarg));
+                break;
 
-        case 1002:
-            source_port = atoi(optarg);
-            break;
+            case 1002:
+                source_port = atoi(optarg);
+                break;
 
-        case 'v':
-            // Prevent -v setting verbose level back down to 1 if already set to 2 by -V
-            verbose = (verbose == 0) ? 1 : verbose;
-            break;
+            case 'v':
+                // Prevent -v setting verbose level back down to 1 if already set to 2 by -V
+                verbose = (verbose == 0) ? 1 : verbose;
+                break;
 
-        case 'V':
-            verbose = 2;
-            break;
+            case 'V':
+                verbose = 2;
+                break;
 
-        case '?':
-        default:
-            usage();
-            break;
+            case '?':
+            default:
+                usage();
+                break;
         }
 
     // Missing Parameter?
@@ -194,15 +193,15 @@ static void parse_opts(int argc, char** argv)
 static void termination_handler (int signum)
 {
     switch(signum) {
-    case SIGHUP:
-        mqtt_sn_log_debug("Got hangup signal.");
-        break;
-    case SIGTERM:
-        mqtt_sn_log_debug("Got termination signal.");
-        break;
-    case SIGINT:
-        mqtt_sn_log_debug("Got interrupt signal.");
-        break;
+        case SIGHUP:
+            mqtt_sn_log_debug("Got hangup signal.");
+            break;
+        case SIGTERM:
+            mqtt_sn_log_debug("Got termination signal.");
+            break;
+        case SIGINT:
+            mqtt_sn_log_debug("Got interrupt signal.");
+            break;
     }
 
     // Signal the main thread to stop

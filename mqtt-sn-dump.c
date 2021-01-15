@@ -60,26 +60,26 @@ static void parse_opts(int argc, char** argv)
     // Parse the options/switches
     while((ch = getopt(argc, argv, "adp:v?")) != -1)
         switch(ch) {
-        case 'a':
-            dump_all = TRUE;
-            break;
+            case 'a':
+                dump_all = TRUE;
+                break;
 
-        case 'd':
-            debug++;
-            break;
+            case 'd':
+                debug++;
+                break;
 
-        case 'p':
-            mqtt_sn_port = optarg;
-            break;
+            case 'p':
+                mqtt_sn_port = optarg;
+                break;
 
-        case 'v':
-            verbose++;
-            break;
+            case 'v':
+                verbose++;
+                break;
 
-        case '?':
-        default:
-            usage();
-            break;
+            case '?':
+            default:
+                usage();
+                break;
         }
 }
 
@@ -111,15 +111,15 @@ static int bind_udp_socket(const char* port_str)
 static void termination_handler (int signum)
 {
     switch(signum) {
-    case SIGHUP:
-        mqtt_sn_log_debug("Got hangup signal.");
-        break;
-    case SIGTERM:
-        mqtt_sn_log_debug("Got termination signal.");
-        break;
-    case SIGINT:
-        mqtt_sn_log_debug("Got interrupt signal.");
-        break;
+        case SIGHUP:
+            mqtt_sn_log_debug("Got hangup signal.");
+            break;
+        case SIGTERM:
+            mqtt_sn_log_debug("Got termination signal.");
+            break;
+        case SIGINT:
+            mqtt_sn_log_debug("Got interrupt signal.");
+            break;
     }
 
     // Signal the main thread to stop
