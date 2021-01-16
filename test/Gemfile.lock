@@ -1,12 +1,13 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    minitest (5.14.0)
+    minitest (5.14.3)
     mqtt (0.5.0)
-    rake (13.0.1)
+    rake (13.0.3)
 
 PLATFORMS
   ruby
+  x86_64-darwin-18
 
 DEPENDENCIES
   bundler (>= 1.5.0)
@@ -18,4 +19,4 @@ RUBY VERSION
    ruby 2.5.5p157
 
 BUNDLED WITH
-   1.16.1
+   2.2.0
