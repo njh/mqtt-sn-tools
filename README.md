@@ -57,6 +57,8 @@ Publishing
       -s             Read one whole message from STDIN.
       -t <topic>     MQTT-SN topic name to publish to.
       -T <topicid>   Pre-defined MQTT-SN topic ID to publish to.
+      --count        Number of times specified message is sent. Defaults to 1.
+      --delay        Delay in milliseconds before publishing messages to a topic. Defaults to 0.
       --fe           Enables Forwarder Encapsulation. Mqtt-sn packets are encapsulated according to MQTT-SN Protocol Specification v1.2, chapter 5.5 Forwarder Encapsulation.
       --wlnid        If Forwarder Encapsulation is enabled, wireless node ID for this client. Defaults to process id.
       --cport <port> Source port for outgoing packets. Uses port in ephemeral range if not specified or set to 0.
