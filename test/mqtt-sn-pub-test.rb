@@ -664,6 +664,43 @@ class MqttSnPubTest < Minitest::Test
     assert_match(/nodename nor servname provided, or not known|Name or service not known/, @cmd_result[0])
   end
 
+  def test_disconnect_after_publish
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          '-T' => 10,
+          '-m' => 'message',
+          '-p' => fs.port,
+          '-h' => fs.address
+        )
+      end
+    end
+
+    assert_empty(@cmd_result)
+    assert_kind_of(MQTT::SN::Packet::Disconnect, @packet)
+    assert_nil(@packet.duration)
+  end
+
+  def test_disconnect_after_publish_with_sleep
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-pub',
+          '-e' => 3600,
+          '-T' => 10,
+          '-m' => 'message',
+          '-p' => fs.port,
+          '-h' => fs.address
+        )
+      end
+    end
+
+    assert_empty(@cmd_result)
+    assert_equal(MQTT::SN::Packet::Disconnect, @packet.class)
+    assert_equal(3600, @packet.duration)
+  end
+
   def test_disconnect_duration_warning
     fake_server do |fs|
       def fs.handle_disconnect(packet)

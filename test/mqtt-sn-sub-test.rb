@@ -604,4 +604,40 @@ class MqttSnSubTest < Minitest::Test
     assert_includes_match(/[\d\-]+ [\d\:]+ WARN  Packet received is longer than this tool can handle/, @cmd_result)
   end
 
+  def test_disconnect_after_recieve
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
+          ['-1',
+          '-t', 'test',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_equal(["Message for test"], @cmd_result)
+    assert_kind_of(MQTT::SN::Packet::Disconnect, @packet)
+    assert_nil(@packet.duration)
+  end
+
+  def test_disconnect_after_recieve_with_sleep
+    fake_server do |fs|
+      @packet = fs.wait_for_packet(MQTT::SN::Packet::Disconnect) do
+        @cmd_result = run_cmd(
+          'mqtt-sn-sub',
+          ['-1',
+          '-e', 3600,
+          '-t', 'test',
+          '-p', fs.port,
+          '-h', fs.address]
+        )
+      end
+    end
+
+    assert_equal(["Message for test"], @cmd_result)
+    assert_equal(MQTT::SN::Packet::Disconnect, @packet.class)
+    assert_equal(3600, @packet.duration)
+  end
 end
