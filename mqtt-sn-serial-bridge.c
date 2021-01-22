@@ -1,6 +1,6 @@
 /*
   MQTT-SN serial bridge
-  Copyright (C) 2014-2016 Nicholas Humfrey
+  Copyright (C) Nicholas Humfrey
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
