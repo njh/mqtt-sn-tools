@@ -748,6 +748,7 @@ void mqtt_sn_dump_packet(char* packet)
     }
 
     printf("\n");
+    fflush(stdout);
 }
 
 void mqtt_sn_print_publish_packet(publish_packet_t* packet)
@@ -783,6 +784,7 @@ void mqtt_sn_print_publish_packet(publish_packet_t* packet)
     } else {
         printf("%s\n", packet->data);
     }
+    fflush(stdout);
 }
 
 uint16_t mqtt_sn_receive_suback(int sock)
