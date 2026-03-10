@@ -1,8 +1,10 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    logger (1.7.0)
     minitest (5.14.3)
-    mqtt (0.5.0)
+    mqtt (0.7.0)
+      logger
     rake (13.0.3)
 
 PLATFORMS
